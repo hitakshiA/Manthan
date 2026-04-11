@@ -90,6 +90,7 @@ indent-style = "space"
 # --- Pytest --------------------------------------------------------------
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 asyncio_mode = "auto"
 markers = [
     "slow: slower integration/system tests (deselect with -m 'not slow')",
