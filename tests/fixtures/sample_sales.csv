@@ -1,0 +1,11 @@
+order_id,order_date,region,revenue,quantity,customer_segment
+1001,2024-01-15,North,125.50,2,retail
+1002,2024-01-16,South,89.00,1,wholesale
+1003,2024-01-17,East,299.99,3,retail
+1004,2024-01-18,West,45.25,1,retail
+1005,2024-01-19,North,520.00,5,wholesale
+1006,2024-01-20,South,150.75,2,retail
+1007,2024-01-21,East,78.50,1,retail
+1008,2024-01-22,West,410.00,4,wholesale
+1009,2024-01-23,North,65.25,1,retail
+1010,2024-01-24,South,199.00,2,retail
