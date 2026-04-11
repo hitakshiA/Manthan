@@ -14,11 +14,22 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
-from src.api.pipeline import LlmClientFactory, ingest_and_profile
+from src.api.pipeline import (
+    LlmClientFactory,
+    ingest_and_profile,
+    ingest_database_and_profile,
+)
 from src.core.config import get_settings
-from src.core.exceptions import IngestionError, ProfilingError
+from src.core.exceptions import (
+    DcdValidationError,
+    IngestionError,
+    ProfilingError,
+    SqlValidationError,
+)
 from src.core.llm import LlmClient
 from src.core.state import AppState, get_state
+from src.ingestion.loaders.db_loader import DbLoadRequest
+from src.semantic.editor import DcdEditRequest, apply_edits
 from src.tools.context_tool import get_context
 from src.tools.schema_tool import SchemaSummary, get_schema
 
@@ -83,6 +94,7 @@ async def upload_dataset(
             state=state,
             file_path=temp_path,
             max_upload_size_mb=settings.max_upload_size_mb,
+            original_filename=file.filename,
             llm_client_factory=llm_client_factory,
         )
     except IngestionError as exc:
@@ -92,6 +104,26 @@ async def upload_dataset(
     finally:
         temp_path.unlink(missing_ok=True)
 
+    return _summarize(state, entry.dataset_id)
+
+
+@router.post("/connect", response_model=DatasetSummary)
+async def connect_database(
+    state: StateDep,
+    llm_client_factory: LlmFactoryDep,
+    request: DbLoadRequest,
+) -> DatasetSummary:
+    """Connect to a database source, pull a table, run the full pipeline."""
+    try:
+        entry = await ingest_database_and_profile(
+            state=state,
+            db_request=request,
+            llm_client_factory=llm_client_factory,
+        )
+    except (IngestionError, SqlValidationError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ProfilingError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return _summarize(state, entry.dataset_id)
 
 
@@ -121,6 +153,29 @@ def get_dataset_context(
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
     yaml_text = get_context(dcd, query=query)
     return Response(content=yaml_text, media_type="application/x-yaml")
+
+
+@router.put("/{dataset_id}/context", response_model=DatasetSummary)
+def put_dataset_context(
+    dataset_id: str,
+    state: StateDep,
+    request: DcdEditRequest,
+) -> DatasetSummary:
+    dcd = state.dcds.get(dataset_id)
+    if dcd is None:
+        raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
+    gold_table = state.gold_table_names.get(dataset_id)
+    try:
+        updated = apply_edits(
+            dcd,
+            request,
+            connection=state.connection,
+            gold_table=gold_table,
+        )
+    except DcdValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    state.dcds[dataset_id] = updated
+    return _summarize(state, dataset_id)
 
 
 @router.get("/{dataset_id}/schema", response_model=SchemaSummary)

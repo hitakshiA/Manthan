@@ -36,7 +36,7 @@ class Settings(BaseSettings):
         description="OpenRouter API key. No default — must be provided via env.",
     )
     openrouter_model: str = Field(
-        default="google/gemma-4-27b-it:free",
+        default="openai/gpt-oss-120b:free",
         description="Free-tier OpenRouter model slug used for profiling.",
     )
     openrouter_base_url: str = Field(

@@ -1,19 +1,21 @@
 """Agent tool API endpoints.
 
-Thin HTTP shells around :mod:`src.tools.sql_tool`,
-:mod:`src.tools.context_tool`, and :mod:`src.tools.schema_tool`.
+Thin HTTP shells around ``src.tools.sql_tool``, ``context_tool``,
+``schema_tool``, and ``python_tool`` (Docker sandbox).
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from src.core.exceptions import SqlValidationError, ToolError
+from src.core.exceptions import SandboxError, SqlValidationError, ToolError
 from src.core.state import AppState, get_state
 from src.tools.context_tool import get_context
+from src.tools.python_tool import SandboxResult, run_python
 from src.tools.schema_tool import SchemaSummary, get_schema
 from src.tools.sql_tool import SqlResult, run_sql
 
@@ -62,3 +64,36 @@ def schema(dataset_id: str, state: StateDep) -> SchemaSummary:
     if dcd is None:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
     return get_schema(dcd)
+
+
+class PythonRequest(BaseModel):
+    """Body of ``POST /tools/python``."""
+
+    dataset_id: str
+    code: str
+    timeout_seconds: int | None = Field(default=None, ge=1, le=600)
+
+
+@router.post("/python", response_model=SandboxResult)
+def execute_python(request: PythonRequest, state: StateDep) -> SandboxResult:
+    dcd = state.dcds.get(request.dataset_id)
+    if dcd is None:
+        raise HTTPException(
+            status_code=404, detail=f"Unknown dataset: {request.dataset_id}"
+        )
+    dataset_dir = Path(state.data_directory) / request.dataset_id / "data"
+    output_dir = Path(state.data_directory) / request.dataset_id / "output"
+    if not dataset_dir.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Dataset directory missing: {dataset_dir}",
+        )
+    try:
+        return run_python(
+            code=request.code,
+            dataset_directory=dataset_dir,
+            output_directory=output_dir,
+            timeout_seconds=request.timeout_seconds,
+        )
+    except SandboxError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

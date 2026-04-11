@@ -13,6 +13,7 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
 from types import TracebackType
 from typing import Any
 
@@ -23,6 +24,9 @@ from src.core.exceptions import LlmError, LlmTimeoutError
 from src.core.logger import get_logger
 
 _DEFAULT_TIMEOUT_SECONDS = 30.0
+_DEFAULT_MAX_RETRIES = 3
+_RETRY_BACKOFF_BASE_SECONDS = 1.0
+_RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 
 _logger = get_logger()
 
@@ -41,11 +45,13 @@ class LlmClient:
         *,
         timeout: float = _DEFAULT_TIMEOUT_SECONDS,
         client: httpx.AsyncClient | None = None,
+        max_retries: int = _DEFAULT_MAX_RETRIES,
     ) -> None:
         self._settings = settings or get_settings()
         self._timeout = timeout
         self._client = client
         self._owns_client = client is None
+        self._max_retries = max_retries
 
     async def __aenter__(self) -> LlmClient:
         if self._client is None:
@@ -110,24 +116,45 @@ class LlmClient:
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
 
-        try:
-            response = await self._client.post("/chat/completions", json=payload)
-            response.raise_for_status()
-        except httpx.TimeoutException as exc:
-            _logger.warning("llm.timeout", model=payload["model"])
-            raise LlmTimeoutError("OpenRouter request timed out") from exc
-        except httpx.HTTPStatusError as exc:
-            _logger.warning(
-                "llm.http_status",
-                status_code=exc.response.status_code,
-                model=payload["model"],
+        last_error: Exception | None = None
+        for attempt in range(1, self._max_retries + 1):
+            try:
+                response = await self._client.post("/chat/completions", json=payload)
+                response.raise_for_status()
+                break
+            except httpx.TimeoutException:
+                last_error = LlmTimeoutError(
+                    f"OpenRouter request timed out (attempt {attempt}/"
+                    f"{self._max_retries})"
+                )
+                _logger.warning("llm.timeout", attempt=attempt, model=payload["model"])
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if status not in _RETRYABLE_STATUS_CODES:
+                    _logger.warning(
+                        "llm.http_status_fatal",
+                        status_code=status,
+                        model=payload["model"],
+                    )
+                    raise LlmError(f"OpenRouter returned HTTP {status}") from exc
+                last_error = LlmError(f"OpenRouter returned HTTP {status}")
+                _logger.warning(
+                    "llm.http_status_retryable",
+                    attempt=attempt,
+                    status_code=status,
+                )
+            except httpx.HTTPError as exc:
+                last_error = LlmError(f"OpenRouter transport error: {exc}")
+                _logger.warning("llm.transport_error", attempt=attempt, error=str(exc))
+
+            if attempt < self._max_retries:
+                await asyncio.sleep(_RETRY_BACKOFF_BASE_SECONDS * (2 ** (attempt - 1)))
+        else:
+            raise (
+                last_error
+                if last_error is not None
+                else LlmError("OpenRouter request failed without a captured error")
             )
-            raise LlmError(
-                f"OpenRouter returned HTTP {exc.response.status_code}"
-            ) from exc
-        except httpx.HTTPError as exc:
-            _logger.warning("llm.transport_error", error=str(exc))
-            raise LlmError(f"OpenRouter request failed: {exc}") from exc
 
         try:
             data = response.json()

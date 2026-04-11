@@ -12,7 +12,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src import __version__
-from src.api import datasets, health, tools
+from src.api import clarification, datasets, health, status, tools
+from src.core import metrics
 from src.core.config import get_settings
 from src.core.logger import configure_logging
 
@@ -36,3 +37,11 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(datasets.router)
 app.include_router(tools.router)
+app.include_router(clarification.router)
+app.include_router(status.router)
+
+
+@app.get("/metrics", tags=["observability"])
+def read_metrics() -> dict[str, object]:
+    """Return a snapshot of in-process metrics."""
+    return metrics.snapshot()
