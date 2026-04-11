@@ -30,7 +30,7 @@ def test_default_values_are_applied() -> None:
     assert settings.duckdb_memory_limit == "4GB"
     assert settings.openrouter_model == "openai/gpt-oss-120b:free"
     assert settings.sandbox_network_disabled is True
-    assert settings.pii_confidence_threshold == 0.7
+    assert settings.max_upload_size_mb == 500
 
 
 def test_missing_api_key_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:

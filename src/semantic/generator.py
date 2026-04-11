@@ -1,9 +1,8 @@
 """Assemble a Data Context Document from Silver-stage outputs.
 
-This module is the hinge between the profiling agent and everything
-downstream: it takes a :class:`LoadResult` (Bronze metadata) and a
-:class:`ProfilingResult` (Silver profile + classification + PII + enrich)
-and produces a fully-populated :class:`DataContextDocument` ready for
+Takes a :class:`LoadResult` (Bronze metadata) and a
+:class:`ProfilingResult` (Silver profile + classification + enrich) and
+produces a fully-populated :class:`DataContextDocument` ready for
 materialization, pruning, and serving to analysis agents.
 
 The generator is deterministic. It does no LLM calls of its own — all
@@ -18,7 +17,6 @@ from pathlib import Path
 from src.ingestion.base import LoadResult
 from src.profiling.agent import ProfilingResult
 from src.profiling.classifier import ColumnClassification
-from src.profiling.pii_detector import PiiFlag
 from src.profiling.statistical import (
     ColumnProfile,
     is_numeric_type,
@@ -48,20 +46,10 @@ def build_dcd(
     load_result: LoadResult,
     profiling_result: ProfilingResult,
 ) -> DataContextDocument:
-    """Assemble a :class:`DataContextDocument` from Silver-stage outputs.
-
-    Args:
-        dataset_id: The opaque ``ds_*`` id assigned by the registry.
-        load_result: The Bronze-stage load metadata.
-        profiling_result: The Silver-stage profiling output.
-
-    Returns:
-        A validated :class:`DataContextDocument`.
-    """
+    """Assemble a :class:`DataContextDocument` from Silver-stage outputs."""
     columns = _build_columns(
         profiling_result.column_profiles,
         profiling_result.classifications,
-        profiling_result.pii_flags,
     )
 
     temporal = _build_temporal(profiling_result)
@@ -91,9 +79,7 @@ def build_dcd(
         columns=columns,
         computed_metrics=metrics,
         quality=quality,
-        agent_instructions=_build_agent_instructions(
-            columns, profiling_result.pii_flags
-        ),
+        agent_instructions=_build_agent_instructions(columns),
     )
 
     return DataContextDocument(dataset=dataset)
@@ -102,22 +88,18 @@ def build_dcd(
 def _build_columns(
     profiles: list[ColumnProfile],
     classifications: list[ColumnClassification],
-    pii_flags: list[PiiFlag],
 ) -> list[DcdColumn]:
     classification_by_name = {c.name: c for c in classifications}
-    pii_by_name = {f.column_name: f for f in pii_flags}
     columns: list[DcdColumn] = []
     for profile in profiles:
         classification = classification_by_name.get(profile.name)
-        pii_flag = pii_by_name.get(profile.name)
-        columns.append(_build_column(profile, classification, pii_flag))
+        columns.append(_build_column(profile, classification))
     return columns
 
 
 def _build_column(
     profile: ColumnProfile,
     classification: ColumnClassification | None,
-    pii_flag: PiiFlag | None,
 ) -> DcdColumn:
     stats: DcdColumnStats | None = None
     if is_numeric_type(profile.dtype):
@@ -137,10 +119,6 @@ def _build_column(
     )
     aggregation = classification.aggregation if classification else None
 
-    sensitivity = pii_flag.sensitivity if pii_flag else "public"
-    pii_type = pii_flag.pii_type if pii_flag else None
-    handling = pii_flag.handling if pii_flag else None
-
     return DcdColumn(
         name=profile.name,
         dtype=profile.dtype,
@@ -150,9 +128,6 @@ def _build_column(
         nullable=profile.null_count > 0,
         completeness=profile.completeness,
         cardinality=profile.distinct_count,
-        sensitivity=sensitivity,
-        pii_type=pii_type,
-        handling=handling,
         stats=stats,
         sample_values=list(profile.sample_values),
     )
@@ -226,18 +201,23 @@ def _build_quality(
     )
 
 
-def _build_agent_instructions(
-    columns: list[DcdColumn],
-    pii_flags: list[PiiFlag],
-) -> list[str]:
+def _build_agent_instructions(columns: list[DcdColumn]) -> list[str]:
+    """Emit natural-language directives the analysis agent should follow.
+
+    The key rule: never enumerate individual values of ``identifier``
+    columns when answering questions. Aggregate or count them instead.
+    This replaces the old PII-based output filtering — the role
+    classification is the enforcement mechanism.
+    """
     instructions: list[str] = []
-    pii_columns = sorted(
-        flag.column_name for flag in pii_flags if flag.sensitivity == "pii"
-    )
-    if pii_columns:
+
+    identifier_cols = sorted(c.name for c in columns if c.role == "identifier")
+    if identifier_cols:
         instructions.append(
-            "Never include the following PII columns in query outputs: "
-            + ", ".join(pii_columns)
+            "Never enumerate individual values of identifier columns ("
+            + ", ".join(identifier_cols)
+            + "). Aggregate (COUNT DISTINCT, GROUP BY dimension) or "
+            "reference them only when the user explicitly asks for a lookup."
         )
 
     metric_cols = [c for c in columns if c.role == "metric" and c.aggregation]

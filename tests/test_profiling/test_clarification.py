@@ -9,7 +9,6 @@ from src.profiling.clarification import (
     merge_answers,
 )
 from src.profiling.classifier import ColumnClassification
-from src.profiling.pii_detector import PiiFlag
 from src.profiling.statistical import ColumnProfile
 
 
@@ -50,21 +49,10 @@ def _build_result() -> ProfilingResult:
             aggregation=None,
         ),
     ]
-    pii_flags = [
-        PiiFlag(
-            column_name=p.name,
-            sensitivity="public",
-            handling="expose",
-            reason="none",
-            confidence=0.5,
-        )
-        for p in profiles
-    ]
     return ProfilingResult(
         table_name="raw_test",
         column_profiles=profiles,
         classifications=classifications,
-        pii_flags=pii_flags,
     )
 
 

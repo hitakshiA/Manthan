@@ -134,8 +134,7 @@ def _convert_low_cardinality_dimensions_to_enums(
                 f"WHERE {quoted_col} IS NOT NULL)"
             )
             connection.execute(
-                f"ALTER TABLE {gold_table} "
-                f"ALTER COLUMN {quoted_col} TYPE {enum_type}"
+                f"ALTER TABLE {gold_table} ALTER COLUMN {quoted_col} TYPE {enum_type}"
             )
         except duckdb.Error:
             with contextlib.suppress(duckdb.Error):

@@ -43,7 +43,7 @@ Derived directly from the hackathon transcripts and problem statement PDFs:
 | "Structured, unstructured" | Ravi, transcript | Support files and databases |
 | "Self-service to aid re-use" | Problem statement | Data context must travel with the dataset |
 | "Consistent metrics" | Learning outcomes | Semantic layer with canonical definitions |
-| "No exposure of private data" | Core description | PII detection and classification at ingestion |
+| "No exposure of private data" | Core description | Agent output discipline: never enumerate ``identifier`` columns in answers (see §6) |
 | "Source transparency" | Trust pillar | Full provenance chain from question to column |
 | "Near instant responses" | Speed pillar | Pre-computed summaries for common patterns |
 | "Free-tier AI" | Hackathon rules | LLM calls must be economical, cacheable |
@@ -584,36 +584,54 @@ When multiple tables are loaded (multi-file upload or database import), the DCD 
 
 ---
 
-## 6. PII Detection Pipeline
+## 6. Output Discipline for Sensitive Columns
 
-PII detection runs during the Silver stage using a layered approach:
+The problem statement calls for "no exposure of private or sensitive data"
+in agent outputs. Rather than treating this as a runtime PII-scanning
+problem, Manthan treats it as an **agent output-discipline** problem
+anchored on column role classification.
 
-### Layer 1: Column Name Heuristics
-Fast regex matching on column names against known PII patterns:
-- Names: `/name|first.?name|last.?name|full.?name/i`
-- Contact: `/email|phone|mobile|tel|fax/i`
-- Identity: `/ssn|passport|license|aadhaar|pan.?card/i`
-- Financial: `/account.?no|card.?number|iban|routing/i`
-- Location: `/address|street|zip|postal|city|state/i`
+### Rule
 
-### Layer 2: Value Pattern Detection (Presidio)
-For string columns not caught by Layer 1, sample 100 values and run through Presidio's AnalyzerEngine:
-- Detects: PERSON, EMAIL_ADDRESS, PHONE_NUMBER, CREDIT_CARD, US_SSN, IBAN, IP_ADDRESS, LOCATION, DATE_TIME, URL, and 40+ additional entity types
-- Uses spaCy `en_core_web_lg` NER model plus regex recognizers
-- Confidence threshold: 0.7 (flag column if >5% of sampled values match)
+The Silver-stage LLM classifier assigns each column a ``role``:
+``metric``, ``dimension``, ``temporal``, ``identifier``, ``auxiliary``.
+When a column is marked ``identifier`` (unique-ish keys such as
+``customer_name``, ``customer_email``, ``order_id``, ``account_number``),
+the downstream analysis agent **must not enumerate individual values**
+in its answers. It may aggregate (``COUNT(DISTINCT identifier)``),
+group other metrics by it, or look up a single value when the user
+explicitly asks — but it must not list them.
 
-### Layer 3: Statistical Heuristics
-For columns not caught by Layers 1-2:
-- High cardinality string columns approaching row count → likely identifiers
-- Columns with values matching UUID/GUID patterns → system identifiers
-- Numeric columns with exactly N digits (e.g., 10-digit phone numbers) → potential PII
+This rule is injected into the DCD's ``agent_instructions`` section at
+materialization time, e.g.:
 
-Each flagged column receives:
-- `sensitivity`: "pii" | "quasi_identifier" | "public"
-- `pii_type`: The Presidio entity type (PERSON, EMAIL_ADDRESS, etc.)
-- `handling`: "never_expose_in_outputs" | "aggregate_only" | "mask_in_outputs"
+> "Never enumerate individual values of identifier columns
+> (customer_email, customer_name, order_id). Aggregate (COUNT DISTINCT,
+> GROUP BY dimension) or reference them only when the user explicitly
+> asks for a lookup."
 
-Sensitivity classifications are included in the DCD's column definitions and injected into agent instructions.
+### Why not Presidio / runtime PII scanning
+
+Two reasons:
+
+1. The NatWest hackathon rules require teams to **use synthetic data
+   only** and not scrape real PII. There is no real PII to detect on
+   uploads during the hackathon; runtime entity scanning would be
+   theatre.
+2. Third-party PII scanners (Presidio + spaCy NER) produce noisy false
+   positives on legitimate dimension columns — e.g. "North" / "South"
+   / "East" / "West" get flagged as LOCATION entities. Labels that
+   produce noise erode trust and get ignored.
+
+### Datasets with truly sensitive data (post-hackathon)
+
+If a deployment does accept real-world data containing PII, the
+enforcement layer is the analysis agent's output filter plus a SQL tool
+guardrail that rejects ``SELECT`` clauses referencing ``identifier``
+columns unless the user explicitly opted in. Both extensions are local
+to ``src/tools/sql_tool.py`` and the (future) analysis agent system
+prompt. The DCD already carries the classifications needed to drive
+them — no additional detection pipeline is required.
 
 ---
 
@@ -654,9 +672,6 @@ These are documented as future capabilities, not limitations. The architecture s
 |---|---|---|---|---|
 | duckdb | >=1.2.0 | MIT | Analytical engine, ingestion, SQL | Core |
 | ydata-profiling | >=4.18.0 | MIT | Statistical profiling, JSON export | Silver stage |
-| presidio-analyzer | >=2.2.360 | MIT | PII entity detection | Silver stage |
-| presidio-anonymizer | >=2.2.360 | MIT | PII redaction (optional) | Silver stage |
-| spacy + en_core_web_lg | >=3.8 | MIT | NER model for Presidio | Silver stage |
 | great-expectations | >=1.4.0 | Apache 2.0 | Data quality validation rules | Gold stage |
 | pyyaml | >=6.0 | MIT | DCD serialization/deserialization | All stages |
 | fastapi | >=0.115.0 | MIT | API server | Tool interface |

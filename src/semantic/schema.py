@@ -61,7 +61,14 @@ class DcdColumnStats(BaseModel):
 
 
 class DcdColumn(BaseModel):
-    """Complete semantic and statistical description of a column."""
+    """Complete semantic and statistical description of a column.
+
+    Column sensitivity is expressed through ``role`` rather than a
+    separate PII classification: columns tagged ``identifier`` (like
+    customer_name or order_id) should never be enumerated individually
+    in analysis-agent outputs. Analysis agents aggregate or count them
+    instead.
+    """
 
     name: str
     dtype: str
@@ -74,12 +81,6 @@ class DcdColumn(BaseModel):
     nullable: bool = True
     completeness: float = Field(default=1.0, ge=0.0, le=1.0)
     cardinality: int | None = Field(default=None, ge=0)
-    sensitivity: str = Field(
-        default="public",
-        description="public | quasi_identifier | pii",
-    )
-    pii_type: str | None = None
-    handling: str | None = None
     stats: DcdColumnStats | None = None
     sample_values: list[Any] = Field(default_factory=list)
 

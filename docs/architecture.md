@@ -27,12 +27,12 @@ interface exposed via FastAPI.
 │  Silver — src/profiling/                                │
 │  1. PERCEIVE  — per-column statistical profile          │
 │  2. CLASSIFY  — LLM assigns role + aggregation          │
-│  3. PII       — Layer 1 regex + Layer 2 Presidio        │
-│                  + Layer 3 statistical heuristics       │
-│  4. ENRICH    — temporal grain + metric proposals       │
-│  5. DISAMBIG  — emit clarification questions            │
-│  6. VALIDATE  — cross-check classifier vs dtypes        │
-│  7. EMIT      — ProfilingResult                         │
+│                  (identifier role drives output         │
+│                  discipline; see SPEC §6)               │
+│  3. ENRICH    — temporal grain + metric proposals       │
+│  4. DISAMBIG  — emit clarification questions            │
+│  5. VALIDATE  — cross-check classifier vs dtypes        │
+│  6. EMIT      — ProfilingResult                         │
 └──────┬──────────────────────────────────────────────────┘
        │
        ▼
@@ -70,7 +70,7 @@ interface exposed via FastAPI.
 src/
 ├── core/                # Settings, logger, DuckDB, OpenRouter, state, metrics
 ├── ingestion/           # Bronze: loaders + gateway + validators + registry
-├── profiling/           # Silver: statistical + classifier + PII + enricher +
+├── profiling/           # Silver: statistical + classifier + enricher +
 │                        #         clarification + ReAct-style agent
 ├── semantic/            # DCD schema, generator, editor, pruner
 ├── materialization/     # Gold: optimizer, summarizer, exporter, verified
