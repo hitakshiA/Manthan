@@ -67,6 +67,42 @@ def validate_identifier(name: str) -> str:
     return name
 
 
+def quote_identifier(name: str) -> str:
+    """Return ``name`` wrapped as an injection-safe quoted SQL identifier.
+
+    Where :func:`validate_identifier` enforces a strict allow-list for
+    names generated inside Manthan, ``quote_identifier`` exists for names
+    that come from external data (CSV headers, database column names)
+    and may legitimately contain spaces, punctuation, or reserved words.
+    The name is double-quoted and any internal double quotes are doubled,
+    which is the standard SQL way to safely include any identifier.
+
+    Args:
+        name: The candidate identifier.
+
+    Returns:
+        The identifier wrapped in double quotes, with internal quotes
+        escaped.
+
+    Raises:
+        SqlValidationError: If ``name`` is empty, too long, or contains
+            a NUL byte or a newline (which DuckDB will reject regardless
+            of quoting).
+    """
+    if not isinstance(name, str) or not name:
+        raise SqlValidationError("Identifier must be a non-empty string")
+    if len(name) > _MAX_IDENTIFIER_LENGTH:
+        raise SqlValidationError(
+            f"Identifier exceeds maximum length of {_MAX_IDENTIFIER_LENGTH}: {name!r}"
+        )
+    if "\x00" in name or "\n" in name or "\r" in name:
+        raise SqlValidationError(
+            f"Identifier contains disallowed control characters: {name!r}"
+        )
+    escaped = name.replace('"', '""')
+    return f'"{escaped}"'
+
+
 class LoadResult(BaseModel):
     """Metadata produced by a Bronze-stage loader.
 
