@@ -1,0 +1,97 @@
+[project]
+name = "manthan"
+version = "0.1.0"
+description = "Seamless Self-Service Intelligence — Talk to Data. NatWest Code for Purpose India Hackathon."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Manthan Engineering" }]
+keywords = ["data", "llm", "duckdb", "semantic-layer", "profiling", "hackathon"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+# Runtime dependencies. All licenses must be Apache 2.0, MIT, BSD, or PSF.
+# See SPEC.md §8 (Dependency Matrix) for rationale and per-package purpose.
+dependencies = [
+    "duckdb>=1.2.0",            # MIT — analytical engine, ingestion, SQL
+    "ydata-profiling>=4.18.0",  # MIT — statistical profiling
+    "presidio-analyzer>=2.2.360", # MIT — PII entity detection
+    "presidio-anonymizer>=2.2.360", # MIT — PII redaction
+    "spacy>=3.8",               # MIT — NER model backend for Presidio
+    "great-expectations>=1.4.0", # Apache-2.0 — data quality validation
+    "pyyaml>=6.0",              # MIT — DCD serialization
+    "fastapi>=0.115.0",         # MIT — API server
+    "uvicorn[standard]>=0.34.0", # BSD-3 — ASGI server
+    "docker>=7.0",              # Apache-2.0 — sandbox management
+    "httpx>=0.28.0",            # BSD-3 — async HTTP client (OpenRouter)
+    "pandas>=2.2.0",            # BSD-3 — DataFrame interop
+    "pydantic>=2.9.0",          # MIT — data models
+    "pydantic-settings>=2.5.0", # MIT — typed env-var configuration
+    "structlog>=24.4.0",        # MIT / Apache-2.0 dual — structured JSON logs
+    "python-multipart>=0.0.12", # Apache-2.0 — multipart upload parsing for FastAPI
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",              # MIT
+    "pytest-cov>=5.0",          # MIT
+    "pytest-asyncio>=0.24",     # Apache-2.0
+    "ruff>=0.7",                # MIT
+]
+
+[project.urls]
+Repository = "https://github.com/hitakshiA/Manthan"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+# --- Ruff (format + lint) ------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# A pragmatic set: pycodestyle, pyflakes, imports, naming, bugbear, pyupgrade,
+# flake8-comprehensions, flake8-simplify, pytest-style, and ruff-specific rules.
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "W",    # pycodestyle warnings
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "PT",   # flake8-pytest-style
+    "RUF",  # ruff-specific
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use asserts and skip some strictness.
+"tests/**" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# --- Pytest --------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+markers = [
+    "slow: slower integration/system tests (deselect with -m 'not slow')",
+]
