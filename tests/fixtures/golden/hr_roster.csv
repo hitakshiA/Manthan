@@ -1,0 +1,11 @@
+employee_id,department,role,hire_date,annual_salary,manager_id
+EMP-001,Engineering,Senior Engineer,2020-03-15,120000,EMP-010
+EMP-002,Engineering,Junior Engineer,2023-06-01,75000,EMP-010
+EMP-003,Sales,Account Executive,2021-08-12,95000,EMP-011
+EMP-004,Sales,Account Executive,2022-02-28,92000,EMP-011
+EMP-005,Marketing,Content Lead,2021-11-03,88000,EMP-012
+EMP-006,Engineering,Staff Engineer,2019-01-20,150000,EMP-010
+EMP-007,Sales,BDR,2024-01-15,65000,EMP-011
+EMP-008,Marketing,Designer,2022-09-05,78000,EMP-012
+EMP-009,Engineering,Junior Engineer,2023-12-10,72000,EMP-010
+EMP-010,Engineering,Director,2018-04-01,185000,

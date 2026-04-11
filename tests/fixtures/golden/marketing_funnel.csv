@@ -1,0 +1,11 @@
+campaign_id,week,channel,stage,users,conversions,spend_usd
+CMP-A1,2024-W01,Email,Awareness,12500,340,1200.00
+CMP-A1,2024-W01,Email,Consideration,5200,180,800.00
+CMP-A1,2024-W01,Email,Purchase,1800,120,400.00
+CMP-B2,2024-W01,Social,Awareness,25000,520,2500.00
+CMP-B2,2024-W01,Social,Consideration,8400,290,1400.00
+CMP-B2,2024-W01,Social,Purchase,2100,150,700.00
+CMP-C3,2024-W01,Search,Awareness,9800,410,1800.00
+CMP-C3,2024-W01,Search,Consideration,4200,220,900.00
+CMP-C3,2024-W01,Search,Purchase,1600,140,500.00
+CMP-A1,2024-W02,Email,Awareness,13200,365,1250.00

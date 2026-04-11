@@ -2,23 +2,61 @@
 
 **Seamless Self-Service Intelligence — Talk to Data.**
 
-Manthan is a data layer that ingests arbitrary datasets, profiles and annotates
-them autonomously, and exposes them to downstream analysis agents through a
-small set of well-defined tools. Built for the NatWest *Code for Purpose* India
-Hackathon — Problem Statement: *Talk to Data*.
+Manthan is the **data and semantic foundation** for a NatWest *Code for Purpose*
+India Hackathon "Talk to Data" submission. It is **Layer 1 of a planned three-
+layer architecture**:
+
+```
+┌─────────────────────────────┐
+│  Layer 3 — Chat UI          │  Round 3 deliverable
+│  (conversational frontend)  │
+└───────────────┬─────────────┘
+                │ natural language
+                ▼
+┌─────────────────────────────┐
+│  Layer 2 — Analysis Agent   │  Round 3 deliverable
+│  (LLM + tool use + narrate) │
+└───────────────┬─────────────┘
+                │ composable tool calls
+                ▼
+┌─────────────────────────────┐
+│  Layer 1 — Manthan          │  ← this repo
+│  (DCD + toolbox + Gold)     │
+└─────────────────────────────┘
+```
+
+This layering mirrors the architecture cited in the PDF's own references —
+Snowflake's semantic model → Cortex Analyst → Snowflake Intelligence. Manthan
+is the semantic-model layer. The analysis agent and the conversational UI are
+intentionally separate layers with their own lifecycles and test boundaries.
 
 Hand Manthan a CSV, Excel, JSON, Parquet file, or a live PostgreSQL / MySQL /
-SQLite connection, and a minute later it gives back: a validated Data Context
-Document describing every column, a curated Zstandard-compressed Parquet
-dataset optimized for DuckDB, a library of verified SQL queries covering the
-four NatWest use-case types, and a REST API that analysis agents can query with
-zero guesswork — including sandboxed Python execution for charts and analysis.
+SQLite connection and it gives back:
+
+1. **A validated Data Context Document** — YAML with every column's role,
+   description, confidence score, reasoning, synonyms, drill-up hierarchy,
+   and source provenance.
+2. **A curated Zstandard-compressed Parquet dataset** with sorted Gold table,
+   ENUM-converted dimensions, temporal rollups, and dimension breakdowns
+   pre-computed.
+3. **A library of verified SQL queries** covering the four PDF use-case types
+   (change / compare / breakdown / summarize).
+4. **An expansive agent toolbox** — stateful Python sessions (variables
+   persist across calls), SQL with temp-table scratchpad (CREATE TEMP TABLE
+   AS SELECT... across turns), DCD context retrieval, schema introspection,
+   and sandboxed Python execution. Layer 2 composes these primitives to
+   answer any business question. See [`docs/building-the-agent.md`](docs/building-the-agent.md).
 
 ## Status
 
-**100% of [`SPEC.md`](SPEC.md) is implemented and tested end-to-end**, including
-the live OpenRouter-backed smoke test against `gpt-oss-120b:free`. 240 tests
-pass (unit + integration + sandbox + ephemeral Postgres via testcontainers).
+**Layer 1 is complete and tested end-to-end.** 230 tests pass (unit,
+integration, Docker sandbox, ephemeral Postgres via testcontainers, and
+three golden-DCD fixtures for retail / HR / marketing funnel datasets).
+The live OpenRouter smoke test against `openai/gpt-oss-120b:free` exercises
+the full Bronze → Silver → Gold flow with real LLM classification.
+
+Layer 2 (analysis agent) and Layer 3 (chat UI) are Round 3 deliverables and
+live in separate commits/repos.
 
 ## Features
 
@@ -32,11 +70,19 @@ pass (unit + integration + sandbox + ephemeral Postgres via testcontainers).
   the raw table, classifies every column's role (`metric`, `dimension`,
   `temporal`, `identifier`, `auxiliary`) via an LLM (OpenRouter
   `gpt-oss-120b:free` by default, validated against a 10-column benchmark
-  with a perfect 10/10 score), detects temporal grain from gap analysis,
-  proposes computed metrics, emits interactive clarification questions for
-  low-confidence columns, and surfaces classifier inconsistencies as
-  explicit validation warnings. LLM calls are retried with exponential
-  backoff on transient failures.
+  with a perfect 10/10 score) **together with a confidence score, a one-
+  sentence explanation of why that role was picked, and a list of user-
+  facing synonyms**, detects temporal grain from gap analysis, **detects
+  dimension hierarchies via functional-dependency analysis** (city →
+  state → country), proposes computed metrics, emits interactive
+  clarification questions for low-confidence columns, and surfaces
+  classifier inconsistencies as explicit validation warnings. LLM calls
+  are retried with exponential backoff on transient failures.
+- **Multi-file upload with foreign-key detection.** `POST /datasets/upload-multi`
+  accepts a list of related files (orders.csv + customers.csv + products.csv),
+  loads each as its own raw table, profiles every table, and detects foreign
+  keys by column-name + value-containment analysis. The DCD gains a `tables`
+  list and a `relationships` list so the agent knows how to join across files.
 - **Output discipline for sensitive columns (SPEC §6).** Columns tagged
   `role: identifier` (customer_name, order_id, account_number) must never
   be enumerated individually in analysis-agent answers — the DCD's
@@ -62,12 +108,26 @@ pass (unit + integration + sandbox + ephemeral Postgres via testcontainers).
   (non-null, value-set, numeric range), and exports everything as Zstandard-
   compressed Parquet plus a portable `manthan-context.yaml` and
   `verified-queries.json`.
-- **Agent tools.** `run_sql` (read-only with comment-stripping guardrails,
-  30-second timeout via `connection.interrupt()`, row limit with truncation
-  flag), `run_python` (Docker-sandboxed with 2 GB RAM / 2 CPUs / no network,
-  auto-loads Parquet into pandas + DuckDB via a prelude, collects
-  `/output/*` files), `get_context` (full or query-pruned DCD as YAML),
-  `get_schema` (compact summary including verified queries).
+- **Agent toolbox (composable primitives).**
+  - `run_sql` — read-only by default, **plus a temp-table scratchpad**:
+    `CREATE TEMP TABLE scratch AS SELECT ...` in turn 1 and `JOIN scratch ...`
+    in turn 2, with the same session-scoped DuckDB connection. `DROP TABLE`
+    is allowed but only on temp objects (verified against `duckdb_tables()`).
+    30-second timeout via `connection.interrupt()`, comment-stripping
+    guardrails, row limit with truncation flag.
+  - `run_python` — **stateful Python sessions**. Variables, imports,
+    DataFrames, and DuckDB connections defined in turn N are still in scope
+    in turn N+1 when the same `session_id` is passed. Pre-loaded with `df`
+    (pandas, primary Gold table), `con` (DuckDB), `OUTPUT_DIR` (writable).
+    Libraries: pandas, numpy, scipy, sklearn, plotly, matplotlib, duckdb.
+    Idle sessions swept after 30 minutes. Bare-expression evaluation
+    captures `repr()` for REPL-style one-liners.
+  - `get_context` — full or query-pruned DCD as YAML.
+  - `get_schema` — compact summary including verified queries.
+
+  **See [`docs/building-the-agent.md`](docs/building-the-agent.md) for the
+  full Layer 2 integration guide** — shows exactly how to compose these
+  primitives to answer each of the four PDF use cases.
 - **REST API.** `/datasets/upload`, `/datasets/connect`, `/datasets/{id}`,
   `/datasets/{id}/context` (GET + PUT), `/datasets/{id}/schema`,
   `/datasets/{id}/progress`, `/clarification/{id}` (GET + POST),
@@ -108,16 +168,30 @@ other `src/` module.
 All dependencies are Apache-2.0, MIT, BSD, or PSF licensed per AGENTS.md. No
 GPL / LGPL / AGPL.
 
-## Install
+## Install (local)
 
 ```bash
 git clone https://github.com/hitakshiA/Manthan.git
 cd Manthan
 python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-docker build -t manthan-sandbox:latest src/sandbox/   # ~1.1 GB sandbox image
 cp .env.example .env                           # fill in OPENROUTER_API_KEY
 ```
+
+## Deploy (Fly.io free tier)
+
+Manthan ships with `Dockerfile` + `fly.toml` for one-command deployment:
+
+```bash
+fly launch --no-deploy          # pick app name + region (bom for India)
+fly secrets set OPENROUTER_API_KEY=sk-or-v1-...
+fly deploy
+fly open                        # browse /docs for the live API playground
+```
+
+The free-tier config runs a 512 MB VM with auto-stop when idle so the
+cost is effectively zero. The `/docs` Swagger page is a live playground
+— judges can click through every endpoint without cloning the repo.
 
 ## Run
 

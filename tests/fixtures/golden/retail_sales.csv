@@ -1,0 +1,11 @@
+order_id,order_date,region,product_category,quantity,unit_price,revenue,customer_segment
+ORD-0001,2024-01-15,North,Electronics,2,299.99,599.98,Retail
+ORD-0002,2024-01-16,South,Apparel,1,89.00,89.00,Wholesale
+ORD-0003,2024-01-17,East,Books,3,19.99,59.97,Retail
+ORD-0004,2024-01-18,West,Home,1,149.50,149.50,Retail
+ORD-0005,2024-01-19,North,Electronics,1,999.00,999.00,Enterprise
+ORD-0006,2024-01-20,South,Apparel,2,49.99,99.98,Retail
+ORD-0007,2024-01-21,East,Electronics,1,399.00,399.00,Retail
+ORD-0008,2024-01-22,West,Books,5,12.99,64.95,Retail
+ORD-0009,2024-01-23,North,Home,1,259.00,259.00,Wholesale
+ORD-0010,2024-01-24,South,Electronics,2,199.99,399.98,Retail
