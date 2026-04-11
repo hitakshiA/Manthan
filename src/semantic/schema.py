@@ -68,6 +68,11 @@ class DcdColumn(BaseModel):
     customer_name or order_id) should never be enumerated individually
     in analysis-agent outputs. Analysis agents aggregate or count them
     instead.
+
+    The ``hierarchy``, ``synonyms``, ``classification_reasoning``, and
+    ``classification_confidence`` fields give the downstream agent
+    richer context for deciding how to interpret a user's phrasing and
+    how confident to sound when citing a column in an answer.
     """
 
     name: str
@@ -83,6 +88,28 @@ class DcdColumn(BaseModel):
     cardinality: int | None = Field(default=None, ge=0)
     stats: DcdColumnStats | None = None
     sample_values: list[Any] = Field(default_factory=list)
+    hierarchy: list[str] | None = Field(
+        default=None,
+        description=(
+            "Drill-up path for dimension columns, e.g. "
+            "city -> ['state', 'country']. Detected from functional "
+            "dependencies during the Silver stage."
+        ),
+    )
+    synonyms: list[str] = Field(
+        default_factory=list,
+        description="User-facing aliases (e.g. 'sales' for 'revenue').",
+    )
+    classification_reasoning: str | None = Field(
+        default=None,
+        description="One-sentence explanation of why this role was chosen.",
+    )
+    classification_confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Classifier self-reported confidence in this role.",
+    )
 
 
 class DcdComputedMetric(BaseModel):
@@ -92,6 +119,37 @@ class DcdComputedMetric(BaseModel):
     formula: str
     description: str
     depends_on: list[str] = Field(default_factory=list)
+    synonyms: list[str] = Field(default_factory=list)
+
+
+class DcdTable(BaseModel):
+    """One table inside a multi-table dataset.
+
+    Used when a dataset is loaded from multiple related files (orders,
+    customers, products). Each table carries its own columns, row
+    count, and optional temporal metadata. Relationships between
+    tables live in :attr:`DcdDataset.relationships`.
+    """
+
+    name: str
+    description: str
+    row_count: int = Field(ge=0)
+    columns: list[DcdColumn]
+    temporal: DcdTemporal | None = None
+
+
+class DcdRelationship(BaseModel):
+    """A detected or declared join between two tables."""
+
+    from_table: str
+    from_column: str
+    to_table: str
+    to_column: str
+    kind: str = Field(
+        default="foreign_key",
+        description="foreign_key | lookup | many_to_one | one_to_one",
+    )
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
 class DcdQualityFreshness(BaseModel):
@@ -139,7 +197,14 @@ class DcdVerifiedQuery(BaseModel):
 
 
 class DcdDataset(BaseModel):
-    """The dataset body of a Data Context Document."""
+    """The dataset body of a Data Context Document.
+
+    Single-file datasets populate ``columns`` directly and leave
+    ``tables`` empty. Multi-file datasets populate ``tables`` with an
+    entry per uploaded file; ``columns`` then holds the primary
+    table's columns as a backward-compatibility shortcut, and
+    ``relationships`` carries the detected joins.
+    """
 
     id: str
     name: str
@@ -148,7 +213,8 @@ class DcdDataset(BaseModel):
     temporal: DcdTemporal = Field(default_factory=DcdTemporal)
     columns: list[DcdColumn]
     computed_metrics: list[DcdComputedMetric] = Field(default_factory=list)
-    relationships: list[dict[str, Any]] = Field(default_factory=list)
+    tables: list[DcdTable] = Field(default_factory=list)
+    relationships: list[DcdRelationship] = Field(default_factory=list)
     quality: DcdQuality = Field(default_factory=DcdQuality)
     verified_queries: list[DcdVerifiedQuery] = Field(default_factory=list)
     agent_instructions: list[str] = Field(default_factory=list)

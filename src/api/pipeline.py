@@ -21,6 +21,7 @@ from src.ingestion.base import LoadResult, validate_identifier
 from src.ingestion.gateway import create_default_gateway
 from src.ingestion.loaders.db_loader import DbLoadRequest, load_from_database
 from src.ingestion.registry import DatasetEntry
+from src.ingestion.relationships import detect_relationships
 from src.ingestion.validators import validate_file
 from src.materialization.exporter import export_dataset
 from src.materialization.optimizer import create_gold_table
@@ -29,7 +30,11 @@ from src.materialization.query_generator import generate_verified_queries
 from src.materialization.summarizer import create_summary_tables
 from src.profiling.agent import profile_dataset
 from src.profiling.clarification import generate_questions
-from src.semantic.generator import build_dcd
+from src.semantic.generator import (
+    build_dcd,
+    build_dcd_table_from_profile,
+    dcd_table_from_primary_dcd,
+)
 
 _INVALID_NAME_CHARS = re.compile(r"[^A-Za-z0-9_]")
 
@@ -68,6 +73,103 @@ async def ingest_and_profile(
         load_result=load_result,
         llm_client_factory=llm_client_factory,
     )
+
+
+async def ingest_multi_file_and_profile(
+    *,
+    state: AppState,
+    files: list[tuple[Path, str]],
+    max_upload_size_mb: int = 500,
+    llm_client_factory: LlmClientFactory = LlmClient,
+) -> DatasetEntry:
+    """Run the pipeline for a dataset composed of several related files.
+
+    Each file is loaded as its own ``raw_*`` table and profiled
+    individually. The first file becomes the **primary** table and is
+    materialized to Gold (sorted, ENUM'd, summary tables, verified
+    queries, Parquet exported). Additional files are profiled and
+    attached to the DCD under ``tables`` for the agent to query via
+    ``run_sql`` against the raw tables directly.
+
+    Foreign keys between the tables are detected by column-name +
+    value-containment analysis and populated into
+    ``DcdDataset.relationships``.
+
+    Args:
+        files: Pairs of ``(local_path, original_filename)`` for each
+            file to load. The first entry is treated as the primary
+            table.
+    """
+    if not files:
+        raise ValueError("ingest_multi_file_and_profile requires at least one file")
+
+    primary_path, primary_name = files[0]
+    primary_entry = await ingest_and_profile(
+        state=state,
+        file_path=primary_path,
+        max_upload_size_mb=max_upload_size_mb,
+        original_filename=primary_name,
+        llm_client_factory=llm_client_factory,
+    )
+
+    if len(files) == 1:
+        return primary_entry
+
+    dcd = state.dcds[primary_entry.dataset_id]
+    gateway = create_default_gateway()
+    additional_tables = []
+    all_raw_table_names = [
+        f"raw_{_sanitize_name(Path(primary_name).stem)}",
+    ]
+
+    for extra_path, extra_name in files[1:]:
+        validate_file(extra_path, max_size_mb=max_upload_size_mb)
+        stem = _sanitize_name(Path(extra_name).stem)
+        raw_table_name = f"raw_{stem}_{uuid_suffix()}"
+        validate_identifier(raw_table_name)
+        load_result = gateway.load(extra_path, state.connection, raw_table_name)
+        load_result = load_result.model_copy(update={"original_filename": extra_name})
+
+        llm_client = llm_client_factory()
+        async with llm_client as llm:
+            extra_profile = await profile_dataset(state.connection, raw_table_name, llm)
+
+        additional_tables.append(
+            build_dcd_table_from_profile(
+                table_name=raw_table_name,
+                original_filename=extra_name,
+                load_result=load_result,
+                profiling_result=extra_profile,
+            )
+        )
+        all_raw_table_names.append(raw_table_name)
+        metrics.increment("ingestion.rows_loaded", load_result.row_count)
+
+    relationships = detect_relationships(state.connection, all_raw_table_names)
+
+    # The primary table also lives in the DCD.tables list so the agent
+    # can enumerate all tables uniformly.
+    primary_as_table = dcd_table_from_primary_dcd(dcd, all_raw_table_names[0])
+    tables = [primary_as_table, *additional_tables]
+
+    updated_dataset = dcd.dataset.model_copy(
+        update={
+            "tables": tables,
+            "relationships": relationships,
+        }
+    )
+    updated_dcd = dcd.model_copy(update={"dataset": updated_dataset})
+    state.dcds[primary_entry.dataset_id] = updated_dcd
+
+    _record_progress(
+        state,
+        primary_entry.dataset_id,
+        "gold",
+        f"multi-file dataset: {len(tables)} tables, "
+        f"{len(relationships)} relationships detected",
+    )
+
+    return primary_entry
 
 
 async def ingest_database_and_profile(
@@ -208,3 +310,10 @@ def _sanitize_name(raw: str) -> str:
     if not cleaned[0].isalpha() and cleaned[0] != "_":
         cleaned = f"d_{cleaned}"
     return cleaned
+
+
+def uuid_suffix() -> str:
+    """Return a short random suffix for disambiguating multi-file raw tables."""
+    from uuid import uuid4
+
+    return uuid4().hex[:6]

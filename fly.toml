@@ -1,0 +1,45 @@
+# fly.toml — Fly.io deployment config for Manthan Layer 1.
+#
+# Deploy:
+#   fly launch --no-deploy          # first time
+#   fly secrets set OPENROUTER_API_KEY=sk-or-...
+#   fly deploy
+#
+# Free-tier-friendly: one 256 MB VM, Auto-stop when idle.
+
+app = "manthan"
+primary_region = "bom"            # Mumbai — closest to the NatWest India judges
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  HOST = "0.0.0.0"
+  LOG_LEVEL = "info"
+  LOG_FORMAT = "json"
+  DATA_DIRECTORY = "/app/data"
+  OPENROUTER_MODEL = "openai/gpt-oss-120b:free"
+  OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[mounts]
+  source = "manthan_data"
+  destination = "/app/data"

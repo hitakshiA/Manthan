@@ -33,6 +33,7 @@ from src.profiling.classifier import ColumnClassification, classify_columns
 from src.profiling.enricher import (
     MetricProposal,
     TemporalGrain,
+    detect_hierarchies,
     detect_temporal_grain,
     propose_metrics,
 )
@@ -56,6 +57,7 @@ class ProfilingResult(BaseModel):
     temporal_column: str | None = None
     temporal_grain: TemporalGrain | None = None
     metric_proposals: list[MetricProposal] = Field(default_factory=list)
+    hierarchies: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -83,6 +85,13 @@ async def profile_dataset(
         )
 
     metric_proposals = propose_metrics(profiles)
+    hierarchies = detect_hierarchies(connection, table_name, profiles)
+    if hierarchies:
+        _logger.info(
+            "profiling.hierarchies",
+            table=table_name,
+            count=len(hierarchies),
+        )
 
     warnings = _validate(profiles, classifications)
 
@@ -90,6 +99,7 @@ async def profile_dataset(
         "profiling.complete",
         table=table_name,
         metric_proposals=len(metric_proposals),
+        hierarchies=len(hierarchies),
         warnings=len(warnings),
     )
 
@@ -100,6 +110,7 @@ async def profile_dataset(
         temporal_column=temporal_column,
         temporal_grain=temporal_grain,
         metric_proposals=metric_proposals,
+        hierarchies=hierarchies,
         warnings=warnings,
     )
 

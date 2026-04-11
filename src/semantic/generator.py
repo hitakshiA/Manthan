@@ -32,6 +32,7 @@ from src.semantic.schema import (
     DcdQualityCompletenessDetail,
     DcdQualityFreshness,
     DcdSource,
+    DcdTable,
     DcdTemporal,
     DcdTemporalRange,
 )
@@ -50,6 +51,7 @@ def build_dcd(
     columns = _build_columns(
         profiling_result.column_profiles,
         profiling_result.classifications,
+        profiling_result.hierarchies,
     )
 
     temporal = _build_temporal(profiling_result)
@@ -88,18 +90,23 @@ def build_dcd(
 def _build_columns(
     profiles: list[ColumnProfile],
     classifications: list[ColumnClassification],
+    hierarchies: dict[str, list[str]] | None = None,
 ) -> list[DcdColumn]:
     classification_by_name = {c.name: c for c in classifications}
+    hierarchies = hierarchies or {}
     columns: list[DcdColumn] = []
     for profile in profiles:
         classification = classification_by_name.get(profile.name)
-        columns.append(_build_column(profile, classification))
+        columns.append(
+            _build_column(profile, classification, hierarchies.get(profile.name))
+        )
     return columns
 
 
 def _build_column(
     profile: ColumnProfile,
     classification: ColumnClassification | None,
+    hierarchy: list[str] | None = None,
 ) -> DcdColumn:
     stats: DcdColumnStats | None = None
     if is_numeric_type(profile.dtype):
@@ -118,6 +125,9 @@ def _build_column(
         classification.description if classification else f"{profile.name} column"
     )
     aggregation = classification.aggregation if classification else None
+    synonyms = list(classification.synonyms) if classification else []
+    reasoning = classification.reasoning if classification else None
+    confidence = classification.confidence if classification else None
 
     return DcdColumn(
         name=profile.name,
@@ -130,6 +140,10 @@ def _build_column(
         cardinality=profile.distinct_count,
         stats=stats,
         sample_values=list(profile.sample_values),
+        hierarchy=hierarchy,
+        synonyms=synonyms,
+        classification_reasoning=reasoning,
+        classification_confidence=confidence,
     )
 
 
@@ -258,3 +272,54 @@ def _coerce_to_date(value: object) -> date | None:
     if isinstance(value, date):
         return value
     return None
+
+
+def build_dcd_table_from_profile(
+    *,
+    table_name: str,
+    original_filename: str,
+    load_result: LoadResult,
+    profiling_result: ProfilingResult,
+) -> DcdTable:
+    """Build a :class:`DcdTable` for one file in a multi-file dataset.
+
+    Used by :func:`src.api.pipeline.ingest_multi_file_and_profile` to
+    attach additional (non-primary) tables to the DCD. Only the
+    per-column shape + description is surfaced — Gold summary tables
+    and verified queries still target the primary table only.
+    """
+    columns = _build_columns(
+        profiling_result.column_profiles,
+        profiling_result.classifications,
+        profiling_result.hierarchies,
+    )
+    temporal = _build_temporal(profiling_result)
+    return DcdTable(
+        name=table_name,
+        description=(
+            f"{load_result.source_type.upper()} table loaded from "
+            f"{original_filename} ({load_result.row_count} rows, "
+            f"{load_result.column_count} columns)."
+        ),
+        row_count=load_result.row_count,
+        columns=columns,
+        temporal=temporal if temporal.column else None,
+    )
+
+
+def dcd_table_from_primary_dcd(
+    dcd: DataContextDocument,
+    table_name: str,
+) -> DcdTable:
+    """Wrap the primary DCD's columns as a :class:`DcdTable` entry.
+
+    Used so the primary table appears alongside additional tables in
+    ``DcdDataset.tables`` for uniform agent enumeration.
+    """
+    return DcdTable(
+        name=table_name,
+        description=dcd.dataset.description,
+        row_count=dcd.dataset.source.row_count,
+        columns=list(dcd.dataset.columns),
+        temporal=dcd.dataset.temporal if dcd.dataset.temporal.column else None,
+    )

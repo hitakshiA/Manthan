@@ -18,6 +18,7 @@ from src.api.pipeline import (
     LlmClientFactory,
     ingest_and_profile,
     ingest_database_and_profile,
+    ingest_multi_file_and_profile,
 )
 from src.core.config import get_settings
 from src.core.exceptions import (
@@ -103,6 +104,56 @@ async def upload_dataset(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     finally:
         temp_path.unlink(missing_ok=True)
+
+    return _summarize(state, entry.dataset_id)
+
+
+@router.post("/upload-multi", response_model=DatasetSummary)
+async def upload_multi_file_dataset(
+    state: StateDep,
+    llm_client_factory: LlmFactoryDep,
+    files: Annotated[list[UploadFile], File(...)],
+) -> DatasetSummary:
+    """Upload multiple related files as one dataset.
+
+    The first file is treated as the primary table (Gold-materialized,
+    summary tables, verified queries). Additional files are profiled
+    and attached to the DCD under ``tables`` so the agent can query
+    them via ``run_sql`` against the raw tables. Foreign keys are
+    detected automatically by column-name + value-containment analysis
+    and populated into ``DcdDataset.relationships``.
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="Upload requires at least one file")
+    for file in files:
+        if not file.filename:
+            raise HTTPException(
+                status_code=400, detail="Every uploaded file must have a filename"
+            )
+
+    staged: list[tuple[Path, str]] = []
+    try:
+        for file in files:
+            suffix = Path(file.filename or "").suffix
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                content = await file.read()
+                tmp.write(content)
+                staged.append((Path(tmp.name), file.filename or tmp.name))
+
+        settings = get_settings()
+        entry = await ingest_multi_file_and_profile(
+            state=state,
+            files=staged,
+            max_upload_size_mb=settings.max_upload_size_mb,
+            llm_client_factory=llm_client_factory,
+        )
+    except IngestionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ProfilingError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    finally:
+        for path, _ in staged:
+            path.unlink(missing_ok=True)
 
     return _summarize(state, entry.dataset_id)
 
