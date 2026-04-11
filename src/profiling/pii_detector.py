@@ -93,6 +93,17 @@ _UUID_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Numeric PII heuristic: strings of digits of fixed, "typical" lengths —
+# 10 digits for US / India phone numbers, 12 for Aadhaar, 16 for credit
+# cards. We only fire this heuristic for string columns where samples
+# are uniform-length digit runs.
+_PII_NUMERIC_LENGTHS: dict[int, str] = {
+    10: "PHONE_NUMBER",
+    12: "AADHAAR",
+    16: "CREDIT_CARD",
+}
+_NUMERIC_PII_MIN_HIT_RATIO = 0.8
+
 
 def classify_by_column_name(column_name: str) -> PiiFlag | None:
     """Run Layer 1 against ``column_name``.
@@ -155,20 +166,75 @@ def detect_statistical_pii(profile: ColumnProfile) -> PiiFlag | None:
             confidence=_HIGH_CARDINALITY_CONFIDENCE,
         )
 
+    numeric_flag = _detect_fixed_width_numeric_pii(profile)
+    if numeric_flag is not None:
+        return numeric_flag
+
     return None
 
 
-def classify_column(profile: ColumnProfile) -> PiiFlag:
-    """Run Layer 1 then Layer 3 and return a composite classification.
+def _detect_fixed_width_numeric_pii(profile: ColumnProfile) -> PiiFlag | None:
+    """Flag string columns whose samples are uniform-length digit runs."""
+    if not is_string_type(profile.dtype):
+        return None
+    string_samples = [v for v in profile.sample_values if isinstance(v, str)]
+    if len(string_samples) < 5:
+        return None
+    digit_samples = [s for s in string_samples if s.isdigit()]
+    if len(digit_samples) / len(string_samples) < _NUMERIC_PII_MIN_HIT_RATIO:
+        return None
+    lengths = {len(s) for s in digit_samples}
+    if len(lengths) != 1:
+        return None
+    width = lengths.pop()
+    entity = _PII_NUMERIC_LENGTHS.get(width)
+    if entity is None:
+        return None
+    return PiiFlag(
+        column_name=profile.name,
+        sensitivity="pii",
+        pii_type=entity,
+        handling="never_expose_in_outputs",
+        reason=(
+            f"All sampled values are {width}-digit numeric strings — "
+            f"matches the {entity} shape"
+        ),
+        confidence=0.75,
+    )
 
-    Layer 1 takes precedence because column-name matches are the
-    highest-signal, lowest-cost check. If neither layer fires the column
-    is marked ``public`` with a low confidence so downstream agents can
-    still surface the decision explicitly.
+
+def classify_column(
+    profile: ColumnProfile,
+    *,
+    enable_presidio: bool = True,
+) -> PiiFlag:
+    """Run Layers 1 → 2 → 3 and return a composite classification.
+
+    Layer 1 (column-name heuristics) takes precedence because it is the
+    highest-signal, lowest-cost check. If Layer 1 does not fire, Layer 2
+    (Presidio value-pattern scanning) runs when ``enable_presidio`` is
+    true and the module is available. Finally Layer 3 (statistical
+    heuristics) picks up quasi-identifiers and fixed-width numeric
+    identifiers. If no layer fires, the column is marked ``public`` with
+    a low confidence so downstream agents can still surface the decision
+    explicitly.
     """
     by_name = classify_by_column_name(profile.name)
     if by_name is not None:
         return by_name
+
+    if enable_presidio:
+        # Import lazily so projects that do not install Presidio can still
+        # use the deterministic layers. If Presidio isn't available the
+        # module's detect_value_pii returns None.
+        try:
+            from src.profiling.presidio_layer import detect_value_pii
+
+            by_value = detect_value_pii(profile)
+            if by_value is not None:
+                return by_value
+        except ImportError:
+            pass
 
     by_stats = detect_statistical_pii(profile)
     if by_stats is not None:

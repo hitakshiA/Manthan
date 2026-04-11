@@ -1,23 +1,23 @@
 """Gold-stage table optimizer.
 
 Rewrites a raw table into a Gold table sorted on the primary dimensions
-(ascending cardinality) and the temporal column, then attaches
-``COMMENT ON`` descriptions from the DCD so the schema is
-self-documenting at the database level. Per SPEC §3.1.
-
-ENUM type conversion (also described in SPEC §3.1) is intentionally
-skipped for this pass: creating and attaching ENUM types in DuckDB
-requires either rewriting the column or recreating the table, both of
-which add complexity without affecting correctness. We can revisit once
-the end-to-end flow is demonstrably working.
+(ascending cardinality) and the temporal column, attaches
+``COMMENT ON`` descriptions from the DCD, and converts low-cardinality
+dimension columns to DuckDB ``ENUM`` types for compression + enforced
+valid-value sets (SPEC §3.1).
 """
 
 from __future__ import annotations
 
+import contextlib
+
 import duckdb
 
+from src.core.exceptions import SqlValidationError
 from src.ingestion.base import quote_identifier, validate_identifier
 from src.semantic.schema import DataContextDocument, DcdColumn
+
+_ENUM_CARDINALITY_THRESHOLD = 100
 
 
 def create_gold_table(
@@ -26,7 +26,7 @@ def create_gold_table(
     gold_table: str,
     dcd: DataContextDocument,
 ) -> list[str]:
-    """Build the Gold table and attach documentation comments.
+    """Build the Gold table, attach comments, and ENUM-convert dimensions.
 
     Args:
         connection: Active DuckDB connection.
@@ -35,8 +35,7 @@ def create_gold_table(
         dcd: The Data Context Document for ``raw_table``.
 
     Returns:
-        The column names used in the ``ORDER BY`` clause, in order. May
-        be empty when the DCD has no dimensions or temporal column.
+        The column names used in the ``ORDER BY`` clause, in order.
     """
     validate_identifier(raw_table)
     validate_identifier(gold_table)
@@ -56,17 +55,15 @@ def create_gold_table(
     for column in dcd.dataset.columns:
         _attach_column_comment(connection, gold_table, column)
 
+    _convert_low_cardinality_dimensions_to_enums(
+        connection, gold_table, dcd.dataset.columns
+    )
+
     return sort_columns
 
 
 def pick_sort_order(dcd: DataContextDocument) -> list[str]:
-    """Return the Gold-table sort order for ``dcd``.
-
-    Dimensions are sorted ascending by cardinality (lowest first) so
-    that zone maps on DuckDB row groups prune as aggressively as
-    possible for typical ``WHERE dim = X AND date BETWEEN Y AND Z``
-    queries. The temporal column is appended last.
-    """
+    """Return the Gold-table sort order for ``dcd``."""
     dimensions = [
         column for column in dcd.dataset.columns if column.role == "dimension"
     ]
@@ -98,3 +95,48 @@ def _attach_column_comment(
     connection.execute(
         f"COMMENT ON COLUMN {table_name}.{quoted_column} IS '{description}'"
     )
+
+
+def _convert_low_cardinality_dimensions_to_enums(
+    connection: duckdb.DuckDBPyConnection,
+    gold_table: str,
+    columns: list[DcdColumn],
+) -> None:
+    """Convert each low-cardinality dimension to a DuckDB ENUM type.
+
+    ENUM conversion is opportunistic: if DuckDB refuses (e.g. because
+    the distinct set changed during the session) the column stays as
+    its original type and materialization continues.
+    """
+    for column in columns:
+        if column.role != "dimension":
+            continue
+        if column.cardinality is None or column.cardinality == 0:
+            continue
+        if column.cardinality >= _ENUM_CARDINALITY_THRESHOLD:
+            continue
+        try:
+            validate_identifier(column.name)
+        except SqlValidationError:
+            continue
+        enum_type = f"{gold_table}_{column.name}_enum"
+        try:
+            validate_identifier(enum_type)
+        except SqlValidationError:
+            continue
+        quoted_col = quote_identifier(column.name)
+        with contextlib.suppress(duckdb.Error):
+            connection.execute(f"DROP TYPE IF EXISTS {enum_type}")
+        try:
+            connection.execute(
+                f"CREATE TYPE {enum_type} AS ENUM "
+                f"(SELECT DISTINCT {quoted_col} FROM {gold_table} "
+                f"WHERE {quoted_col} IS NOT NULL)"
+            )
+            connection.execute(
+                f"ALTER TABLE {gold_table} "
+                f"ALTER COLUMN {quoted_col} TYPE {enum_type}"
+            )
+        except duckdb.Error:
+            with contextlib.suppress(duckdb.Error):
+                connection.execute(f"DROP TYPE IF EXISTS {enum_type}")

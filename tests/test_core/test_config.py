@@ -28,7 +28,7 @@ def test_env_var_override_is_picked_up(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_default_values_are_applied() -> None:
     settings = get_settings()
     assert settings.duckdb_memory_limit == "4GB"
-    assert settings.openrouter_model == "google/gemma-4-27b-it:free"
+    assert settings.openrouter_model == "openai/gpt-oss-120b:free"
     assert settings.sandbox_network_disabled is True
     assert settings.pii_confidence_threshold == 0.7
 

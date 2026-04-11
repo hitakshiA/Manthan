@@ -20,6 +20,8 @@ import duckdb
 from src.core.exceptions import IngestionError
 from src.ingestion.base import Loader, LoadResult
 from src.ingestion.loaders.csv_loader import CsvLoader
+from src.ingestion.loaders.excel_loader import ExcelLoader
+from src.ingestion.loaders.json_loader import JsonLoader
 from src.ingestion.loaders.parquet_loader import ParquetLoader
 
 
@@ -50,14 +52,18 @@ class IngestionGateway:
 
 
 def create_default_gateway() -> IngestionGateway:
-    """Return a gateway wired up with every built-in loader.
+    """Return a gateway wired up with every built-in file loader.
 
-    Currently: :class:`CsvLoader` and :class:`ParquetLoader`. Excel, JSON,
-    and database loaders will be added in subsequent phases.
+    Handles CSV/TSV/TXT, Parquet, Excel (xlsx/xls/xlsm), and
+    JSON/JSONL/NDJSON. Database sources are served by a separate
+    :mod:`src.ingestion.loaders.db_loader` entry point because their
+    inputs are connection strings rather than file paths.
     """
     return IngestionGateway(
         loaders=[
             CsvLoader(),
             ParquetLoader(),
+            ExcelLoader(),
+            JsonLoader(),
         ]
     )

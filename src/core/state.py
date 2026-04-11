@@ -19,6 +19,10 @@ import duckdb
 from src.core.config import get_settings
 from src.core.database import create_connection
 from src.ingestion.registry import DatasetRegistry
+from src.profiling.clarification import (
+    ClarificationAnswer,
+    ClarificationQuestion,
+)
 from src.semantic.schema import DataContextDocument
 
 
@@ -31,6 +35,11 @@ class AppState:
     data_directory: Path
     dcds: dict[str, DataContextDocument] = field(default_factory=dict)
     gold_table_names: dict[str, str] = field(default_factory=dict)
+    clarifications: dict[str, list[ClarificationQuestion]] = field(default_factory=dict)
+    clarification_answers: dict[str, list[ClarificationAnswer]] = field(
+        default_factory=dict
+    )
+    dataset_progress: dict[str, list[dict[str, object]]] = field(default_factory=dict)
 
     def close(self) -> None:
         """Close the underlying DuckDB connection."""

@@ -19,30 +19,34 @@ classifiers = [
 # Runtime dependencies. All licenses must be Apache 2.0, MIT, BSD, or PSF.
 # See SPEC.md §8 (Dependency Matrix) for rationale and per-package purpose.
 dependencies = [
-    "duckdb>=1.2.0",            # MIT — analytical engine, ingestion, SQL
-    "ydata-profiling>=4.18.0",  # MIT — statistical profiling
-    "presidio-analyzer>=2.2.360", # MIT — PII entity detection
-    "presidio-anonymizer>=2.2.360", # MIT — PII redaction
-    "spacy>=3.8",               # MIT — NER model backend for Presidio
-    "great-expectations>=1.4.0", # Apache-2.0 — data quality validation
-    "pyyaml>=6.0",              # MIT — DCD serialization (already installed)
-    "fastapi>=0.115.0",         # MIT — API server
-    "uvicorn[standard]>=0.34.0", # BSD-3 — ASGI server
-    "docker>=7.0",              # Apache-2.0 — sandbox management
-    "httpx>=0.28.0",            # BSD-3 — async HTTP client (OpenRouter)
-    "pandas>=2.2.0",            # BSD-3 — DataFrame interop
-    "pydantic>=2.9.0",          # MIT — data models
-    "pydantic-settings>=2.5.0", # MIT — typed env-var configuration
-    "structlog>=24.4.0",        # MIT / Apache-2.0 dual — structured JSON logs
-    "python-multipart>=0.0.12", # Apache-2.0 — multipart upload parsing for FastAPI
+    "duckdb>=1.2.0",               # MIT — analytical engine, ingestion, SQL
+    "ydata-profiling>=4.18.0",     # MIT — statistical profiling
+    "presidio-analyzer>=2.2.360",  # MIT — PII entity detection
+    "presidio-anonymizer>=2.2.360",# MIT — PII redaction
+    "spacy>=3.8,<3.9",             # MIT — NER model backend for Presidio
+    "great-expectations>=1.4.0",   # Apache-2.0 — data quality validation
+    "pyyaml>=6.0",                 # MIT — DCD serialization
+    "fastapi>=0.115.0",            # MIT — API server
+    "uvicorn[standard]>=0.34.0",   # BSD-3 — ASGI server
+    "docker>=7.0",                 # Apache-2.0 — sandbox management
+    "httpx>=0.28.0",               # BSD-3 — async HTTP client (OpenRouter)
+    "pandas>=2.2.0",               # BSD-3 — DataFrame interop
+    "pydantic>=2.9.0",             # MIT — data models
+    "pydantic-settings>=2.5.0",    # MIT — typed env-var configuration
+    "structlog>=24.4.0",           # MIT / Apache-2.0 dual — structured JSON logs
+    "python-multipart>=0.0.12",    # Apache-2.0 — multipart upload parsing
+    "openpyxl>=3.1",               # MIT — Excel xlsx read/write for tests + loader
+    "setuptools<81",               # MIT — pkg_resources shim still needed by ge/spacy
+    "websockets>=13.0",            # BSD-3 — FastAPI websocket dependency
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3",              # MIT
-    "pytest-cov>=5.0",          # MIT
-    "pytest-asyncio>=0.24",     # Apache-2.0
-    "ruff>=0.7",                # MIT
+    "pytest>=8.3",                 # MIT
+    "pytest-cov>=5.0",             # MIT
+    "pytest-asyncio>=0.24",        # Apache-2.0
+    "ruff>=0.7",                   # MIT
+    "testcontainers[postgres]>=4.0", # Apache-2.0 — ephemeral Postgres for tests
 ]
 
 [project.urls]

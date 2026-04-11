@@ -28,6 +28,16 @@ _GRAIN_TO_TRUNC: dict[str, str] = {
     "quarterly": "quarter",
     "yearly": "year",
 }
+# Secondary rollups to materialize alongside the detected primary grain.
+# When the detected grain is fine-grained (daily/weekly), we also emit a
+# monthly rollup so agents can answer "per-month" queries without a
+# secondary groupby on the Gold table.
+_ADDITIONAL_ROLLUPS: dict[str, list[tuple[str, str]]] = {
+    "daily": [("monthly", "month")],
+    "weekly": [("monthly", "month")],
+    "monthly": [("quarterly", "quarter")],
+    "quarterly": [("yearly", "year")],
+}
 _VALID_AGGREGATIONS = {"SUM", "AVG", "COUNT", "MIN", "MAX"}
 
 
@@ -54,19 +64,29 @@ def create_summary_tables(
     temporal_column = dcd.dataset.temporal.column
     grain = dcd.dataset.temporal.grain
     if temporal_column and grain in _GRAIN_TO_TRUNC:
-        rollup_name = f"{gold_table}_{grain}"
-        validate_identifier(rollup_name)
-        connection.execute(
-            _build_temporal_rollup_sql(
+        # Primary rollup at the detected grain.
+        _emit_rollup(
+            connection=connection,
+            gold_table=gold_table,
+            rollup_label=grain,
+            trunc_unit=_GRAIN_TO_TRUNC[grain],
+            temporal_column=temporal_column,
+            metric_columns=metric_columns,
+            dimension_columns=dimension_columns,
+            created=created,
+        )
+        # Additional rollups (e.g. monthly when the source is daily).
+        for label, unit in _ADDITIONAL_ROLLUPS.get(grain, []):
+            _emit_rollup(
+                connection=connection,
                 gold_table=gold_table,
-                rollup_name=rollup_name,
+                rollup_label=label,
+                trunc_unit=unit,
                 temporal_column=temporal_column,
-                trunc_unit=_GRAIN_TO_TRUNC[grain],
                 metric_columns=metric_columns,
                 dimension_columns=dimension_columns,
+                created=created,
             )
-        )
-        created.append(rollup_name)
 
     for dimension in dimension_columns:
         breakdown_name = f"{gold_table}_by_{dimension.name}"
@@ -82,6 +102,32 @@ def create_summary_tables(
         created.append(breakdown_name)
 
     return created
+
+
+def _emit_rollup(
+    *,
+    connection: duckdb.DuckDBPyConnection,
+    gold_table: str,
+    rollup_label: str,
+    trunc_unit: str,
+    temporal_column: str,
+    metric_columns: list[DcdColumn],
+    dimension_columns: list[DcdColumn],
+    created: list[str],
+) -> None:
+    rollup_name = f"{gold_table}_{rollup_label}"
+    validate_identifier(rollup_name)
+    connection.execute(
+        _build_temporal_rollup_sql(
+            gold_table=gold_table,
+            rollup_name=rollup_name,
+            temporal_column=temporal_column,
+            trunc_unit=trunc_unit,
+            metric_columns=metric_columns,
+            dimension_columns=dimension_columns,
+        )
+    )
+    created.append(rollup_name)
 
 
 def _build_temporal_rollup_sql(

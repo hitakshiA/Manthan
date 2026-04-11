@@ -1,0 +1,8 @@
+duckdb>=1.2.0
+pandas>=2.2.0
+numpy>=1.26
+plotly>=5.22
+matplotlib>=3.10
+scipy>=1.14
+scikit-learn>=1.5
+pyarrow>=17.0

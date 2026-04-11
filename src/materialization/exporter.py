@@ -56,14 +56,14 @@ def export_dataset(
     data_dir.mkdir(parents=True, exist_ok=True)
     metadata_dir.mkdir(parents=True, exist_ok=True)
 
-    # Gold table -> Parquet
+    # Gold table -> Parquet (Zstandard compression per SPEC ADR-002)
     gold_path = data_dir / f"{gold_table}.parquet"
-    connection.table(gold_table).write_parquet(str(gold_path))
+    connection.table(gold_table).write_parquet(str(gold_path), compression="zstd")
 
     # Summary tables -> Parquet
     for summary in summary_tables:
         summary_path = data_dir / f"{summary}.parquet"
-        connection.table(summary).write_parquet(str(summary_path))
+        connection.table(summary).write_parquet(str(summary_path), compression="zstd")
 
     # DCD -> YAML
     (dataset_dir / "manthan-context.yaml").write_text(dcd.to_yaml())
