@@ -29,21 +29,29 @@ pass (unit + integration + sandbox + ephemeral Postgres via testcontainers).
   parameters; table identifiers pass a strict allow-list; arbitrary external
   column names are safely double-quoted.
 - **Autonomous profiling agent (Silver).** A ReAct-inspired pipeline perceives
-  the raw table, classifies every column's role via an LLM (OpenRouter
+  the raw table, classifies every column's role (`metric`, `dimension`,
+  `temporal`, `identifier`, `auxiliary`) via an LLM (OpenRouter
   `gpt-oss-120b:free` by default, validated against a 10-column benchmark
-  with a perfect 10/10 score), runs a **three-layer PII detector** (column-
-  name regex + Presidio value-pattern scanning + statistical heuristics
-  including UUID and fixed-width numeric identifier shapes), detects temporal
-  grain from gap analysis, proposes computed metrics, emits interactive
-  clarification questions for low-confidence columns, and surfaces classifier
-  inconsistencies as explicit validation warnings. LLM calls are retried with
-  exponential backoff on transient failures.
+  with a perfect 10/10 score), detects temporal grain from gap analysis,
+  proposes computed metrics, emits interactive clarification questions for
+  low-confidence columns, and surfaces classifier inconsistencies as
+  explicit validation warnings. LLM calls are retried with exponential
+  backoff on transient failures.
+- **Output discipline for sensitive columns (SPEC §6).** Columns tagged
+  `role: identifier` (customer_name, order_id, account_number) must never
+  be enumerated individually in analysis-agent answers — the DCD's
+  `agent_instructions` carry the rule and downstream agents are expected
+  to aggregate, count, or group by them instead. Manthan deliberately does
+  **not** run a runtime PII scanner on uploads: the hackathon requires
+  synthetic data only, and third-party entity scanners (Presidio) produce
+  noisy false positives on legitimate dimension columns. Role
+  classification is the enforcement primitive.
 - **Data Context Document (DCD).** A pydantic-validated YAML artifact encoding
-  the full semantic contract: columns, computed metrics, temporal range, PII
-  classifications and handling policies, data-quality caveats, agent
-  instructions, and verified query pairs. Supports YAML round-trip
-  serialization, query-aware pruning for downstream agent prompts, and
-  user-driven PUT edits validated against the live DuckDB catalog.
+  the full semantic contract: columns, computed metrics, temporal range,
+  data-quality caveats, agent instructions, and verified query pairs.
+  Supports YAML round-trip serialization, query-aware pruning for
+  downstream agent prompts, and user-driven PUT edits validated against
+  the live DuckDB catalog.
 - **Gold materialization.** Rewrites the raw table sorted on low-cardinality
   dimensions + the temporal column, attaches `COMMENT ON` documentation,
   converts low-cardinality dimensions to DuckDB `ENUM` types, builds temporal
@@ -83,10 +91,9 @@ other `src/` module.
 
 ## Tech stack
 
-- **Python 3.13** (required by Presidio upper bound)
+- **Python 3.13+**
 - **DuckDB 1.5** — analytical engine, scanner extensions for Postgres /
   MySQL / SQLite / Excel, Zstd Parquet export
-- **Presidio + spaCy `en_core_web_lg`** — value-pattern PII detection
 - **ydata-profiling** + native DuckDB per-column queries — statistical
   profiling
 - **Great Expectations 1.16** — data quality framework (we ship a lightweight
@@ -108,7 +115,6 @@ git clone https://github.com/hitakshiA/Manthan.git
 cd Manthan
 python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m spacy download en_core_web_lg       # ~400 MB, required for Presidio
 docker build -t manthan-sandbox:latest src/sandbox/   # ~1.1 GB sandbox image
 cp .env.example .env                           # fill in OPENROUTER_API_KEY
 ```
@@ -245,11 +251,13 @@ on OpenRouter with 100 rows of synthetic NexaRetail data:
   directory on disk is self-contained and can be reloaded).
 - **Single writer.** Bronze ingestion writes to a single shared DuckDB
   connection; concurrent uploads against the same process will serialize.
-- **Presidio Layer 2 tuning.** The Presidio analyzer is eager: it flags
-  `region` values like "North", "South", "East", "West" as LOCATION
-  entities. The deterministic Layer 1 and Layer 3 layers are stricter.
-  Real deployments may want to add entity-type allow/deny lists to tune
-  false positives.
+- **Identifier-column filtering is enforcement-by-convention.** The
+  `agent_instructions` tell downstream analysis agents not to enumerate
+  identifier columns, but `/tools/sql` will still return them if the query
+  asks for them. Manthan is designed for synthetic data per the hackathon
+  rules; deployments against real-world data should add a SQL-layer filter
+  that rejects SELECT clauses referencing `role: identifier` columns unless
+  the user explicitly opts in (see SPEC §6).
 - **No authentication** on the API.
 - **ENUM conversion is opportunistic.** Columns whose distinct sets change
   during the session fall back to their original VARCHAR type rather than

@@ -26,8 +26,6 @@ class DcdColumnEdit(BaseModel):
     role: str | None = None
     description: str | None = None
     aggregation: str | None = None
-    sensitivity: str | None = None
-    handling: str | None = None
 
 
 class DcdEditRequest(BaseModel):
@@ -91,8 +89,6 @@ def apply_edits(
                         "role": edit.role,
                         "description": edit.description,
                         "aggregation": edit.aggregation,
-                        "sensitivity": edit.sensitivity,
-                        "handling": edit.handling,
                     }.items()
                     if v is not None
                 }

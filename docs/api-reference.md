@@ -100,8 +100,7 @@ mismatch.
 ### `GET /datasets/{dataset_id}/schema`
 
 Return a compact `SchemaSummary` (column list + roles + descriptions +
-sensitivity + verified queries). Cheaper for agents than pulling the
-full DCD.
+verified queries). Cheaper for agents than pulling the full DCD.
 
 ### `DELETE /datasets/{dataset_id}`
 

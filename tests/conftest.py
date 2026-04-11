@@ -22,7 +22,6 @@ from src.ingestion.base import LoadResult
 from src.profiling.agent import ProfilingResult
 from src.profiling.classifier import ColumnClassification
 from src.profiling.enricher import MetricProposal
-from src.profiling.pii_detector import classify_column
 from src.profiling.statistical import profile_columns
 from src.semantic.generator import build_dcd
 from src.semantic.schema import DataContextDocument
@@ -95,8 +94,6 @@ def sample_dcd(gold_connection: duckdb.DuckDBPyConnection) -> DataContextDocumen
             aggregation=None,
         ),
     ]
-    pii_flags = [classify_column(p) for p in profiles]
-
     load_result = LoadResult(
         table_name="raw_sales",
         source_type="csv",
@@ -111,7 +108,6 @@ def sample_dcd(gold_connection: duckdb.DuckDBPyConnection) -> DataContextDocumen
         table_name="raw_sales",
         column_profiles=profiles,
         classifications=classifications,
-        pii_flags=pii_flags,
         temporal_column="order_date",
         temporal_grain="daily",
         metric_proposals=[

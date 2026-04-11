@@ -80,7 +80,6 @@ async def test_profile_dataset_runs_end_to_end(
     assert result.table_name == "raw_sales"
     assert len(result.column_profiles) == 6
     assert len(result.classifications) == 6
-    assert len(result.pii_flags) == 6
 
     # Temporal detection should pick order_date (classified or by dtype).
     assert result.temporal_column == "order_date"

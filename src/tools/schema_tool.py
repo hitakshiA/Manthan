@@ -19,7 +19,6 @@ class SchemaSummaryColumn(BaseModel):
     dtype: str
     role: str
     description: str
-    sensitivity: str | None = None
 
 
 class SchemaSummaryVerifiedQuery(BaseModel):
@@ -59,9 +58,6 @@ def get_schema(
                 dtype=column.dtype,
                 role=column.role,
                 description=column.description,
-                sensitivity=(
-                    column.sensitivity if column.sensitivity != "public" else None
-                ),
             )
             for column in dcd.dataset.columns
         ],

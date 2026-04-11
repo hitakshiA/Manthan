@@ -79,11 +79,6 @@ class Settings(BaseSettings):
     log_level: str = Field(default="info")
     log_format: str = Field(default="json", description="Either 'json' or 'console'.")
 
-    # --- PII Detection -----------------------------------------------------
-    presidio_nlp_model: str = Field(default="en_core_web_lg")
-    pii_confidence_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
-    pii_sample_size: int = Field(default=100, ge=1)
-
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

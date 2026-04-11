@@ -5,16 +5,21 @@ Runs a deterministic version of the ReAct loop described in SPEC.md
 
 1. **PERCEIVE**   — :func:`profile_columns` against the raw table.
 2. **CLASSIFY**   — :func:`classify_columns` via the LLM.
-3. **PII**        — Layers 1 and 3 from :mod:`src.profiling.pii_detector`.
-4. **ENRICH**     — temporal grain detection and metric proposals.
-5. **VALIDATE**   — cross-checks between classifier output and stats.
-6. **EMIT**       — a :class:`ProfilingResult` aggregated for the
+3. **ENRICH**     — temporal grain detection and metric proposals.
+4. **VALIDATE**   — cross-checks between classifier output and stats.
+5. **EMIT**       — a :class:`ProfilingResult` aggregated for the
    semantic layer to turn into a Data Context Document.
 
 Interactive user clarification (``ask_user``) is intentionally not wired
 in at this phase; the agent always picks its best deterministic fallback
 and surfaces any low-confidence classifications in the ``warnings`` list
 so the semantic layer can expose them to the user after the fact.
+
+Column sensitivity is expressed through the LLM's role assignment
+(``identifier`` for unique-ish keys like customer_name or order_id), not
+through a separate PII pipeline. The analysis agent's job is to never
+enumerate individual values of identifier columns when answering
+questions — aggregate or count them instead.
 """
 
 from __future__ import annotations
@@ -31,7 +36,6 @@ from src.profiling.enricher import (
     detect_temporal_grain,
     propose_metrics,
 )
-from src.profiling.pii_detector import PiiFlag, classify_column
 from src.profiling.statistical import (
     ColumnProfile,
     is_temporal_type,
@@ -49,7 +53,6 @@ class ProfilingResult(BaseModel):
     table_name: str
     column_profiles: list[ColumnProfile]
     classifications: list[ColumnClassification]
-    pii_flags: list[PiiFlag]
     temporal_column: str | None = None
     temporal_grain: TemporalGrain | None = None
     metric_proposals: list[MetricProposal] = Field(default_factory=list)
@@ -61,32 +64,14 @@ async def profile_dataset(
     table_name: str,
     llm_client: LlmClient,
 ) -> ProfilingResult:
-    """Run the full Silver-stage pipeline against ``table_name``.
-
-    Args:
-        connection: Live DuckDB connection containing the raw table.
-        table_name: Raw table to profile. Must pass identifier
-            validation via the upstream loaders.
-        llm_client: A live :class:`LlmClient` entered as an async
-            context manager by the caller.
-
-    Returns:
-        A :class:`ProfilingResult` ready to be handed to the semantic
-        layer.
-    """
+    """Run the full Silver-stage pipeline against ``table_name``."""
     _logger.info("profiling.start", table=table_name)
 
-    # 1. PERCEIVE
     profiles = profile_columns(connection, table_name)
     _logger.info("profiling.perceive", table=table_name, columns=len(profiles))
 
-    # 2. CLASSIFY
     classifications = await classify_columns(profiles, llm_client)
 
-    # 3. PII
-    pii_flags = [classify_column(profile) for profile in profiles]
-
-    # 4. ENRICH: temporal grain
     temporal_column = _pick_temporal_column(profiles, classifications)
     temporal_grain: TemporalGrain | None = None
     if temporal_column is not None:
@@ -97,11 +82,9 @@ async def profile_dataset(
             grain=temporal_grain,
         )
 
-    # 4b. ENRICH: metric proposals
     metric_proposals = propose_metrics(profiles)
 
-    # 5. VALIDATE: consistency cross-checks
-    warnings = _validate(profiles, classifications, pii_flags)
+    warnings = _validate(profiles, classifications)
 
     _logger.info(
         "profiling.complete",
@@ -110,12 +93,10 @@ async def profile_dataset(
         warnings=len(warnings),
     )
 
-    # 6. EMIT
     return ProfilingResult(
         table_name=table_name,
         column_profiles=profiles,
         classifications=classifications,
-        pii_flags=pii_flags,
         temporal_column=temporal_column,
         temporal_grain=temporal_grain,
         metric_proposals=metric_proposals,
@@ -140,7 +121,6 @@ def _pick_temporal_column(
 def _validate(
     profiles: list[ColumnProfile],
     classifications: list[ColumnClassification],
-    pii_flags: list[PiiFlag],
 ) -> list[str]:
     """Return human-readable warnings for any inconsistencies."""
     warnings: list[str] = []
@@ -163,13 +143,6 @@ def _validate(
                 f"Column {classification.name!r} classified as metric "
                 f"but dtype is {profile.dtype}"
             )
-
-    pii_columns = {flag.column_name for flag in pii_flags if flag.sensitivity == "pii"}
-    if pii_columns:
-        warnings.append(
-            f"{len(pii_columns)} PII column(s) flagged: "
-            + ", ".join(sorted(pii_columns))
-        )
 
     return warnings
 

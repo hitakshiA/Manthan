@@ -59,9 +59,6 @@ temporal:
   nullable: false
   completeness: 1.0                  # 0.0 - 1.0
   cardinality: 14320
-  sensitivity: "public"              # public | quasi_identifier | pii
-  pii_type: null                     # e.g. EMAIL_ADDRESS, PERSON, PHONE_NUMBER
-  handling: null                     # expose | mask_in_outputs | aggregate_only | never_expose_in_outputs
   stats:
     min: 0.50
     max: 24999.99
@@ -121,7 +118,7 @@ the current schema.
 Natural-language directives injected into downstream analysis agents'
 system prompts. Examples emitted by the generator:
 
-- "Never include the following PII columns in query outputs: customer_email, customer_name"
+- "Never enumerate individual values of identifier columns (customer_email, customer_name, order_id). Aggregate (COUNT DISTINCT, GROUP BY dimension) or reference them only when the user explicitly asks for a lookup."
 - "Always aggregate 'revenue' using SUM."
 - "Surface data-quality warnings when querying columns with completeness below 95%: customer_name"
 

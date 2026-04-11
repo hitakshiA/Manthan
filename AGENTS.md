@@ -79,7 +79,6 @@ manthan/
 │   │   ├── agent.py             # Profiling agent ReAct loop orchestration
 │   │   ├── statistical.py       # DuckDB SUMMARIZE + ydata-profiling wrappers
 │   │   ├── classifier.py        # LLM-powered column role classification
-│   │   ├── pii_detector.py      # Presidio integration + heuristic layers
 │   │   ├── enricher.py          # Computed metrics, temporal grain detection
 │   │   └── clarification.py     # Interactive question generation and handling
 │   │
@@ -191,7 +190,7 @@ manthan/
           ValueError: If the column contains fewer than 2 non-null dates.
       """
   ```
-- Variable names are descriptive. `column_profile` not `cp`. `dataset_registry` not `dr`. `pii_detection_results` not `results`.
+- Variable names are descriptive. `column_profile` not `cp`. `dataset_registry` not `dr`. `classification_results` not `results`.
 - No abbreviations in variable names unless universally understood (`df` for DataFrame, `sql` for SQL strings, `llm` for language model).
 - Constants are UPPER_SNAKE_CASE and live in `core/config.py`.
 - No magic numbers in code. Define constants.
@@ -265,7 +264,7 @@ Format: `type(scope): description`
 
 ```
 feat(ingestion): add Excel file loader via DuckDB spatial extension
-fix(profiling): handle empty string columns in PII detection
+fix(profiling): handle empty string columns in classifier
 refactor(tools): extract SQL validation into dedicated module
 docs(readme): add architecture diagram and installation steps
 test(profiling): add unit tests for temporal grain detection
@@ -350,7 +349,7 @@ Before merging any PR:
 1. Create module under `src/analysis/{agent_name}/`
 2. The agent must:
    - Read the DCD via `get_context` tool before any query
-   - Respect PII flags: never expose columns marked `sensitivity: pii` in outputs
+   - Never enumerate individual values of `role: identifier` columns in outputs (aggregate or count them instead; per SPEC §6)
    - Use `run_sql` for data retrieval and `run_python` for analysis/visualization
    - Include provenance in responses: which columns, which filters, which aggregation
    - Handle errors from tools gracefully (retry with modified approach)
@@ -399,11 +398,6 @@ HOST=0.0.0.0
 PORT=8000
 LOG_LEVEL=info
 LOG_FORMAT=json
-
-# PII Detection
-PRESIDIO_NLP_MODEL=en_core_web_lg
-PII_CONFIDENCE_THRESHOLD=0.7
-PII_SAMPLE_SIZE=100
 ```
 
 ### Configuration Rules
