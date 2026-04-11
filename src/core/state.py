@@ -24,6 +24,7 @@ from src.profiling.clarification import (
     ClarificationQuestion,
 )
 from src.semantic.schema import DataContextDocument
+from src.tools.python_session import PythonSessionManager
 
 
 @dataclass
@@ -40,9 +41,11 @@ class AppState:
         default_factory=dict
     )
     dataset_progress: dict[str, list[dict[str, object]]] = field(default_factory=dict)
+    python_sessions: PythonSessionManager = field(default_factory=PythonSessionManager)
 
     def close(self) -> None:
-        """Close the underlying DuckDB connection."""
+        """Close the underlying DuckDB connection and shut down sessions."""
+        self.python_sessions.shutdown_all()
         self.connection.close()
 
 
