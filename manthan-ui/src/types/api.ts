@@ -16,6 +16,15 @@ export interface ColumnSchema {
   role: "metric" | "dimension" | "temporal" | "identifier" | "auxiliary";
   description: string;
   aggregation: string | null;
+  cardinality: number | null;
+  completeness: number | null;
+  sample_values: string[];
+  stats: {
+    min: number | null;
+    max: number | null;
+    mean: number | null;
+    median: number | null;
+  } | null;
 }
 
 export interface SchemaSummary {

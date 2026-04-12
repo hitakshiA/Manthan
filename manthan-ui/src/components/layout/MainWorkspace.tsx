@@ -174,122 +174,178 @@ function DatasetProfile() {
   const [showQuery, setShowQuery] = useState(false);
 
   if (!activeDs) return null;
+  if (showQuery) return <ReadyToQuery />;
 
   const metrics = schema?.columns.filter((c) => c.role === "metric") ?? [];
   const dimensions = schema?.columns.filter((c) => c.role === "dimension") ?? [];
   const temporal = schema?.columns.filter((c) => c.role === "temporal") ?? [];
   const other = schema?.columns.filter((c) => !["metric", "dimension", "temporal"].includes(c.role)) ?? [];
-
-  if (showQuery) return <ReadyToQuery />;
+  const avgCompleteness = schema ? Math.round(schema.columns.reduce((s, c) => s + (c.completeness ?? 1), 0) / schema.columns.length * 100) : null;
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-6 py-8 animate-fade-up">
+      <div className="max-w-3xl mx-auto px-6 py-8 animate-fade-up">
         <button onClick={() => setActiveDataset(null)} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
           <ArrowLeft size={13} /> All datasets
         </button>
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
-              <span className="text-lg font-bold text-accent-text">{activeDs.name.charAt(0).toUpperCase()}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
-              <p className="text-sm text-text-secondary">
-                {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns · {activeDs.source_type.toUpperCase()}
-              </p>
-            </div>
+        <div className="flex items-start gap-4 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0">
+            <span className="text-lg font-bold text-accent-text">{activeDs.name.charAt(0).toUpperCase()}</span>
           </div>
-
-          {schema && (
-            <div className="mt-4 p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
-              <p className="text-sm text-text-secondary leading-relaxed mb-3">
-                Manthan classified {schema.columns.length} columns and identified{" "}
-                <span className="font-medium text-text-primary">{metrics.length} measurable value{metrics.length !== 1 ? "s" : ""}</span>,{" "}
-                <span className="font-medium text-text-primary">{dimensions.length} grouping categor{dimensions.length !== 1 ? "ies" : "y"}</span>
-                {temporal.length > 0 && <>, and <span className="font-medium text-text-primary">{temporal.length} time dimension</span></>}.
-              </p>
-              <RoleBar columns={schema.columns} showLabels />
-            </div>
-          )}
-        </div>
-
-        {schema ? (
-          <div className="space-y-6">
-            {metrics.length > 0 && (
-              <ColumnGroup icon={<BarChart3 size={14} className="text-accent" />} title="Metrics" subtitle="Values you measure" columns={metrics} />
-            )}
-            {dimensions.length > 0 && (
-              <ColumnGroup icon={<Layers size={14} className="text-border-strong" />} title="Dimensions" subtitle="Categories you group by" columns={dimensions} />
-            )}
-            {temporal.length > 0 && (
-              <ColumnGroup icon={<Clock size={14} className="text-success" />} title="Temporal" subtitle="Time axis for trends" columns={temporal} />
-            )}
-            {other.length > 0 && (
-              <ColumnGroup icon={<Table2 size={14} className="text-text-faint" />} title="Other" subtitle="Identifiers and auxiliary" columns={other} />
-            )}
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
+            <p className="text-sm text-text-secondary mt-0.5">{activeDs.source_type.toUpperCase()} · {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns</p>
           </div>
-        ) : loading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-14 rounded-xl animate-shimmer" />)}
-          </div>
-        ) : null}
-
-        {/* CTA — always visible, never blocked by schema loading */}
-        <div className="mt-8">
           <button
             onClick={() => setShowQuery(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-text text-sm font-medium shadow-xs hover:bg-accent-hover hover:shadow-sm transition-all duration-200 shrink-0"
           >
-            Start analyzing
-            <ChevronRight size={15} />
+            Start analyzing <ChevronRight size={14} />
+          </button>
+        </div>
+
+        {/* Quick stats row */}
+        {schema && (
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            <div className="p-3 rounded-xl bg-surface-raised border border-border">
+              <p className="text-lg font-bold text-text-primary tabular-nums">{schema.columns.length}</p>
+              <p className="text-[11px] text-text-faint">Columns</p>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-raised border border-border">
+              <p className="text-lg font-bold text-text-primary tabular-nums">{metrics.length}</p>
+              <p className="text-[11px] text-text-faint">Metrics</p>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-raised border border-border">
+              <p className="text-lg font-bold text-text-primary tabular-nums">{dimensions.length + temporal.length}</p>
+              <p className="text-[11px] text-text-faint">Dimensions</p>
+            </div>
+            <div className="p-3 rounded-xl bg-surface-raised border border-border">
+              <p className="text-lg font-bold text-accent tabular-nums">{avgCompleteness}%</p>
+              <p className="text-[11px] text-text-faint">Complete</p>
+            </div>
+          </div>
+        )}
+
+        {/* Role bar */}
+        {schema && <RoleBar columns={schema.columns} showLabels className="mb-8" />}
+
+        {loading && (
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl animate-shimmer" />)}
+          </div>
+        )}
+
+        {/* Column table */}
+        {schema && (
+          <div className="rounded-xl border border-border bg-surface-raised shadow-xs overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-[1fr_80px_80px_100px] gap-3 px-4 py-2.5 border-b border-border bg-surface-sunken text-[10px] font-semibold text-text-faint uppercase tracking-wider">
+              <span>Column</span>
+              <span>Type</span>
+              <span>Distinct</span>
+              <span>Quality</span>
+            </div>
+
+            {/* Column rows */}
+            {schema.columns.map((col, i) => (
+              <div
+                key={col.name}
+                className={cn(
+                  "grid grid-cols-[1fr_80px_80px_100px] gap-3 px-4 py-3 items-start transition-colors hover:bg-surface-0",
+                  i < schema.columns.length - 1 && "border-b border-border",
+                )}
+              >
+                {/* Name + description + samples */}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-medium text-text-primary font-mono">{col.name}</span>
+                    <span className={cn(
+                      "text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider",
+                      col.role === "metric" ? "bg-accent-soft text-accent" :
+                      col.role === "temporal" ? "bg-success-soft text-success" :
+                      col.role === "dimension" ? "bg-surface-sunken text-text-secondary" :
+                      "bg-surface-sunken text-text-faint",
+                    )}>
+                      {col.role}
+                      {col.aggregation && ` · ${col.aggregation}`}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-faint mt-0.5 leading-relaxed">{col.description}</p>
+                  {col.stats && (
+                    <p className="text-[10px] text-text-faint mt-1 font-mono">
+                      {col.stats.min != null && <>min {col.stats.min}</>}
+                      {col.stats.max != null && <> · max {col.stats.max}</>}
+                      {col.stats.mean != null && <> · avg {col.stats.mean}</>}
+                    </p>
+                  )}
+                  {col.sample_values.length > 0 && (
+                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                      {col.sample_values.slice(0, 3).map((v, j) => (
+                        <span key={j} className="text-[9px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">{v}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Type */}
+                <span className="text-[11px] text-text-secondary font-mono mt-0.5">{col.dtype}</span>
+
+                {/* Cardinality */}
+                <span className="text-[11px] text-text-secondary tabular-nums mt-0.5">
+                  {col.cardinality != null ? formatNumber(col.cardinality) : "—"}
+                </span>
+
+                {/* Completeness bar */}
+                <div className="mt-1">
+                  {col.completeness != null ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full bg-surface-2 overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all duration-500",
+                            col.completeness >= 0.95 ? "bg-success" : col.completeness >= 0.8 ? "bg-warning" : "bg-error",
+                          )}
+                          style={{ width: `${col.completeness * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-text-faint tabular-nums w-8 text-right">
+                        {Math.round(col.completeness * 100)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-text-faint">—</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Summary tables */}
+        {schema && schema.summary_tables.length > 0 && (
+          <div className="mt-6 p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={14} className="text-warning" />
+              <h3 className="text-sm font-semibold text-text-primary">{schema.summary_tables.length} pre-built tables</h3>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {schema.summary_tables.map((t) => (
+                <span key={t} className="text-[10px] font-mono text-text-faint bg-surface-sunken px-2 py-1 rounded">{t.replace(/^gold_/, "").replace(/_[a-f0-9]+$/, "")}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bottom CTA */}
+        <div className="mt-8 mb-4">
+          <button onClick={() => setShowQuery(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]">
+            Start analyzing <ChevronRight size={15} />
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ColumnGroup({ icon, title, subtitle, columns }: {
-  icon: React.ReactNode; title: string; subtitle: string;
-  columns: Array<{ name: string; dtype: string; role: string; description: string; aggregation: string | null }>;
-}) {
-  const [expanded, setExpanded] = useState(columns.length <= 4);
-
-  const visible = expanded ? columns : columns.slice(0, 3);
-
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-        <span className="text-[11px] text-text-faint">· {subtitle}</span>
-      </div>
-      <div className="space-y-1.5">
-        {visible.map((col) => (
-          <div key={col.name} className="flex items-start gap-3 py-2 px-3 rounded-lg hover:bg-surface-raised transition-colors">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] font-medium text-text-primary font-mono">{col.name}</span>
-                <span className="text-[10px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded">{col.dtype}</span>
-                {col.aggregation && (
-                  <span className="text-[10px] text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">{col.aggregation}</span>
-                )}
-              </div>
-              {col.description && (
-                <p className="text-[11px] text-text-faint mt-0.5 leading-relaxed">{col.description}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      {columns.length > 3 && !expanded && (
-        <button onClick={() => setExpanded(true)} className="text-xs text-accent hover:text-accent-hover mt-1 ml-3 transition-colors">
-          Show {columns.length - 3} more
-        </button>
-      )}
     </div>
   );
 }
