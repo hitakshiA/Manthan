@@ -1,0 +1,52 @@
+# Version control
+.git
+.gitignore
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+dist
+build
+
+# Virtual environments
+.venv
+venv
+
+# Testing
+tests
+.pytest_cache
+.coverage
+htmlcov
+coverage.xml
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Data and artifacts
+data
+*.db
+*.parquet
+*.duckdb
+render_spec.json
+
+# Deployment configs
+fly.toml
+docker-compose.yml
+.dockerignore
+
+# Scripts
+scripts
+
+# Environment
+.env
+.env.*

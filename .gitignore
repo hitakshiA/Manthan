@@ -78,5 +78,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Agent output artifacts
+render_spec.json
+
 # Docker
 .docker/

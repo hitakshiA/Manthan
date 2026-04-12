@@ -32,7 +32,7 @@ def create_connection(
     Configuration (``memory_limit``, ``threads``, ``temp_directory``) is
     applied via DuckDB's connect-time ``config`` dict so that values are
     never string-interpolated into SQL, sidestepping the injection concern
-    flagged in AGENTS.md §SQL rules.
+    flagged in CONTRIBUTING.md §Architecture Rules.
 
     Args:
         database: Path to a DuckDB file, ``":memory:"``, or ``None``. When

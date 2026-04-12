@@ -3,7 +3,7 @@
 Wraps ``structlog`` to emit JSON log lines with ISO-8601 timestamps, log
 levels, and rich context bindings. Application code obtains a logger via
 :func:`get_logger` and must not use the stdlib ``logging`` module directly
-or fall back to ``print()`` (see AGENTS.md §Python rules).
+or fall back to ``print()``.
 
 ``configure_logging`` is safe to call multiple times; structlog's
 ``configure`` is idempotent and the stdlib ``basicConfig`` guard ensures we

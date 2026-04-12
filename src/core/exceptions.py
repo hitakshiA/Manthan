@@ -4,7 +4,7 @@ Every application error inherits from ``ManthanError`` so that callers can
 catch "any Manthan error" with a single ``except`` clause while still being
 able to catch specific sub-classes when they want finer-grained handling.
 
-Per AGENTS.md, no bare ``except:`` clauses are allowed in application code —
+No bare ``except:`` clauses are allowed in application code —
 always catch a specific subclass of ``ManthanError`` or a concrete
 third-party exception.
 """

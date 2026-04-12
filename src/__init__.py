@@ -1,12 +1,9 @@
-"""Manthan — Seamless Self-Service Intelligence for any dataset.
+"""Manthan — Autonomous Data Analyst Platform.
 
-The Manthan data layer provides source-agnostic ingestion, autonomous
-profiling, semantic annotation, and agent-ready materialization of arbitrary
-datasets so that downstream analysis agents can answer natural-language
-questions with zero guesswork.
-
-See ``SPEC.md`` for the architectural specification and ``AGENTS.md`` for
-contribution guidelines.
+A 3-layer system: data pipeline + semantic layer (Layer 1), autonomous
+LLM agent (Layer 2), and frontend rendering (Layer 3). Upload any
+dataset, get a semantic layer that prevents hallucination, and ask
+natural-language questions answered with real SQL and Python analysis.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"

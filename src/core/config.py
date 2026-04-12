@@ -2,7 +2,7 @@
 
 All configuration flows through this module. Other ``src/`` modules import
 :func:`get_settings` rather than reading ``os.environ`` directly (see
-AGENTS.md §Configuration Rules). Secrets have **no defaults** so the
+CONTRIBUTING.md). Secrets have **no defaults** so the
 application fails fast at startup when they are missing; non-secret values
 have sensible defaults defined below.
 

@@ -1,7 +1,7 @@
 """Profiling agent: orchestrates the Silver-stage pipeline.
 
-Runs a deterministic version of the ReAct loop described in SPEC.md
-§ADR-005:
+Runs a deterministic version of the ReAct loop described in
+``docs/LAYER1_SPEC.md``:
 
 1. **PERCEIVE**   — :func:`profile_columns` against the raw table.
 2. **CLASSIFY**   — :func:`classify_columns` via the LLM.

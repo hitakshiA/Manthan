@@ -7,15 +7,15 @@ requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Akash Mondal", email = "akash@manthan.dev" }]
 keywords = [
-    "data",
+    "data-analysis",
     "llm",
     "duckdb",
     "semantic-layer",
     "profiling",
-    "agent",
-    "autonomous-analyst",
+    "autonomous-agent",
     "data-context-document",
-    "talk-to-data",
+    "fastapi",
+    "natural-language-query",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -33,8 +33,6 @@ classifiers = [
 # See SPEC.md §8 (Dependency Matrix) for rationale and per-package purpose.
 dependencies = [
     "duckdb>=1.2.0",               # MIT — analytical engine, ingestion, SQL
-    "ydata-profiling>=4.18.0",     # MIT — statistical profiling
-    "great-expectations>=1.4.0",   # Apache-2.0 — data quality validation
     "pyyaml>=6.0",                 # MIT — DCD serialization
     "fastapi>=0.115.0",            # MIT — API server
     "uvicorn[standard]>=0.34.0",   # BSD-3 — ASGI server
@@ -47,7 +45,6 @@ dependencies = [
     "structlog>=24.4.0",           # MIT / Apache-2.0 dual — structured JSON logs
     "python-multipart>=0.0.12",    # Apache-2.0 — multipart upload parsing
     "openpyxl>=3.1",               # MIT — Excel xlsx read/write for tests + loader
-    "setuptools<81",               # MIT — pkg_resources shim still used by ge
     "slowapi>=0.1.9",              # MIT — IP-based rate limiting
     "websockets>=13.0",            # BSD-3 — FastAPI websocket dependency
 ]

@@ -6,7 +6,7 @@ temporal grain, PII flags, quality caveats, verified queries, and agent
 instructions. This module defines the strict shape of that document so
 that any change to the DCD surface is visible in one place.
 
-The schema closely follows SPEC.md §2 (ADR-004) but uses pydantic models
+The schema closely follows ``docs/LAYER1_SPEC.md`` but uses pydantic models
 instead of free-form YAML so we can validate generated and edited
 documents against a single source of truth.
 """

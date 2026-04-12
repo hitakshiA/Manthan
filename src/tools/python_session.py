@@ -20,7 +20,7 @@ For a deployment running on a trusted developer machine this is fine.
 For a production multi-tenant deployment you would want either per-
 session Docker containers (one container for the life of the session)
 or a true sandbox like gVisor. We intentionally leave that out of
-scope — see SPEC.md §7.3.
+scope — see ``docs/LAYER1_SPEC.md``.
 """
 
 from __future__ import annotations

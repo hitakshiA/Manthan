@@ -2,7 +2,7 @@
 
 Handles ``.csv``, ``.tsv``, and ``.txt`` inputs. Delegates delimiter,
 encoding, and type inference to DuckDB's auto-detection with an explicit
-sample size matching SPEC.md §5.2.
+sample size for type auto-detection.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from src.ingestion.base import (
 )
 
 # Number of rows DuckDB samples to infer types during auto-detection.
-# Matches SPEC.md §5.2. Kept as a module-level constant rather than a
+# Kept as a module-level constant rather than a
 # Settings field because it is an implementation detail of this loader
 # and not something operators routinely tune.
 _CSV_AUTO_DETECT_SAMPLE_SIZE = 10000
