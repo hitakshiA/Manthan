@@ -33,16 +33,15 @@ class AgentConfig(BaseSettings):
         )
 
     model: str = Field(
-        default="openai/gpt-oss-120b",
+        default="z-ai/glm-5.1",
         description=(
-            "LLM for agent reasoning. gpt-oss-120b: 4.3s/call, 100% uptime, "
-            "no rate limit issues. Override via AGENT_MODEL env var. "
-            "Alternatives: google/gemma-4-31b-it (better quality, rate limited), "
-            "nvidia/nemotron-3-super-120b-a12b (deep reasoning, slow)."
+            "LLM for agent reasoning. GLM 5.1: frontier-grade, "
+            "8hr long-horizon tasks, strong tool calling, 200K ctx. "
+            "Override via AGENT_MODEL env var."
         ),
     )
     free_tier: bool = Field(
-        default=True,
+        default=False,
         description="Append ':free' to model slug for free tier",
     )
     openrouter_api_key: str = Field(
