@@ -60,10 +60,12 @@ function FirstOpen() {
     setActiveDataset(ds.dataset_id);
   }, [uploadDataset, setActiveDataset]);
 
-  // Pre-fetch schemas for explore cards
+  // Pre-fetch schemas for explore cards (deduped)
   useEffect(() => {
     if (view === "explore" && datasets.length > 0) {
-      prefetchSchemas(datasets.map((d) => d.dataset_id));
+      const seen = new Set<string>();
+      const unique = datasets.filter((d) => { if (seen.has(d.name)) return false; seen.add(d.name); return true; });
+      prefetchSchemas(unique.map((d) => d.dataset_id));
     }
   }, [view, datasets]);
 
@@ -303,15 +305,15 @@ function DatasetProfile() {
                   <p className="text-[11px] text-text-faint mt-0.5 leading-relaxed">{col.description}</p>
                   {col.stats && (
                     <p className="text-[10px] text-text-faint mt-1 font-mono">
-                      {col.stats.min != null && <>min {col.stats.min}</>}
-                      {col.stats.max != null && <> · max {col.stats.max}</>}
-                      {col.stats.mean != null && <> · avg {col.stats.mean}</>}
+                      {col.stats.min != null && <>min {String(col.stats.min)}</>}
+                      {col.stats.max != null && <> · max {String(col.stats.max)}</>}
+                      {col.stats.mean != null && <> · avg {String(col.stats.mean)}</>}
                     </p>
                   )}
-                  {col.sample_values.length > 0 && (
+                  {(col.sample_values?.length ?? 0) > 0 && (
                     <div className="flex gap-1 mt-1.5 flex-wrap">
                       {col.sample_values.slice(0, 3).map((v, j) => (
-                        <span key={j} className="text-[9px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">{v}</span>
+                        <span key={j} className="text-[9px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">{String(v)}</span>
                       ))}
                     </div>
                   )}
