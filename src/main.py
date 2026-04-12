@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="Manthan",
-    description="Seamless Self-Service Intelligence — Talk to Data",
+    description="Autonomous Data Analyst Platform",
     version=__version__,
     lifespan=lifespan,
 )

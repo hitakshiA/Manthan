@@ -2,7 +2,7 @@
 
 Tracks every dataset the data layer has ingested and the stage each one
 has reached (``bronze`` after ingestion, ``silver`` after profiling,
-``gold`` after materialization). For the hackathon scale this is a simple
+``gold`` after materialization). For this scale this is a simple
 dict-backed store; a persistent store (likely SQLite) will replace it once
 we support multi-session workflows.
 

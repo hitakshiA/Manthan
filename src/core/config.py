@@ -35,27 +35,14 @@ class Settings(BaseSettings):
         ...,
         description="OpenRouter API key. No default — must be provided via env.",
     )
-    openrouter_free_tier: bool = Field(
-        default=True,
-        description=(
-            "When True, appends ':free' to all model slugs so "
-            "requests use OpenRouter's free endpoints (rate-limited "
-            "but $0). Set to False with a funded OpenRouter account "
-            "for full-speed paid inference."
-        ),
-    )
     openrouter_model: str = Field(
-        default="openai/gpt-oss-120b",
-        description=(
-            "Primary model for Layer 1 classification. "
-            "gpt-oss-120b: 4.3s/call, 5/5 quality, 100% "
-            "uptime, free+paid tiers."
-        ),
+        default="openai/gpt-oss-120b:free",
+        description="Primary model for Layer 1 classification.",
     )
     openrouter_fallback_models: list[str] = Field(
         default=[
-            "qwen/qwen3-next-80b-a3b-instruct",
-            "nvidia/nemotron-3-nano-30b-a3b",
+            "qwen/qwen3-next-80b-a3b-instruct:free",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
         ],
         description=(
             "Ordered fallback model slugs. Tried when the primary "
@@ -66,21 +53,13 @@ class Settings(BaseSettings):
 
     @property
     def resolved_model(self) -> str:
-        """Primary model slug with free-tier suffix if enabled."""
-        slug = self.openrouter_model
-        if self.openrouter_free_tier and not slug.endswith(":free"):
-            slug = f"{slug}:free"
-        return slug
+        """Primary model slug."""
+        return self.openrouter_model
 
     @property
     def resolved_fallback_models(self) -> list[str]:
-        """Fallback slugs with free-tier suffix if enabled."""
-        out: list[str] = []
-        for slug in self.openrouter_fallback_models:
-            if self.openrouter_free_tier and not slug.endswith(":free"):
-                slug = f"{slug}:free"
-            out.append(slug)
-        return out
+        """Fallback model slugs."""
+        return list(self.openrouter_fallback_models)
 
     openrouter_base_url: str = Field(
         default="https://openrouter.ai/api/v1",

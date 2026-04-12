@@ -33,16 +33,8 @@ class AgentConfig(BaseSettings):
         )
 
     model: str = Field(
-        default="z-ai/glm-5.1",
-        description=(
-            "LLM for agent reasoning. GLM 5.1: frontier-grade, "
-            "8hr long-horizon tasks, strong tool calling, 200K ctx. "
-            "Override via AGENT_MODEL env var."
-        ),
-    )
-    free_tier: bool = Field(
-        default=False,
-        description="Append ':free' to model slug for free tier",
+        default="openai/gpt-oss-120b:free",
+        description="LLM for agent reasoning. Override via AGENT_MODEL env var.",
     )
     openrouter_api_key: str = Field(
         default="",
@@ -54,11 +46,8 @@ class AgentConfig(BaseSettings):
 
     @property
     def resolved_model(self) -> str:
-        """Model slug with free-tier suffix if enabled."""
-        slug = self.model
-        if self.free_tier and not slug.endswith(":free"):
-            slug = f"{slug}:free"
-        return slug
+        """Model slug."""
+        return self.model
 
     layer1_url: str = Field(
         default="http://127.0.0.1:8000",

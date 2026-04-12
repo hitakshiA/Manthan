@@ -1,6 +1,6 @@
 # Manthan
 
-### Seamless Self-Service Intelligence — Talk to Data
+### Autonomous Data Analyst Platform
 
 [![CI](https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml/badge.svg)](https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
@@ -8,9 +8,6 @@
 [![Tests: 294](https://img.shields.io/badge/tests-294%20passing-brightgreen.svg)]()
 [![Live](https://img.shields.io/badge/live-142.93.213.82:8000-blue.svg)](http://142.93.213.82:8000/health)
 
-> **NatWest Code for Purpose Hackathon — "Talk to Data" Theme**
->
-> Most teams build a chatbot that converts text to SQL. We built an **autonomous data analyst** — an agent that understands your data semantically, asks you questions when it's unsure, shows its plan before executing, remembers what it learned yesterday, and produces professional dashboards — not just text responses.
 
 ---
 
@@ -240,18 +237,16 @@ sequenceDiagram
 
 ```bash
 # .env — all you need
-OPENROUTER_API_KEY=sk-or-...       # required (get free at openrouter.ai)
-OPENROUTER_FREE_TIER=true          # true=$0 rate-limited, false=paid fast
+OPENROUTER_API_KEY=sk-or-...       # required (get one at openrouter.ai)
+OPENROUTER_MODEL=openai/gpt-oss-120b:free
 ```
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENROUTER_FREE_TIER` | `true` | Free ($0, rate-limited) or paid (fast) |
-| `OPENROUTER_MODEL` | `qwen/qwen3-next-80b-a3b-instruct` | Layer 1 classifier |
-| `AGENT_MODEL` | `nvidia/nemotron-3-super-120b-a12b` | Layer 2 reasoning |
-| `AGENT_FREE_TIER` | `true` | Agent model free/paid toggle |
+| `OPENROUTER_API_KEY` | *(required)* | OpenRouter API key |
+| `OPENROUTER_MODEL` | `openai/gpt-oss-120b:free` | LLM model for classification + agent |
 
-All models have free tiers. No credit card needed to run.
+No credit card needed. Sign up at [openrouter.ai](https://openrouter.ai) and get a key.
 
 ---
 
@@ -315,7 +310,7 @@ The agent autonomously discovers 30+ tables via `SHOW TABLES`, describes relevan
 |---|---|---|
 | API Server | FastAPI + uvicorn | Async, SSE streaming, OpenAPI docs |
 | Database | DuckDB (in-memory + Parquet) | Analytical queries, zero-config |
-| LLM (both layers) | gpt-oss-120b (4.3s/call, 100% uptime) | Fast, reliable, free+paid tiers |
+| LLM (both layers) | gpt-oss-120b (4.3s/call, 100% uptime) | Fast, reliable, open-weight |
 | Persistence | SQLite WAL | Memory + plan audit survive restart |
 | Sandbox | Python subprocess REPL | Stateful sessions, variable persistence |
 

@@ -8,7 +8,7 @@
 # Free-tier-friendly: one 256 MB VM, Auto-stop when idle.
 
 app = "manthan"
-primary_region = "bom"            # Mumbai — closest to the NatWest India judges
+primary_region = "bom"            # Mumbai region
 
 [build]
   dockerfile = "Dockerfile"

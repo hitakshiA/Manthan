@@ -1,6 +1,6 @@
 # Contributing to Manthan
 
-Thanks for your interest in contributing! Manthan is built for the NatWest "Code for Purpose" hackathon and welcomes contributions that improve the data pipeline, semantic layer, or agent toolbox.
+Thanks for your interest in contributing! Manthan welcomes contributions that improve the data pipeline, semantic layer, or agent toolbox.
 
 ## Quick Start
 

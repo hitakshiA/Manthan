@@ -1,7 +1,7 @@
 """Verified query generation.
 
 Deterministically produces 8-12 known-correct natural-language ↔ SQL
-pairs covering the four use-case types from the NatWest problem
+pairs covering the four core use-case types from the problem
 statement (SPEC §3.4): change, comparison, breakdown, summary. The
 pairs are SQL-generated from the DCD schema, not the LLM, so they are
 always correct against the Gold table.

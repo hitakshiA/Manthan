@@ -140,7 +140,7 @@ All bugs below were found by the stress test, fixed in-flight, and had tests add
 #### Bug #6: Dataset registry was in-memory only
 
 **Symptom**: Tier 5 phase 2 `POST /tools/python` returned 404 for dataset_ids from phase 1 after restart.
-**Root cause**: `src/ingestion/registry.py` is explicit about it in its docstring: *"for the hackathon scale this is a simple dict-backed store; a persistent store (likely SQLite) will replace it once we support multi-session workflows."* The stress test promptly needed that multi-session workflow.
+**Root cause**: `src/ingestion/registry.py` is explicit about it in its docstring: *"for this scale this is a simple dict-backed store; a persistent store (likely SQLite) will replace it once we support multi-session workflows."* The stress test promptly needed that multi-session workflow.
 **Fix**: Added `rehydrate_datasets_from_disk(state)` in `src/core/state.py`, called from `get_state()` at startup. It walks `data/ds_*/` directories, reads each persisted `manthan-context.yaml` to rebuild the DCD, re-attaches all Gold parquet files (primary + summary rollups + dimension breakdowns) as DuckDB views, synthesizes a `LoadResult` from the DCD's source metadata, and inserts the entry into the registry under the original dataset_id. Survives restart. Took 0 seconds on 4 datasets.
 
 ### 🟡 Gaps not yet fixed (documented here for follow-up)

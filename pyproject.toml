@@ -1,7 +1,7 @@
 [project]
 name = "manthan"
 version = "1.0.0"
-description = "Seamless Self-Service Intelligence — Talk to Data. A 3-layer autonomous data analyst platform: data pipeline + semantic layer + agent toolbox."
+description = "A 3-layer autonomous data analyst platform: data pipeline + semantic layer + agent toolbox."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
