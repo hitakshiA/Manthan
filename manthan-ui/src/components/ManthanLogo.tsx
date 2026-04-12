@@ -6,7 +6,18 @@ interface Props {
   className?: string;
 }
 
-export function ManthanLogo({ size = 28, animate = false, className }: Props) {
+/**
+ * Manthan mark — a stylized "M" where the center dip becomes
+ * an upward peak. Data goes in, insight comes out.
+ *
+ * Animation: when `animate` is true, the stroke cycles through
+ * a dash-offset loop, creating a "drawing" motion that suggests
+ * the system is actively working/churning.
+ */
+export function ManthanLogo({ size = 24, animate = false, className }: Props) {
+  // Total path length of "M6 24V10l10 8 10-8v14" ≈ 54
+  const pathLength = 54;
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -17,49 +28,27 @@ export function ManthanLogo({ size = 28, animate = false, className }: Props) {
       className={cn(className)}
       aria-hidden="true"
     >
-      {/* Rotating group — the churning arcs */}
-      <g className={animate ? "animate-churn" : ""} style={{ transformOrigin: "16px 16px" }}>
-        {/* Outer arc */}
-        <path
-          d="M16 4C9.373 4 4 9.373 4 16"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          opacity="0.25"
-        />
-        {/* Middle arc */}
-        <path
-          d="M16 8C11.582 8 8 11.582 8 16"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          opacity="0.55"
-        />
-        {/* Inner arc */}
-        <path
-          d="M16 12C13.791 12 12 13.791 12 16"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-      </g>
-
-      {/* Center point — the insight */}
-      <circle
-        cx="16"
-        cy="16"
-        r="2.5"
-        fill="currentColor"
-        className={animate ? "animate-pulse-dot" : ""}
+      {animate && (
+        <style>{`
+          @keyframes manthan-draw {
+            0% { stroke-dashoffset: ${pathLength}; }
+            50% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -${pathLength}; }
+          }
+          .manthan-path-animated {
+            stroke-dasharray: ${pathLength};
+            animation: manthan-draw 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          }
+        `}</style>
+      )}
+      <path
+        d="M6 24V10l10 8 10-8v14"
+        stroke="currentColor"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={animate ? "manthan-path-animated" : ""}
       />
-
-      {/* Outward rays — knowledge extracted */}
-      <g className={animate ? "animate-rays" : ""} opacity={animate ? 1 : 0.6}>
-        <path d="M20 16h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-        <path d="M16 20v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-        <path d="M19.5 19.5l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.35" />
-      </g>
     </svg>
   );
 }
