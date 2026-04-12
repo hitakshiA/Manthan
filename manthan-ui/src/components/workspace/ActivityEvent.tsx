@@ -6,6 +6,8 @@ import {
   AlertTriangle, Loader, Database,
 } from "lucide-react";
 import { cn, formatMs } from "@/lib/utils";
+import { AskUserCard } from "@/components/hitl/AskUserCard";
+import { PlanApprovalCard } from "@/components/hitl/PlanApprovalCard";
 
 const TOOL_ICONS: Record<string, string> = {
   run_sql: "SQL",
@@ -56,6 +58,16 @@ function eventColor(type: string): string {
 export function ActivityEvent({ event }: { event: AgentEvent }) {
   // Skip done events — the RenderRouter handles those
   if (event.type === "done") return null;
+
+  // HITL: inline ask_user card
+  if (event.type === "waiting_for_user") {
+    return <AskUserCard questionId={event.question_id} prompt={event.prompt} options={event.options} />;
+  }
+
+  // HITL: inline plan approval card
+  if (event.type === "plan_created") {
+    return <PlanApprovalCard planId={event.plan_id} interpretation={event.interpretation} stepCount={event.steps} />;
+  }
 
   // Turn dividers are subtle
   if (event.type === "turn_complete") {
