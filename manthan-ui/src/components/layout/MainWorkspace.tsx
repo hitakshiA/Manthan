@@ -4,10 +4,16 @@ import { QueryInput } from "@/components/workspace/QueryInput";
 import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
-import { Database, ArrowUpRight, Clock, Wrench, RotateCcw } from "lucide-react";
+import { Clock, Wrench, RotateCcw } from "lucide-react";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
 import { useCallback } from "react";
+
+const SUGGESTIONS = [
+  "What percentage earn over $50k?",
+  "Compare income by education level",
+  "Full income inequality report",
+];
 
 function EmptyState() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
@@ -33,45 +39,29 @@ function EmptyState() {
 
   if (!activeDatasetId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-8">
-        <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center">
-          <Database size={20} className="text-text-tertiary" />
-        </div>
-        <div className="text-center max-w-xs">
-          <h2 className="text-base font-semibold text-text-primary">
-            Upload a dataset to begin
-          </h2>
-          <p className="text-sm text-text-secondary mt-1.5 leading-relaxed">
-            Drop a CSV, Parquet, or Excel file in the sidebar.
-          </p>
-        </div>
+      <div className="flex-1 flex items-center justify-center px-8">
+        <p className="text-sm text-text-tertiary">
+          Select a dataset from the sidebar to begin
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
-      <div className="text-center max-w-sm">
-        <h2 className="text-base font-semibold text-text-primary">
+    <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
+      <div className="text-center">
+        <p className="text-sm text-text-secondary">
           What would you like to know?
-        </h2>
-        <p className="text-sm text-text-secondary mt-1.5 leading-relaxed">
-          The analyst team will run SQL, build charts, and write insights.
         </p>
       </div>
-      <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-        {[
-          "What percentage earn over $50k?",
-          "Compare income across education levels",
-          "Full income inequality report",
-        ].map((q) => (
+      <div className="flex flex-col gap-1.5 w-full max-w-md">
+        {SUGGESTIONS.map((q) => (
           <button
             key={q}
             onClick={() => runSuggestion(q)}
-            className="flex items-center gap-1.5 text-xs text-text-secondary bg-surface-1 hover:bg-surface-2 hover:text-text-primary border border-border px-3 py-2 rounded-lg transition-all duration-150"
+            className="w-full text-left text-[13px] text-text-secondary hover:text-text-primary bg-surface-1 hover:bg-surface-2 border border-border px-3 py-2 rounded-md transition-all duration-150"
           >
             {q}
-            <ArrowUpRight size={11} className="text-text-tertiary" />
           </button>
         ))}
       </div>
@@ -88,13 +78,13 @@ function ResultView() {
 
   return (
     <div className="px-6 py-5 space-y-5 animate-fade-up">
-      <div className="flex items-center gap-4 text-xs text-text-tertiary">
+      <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
         <span className="flex items-center gap-1">
-          <Clock size={12} />
+          <Clock size={11} />
           {elapsed.toFixed(1)}s
         </span>
         <span className="flex items-center gap-1">
-          <Wrench size={12} />
+          <Wrench size={11} />
           {toolCalls} tools
         </span>
         <button
@@ -102,7 +92,7 @@ function ResultView() {
           aria-label="Start new query"
           className="flex items-center gap-1 ml-auto text-text-tertiary hover:text-accent transition-colors"
         >
-          <RotateCcw size={12} />
+          <RotateCcw size={11} />
           New query
         </button>
       </div>
@@ -124,14 +114,13 @@ export function MainWorkspace() {
 
   return (
     <main className="flex-1 flex flex-col min-w-0 bg-surface-0" role="main">
-      <QueryInput />
       <div className="flex-1 overflow-y-auto">
         {!hasContent && <EmptyState />}
         {hasContent && !isDone && <ActivityFeed />}
         {hasContent && isDone && (
           <>
-            <details className="px-6 pt-4">
-              <summary className="text-xs text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors select-none">
+            <details className="px-6 pt-3">
+              <summary className="text-[11px] text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors select-none">
                 Agent activity ({events.length} events)
               </summary>
               <div className="mt-2">
@@ -142,6 +131,7 @@ export function MainWorkspace() {
           </>
         )}
       </div>
+      <QueryInput />
     </main>
   );
 }

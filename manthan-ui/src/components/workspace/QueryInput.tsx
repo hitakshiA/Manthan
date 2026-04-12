@@ -63,7 +63,7 @@ export function QueryInput() {
   };
 
   return (
-    <div className="px-6 py-4 border-b border-border">
+    <div className="px-6 py-3 border-t border-border">
       <div
         className={cn(
           "flex items-end gap-3 rounded-lg border border-border bg-surface-0 px-4 py-3",

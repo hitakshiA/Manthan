@@ -2,26 +2,49 @@ import { useUIStore } from "@/stores/ui-store";
 import { useDatasetStore } from "@/stores/dataset-store";
 import { useSessionStore } from "@/stores/session-store";
 import { cn, formatNumber } from "@/lib/utils";
-import { Trash2 } from "lucide-react";
-import { useEffect } from "react";
-import { DatasetUploader } from "@/components/datasets/DatasetUploader";
+import { Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { SchemaViewer } from "@/components/datasets/SchemaViewer";
 
 function DatasetsSidebar() {
-  const { datasets, fetchDatasets, removeDataset } = useDatasetStore();
+  const { datasets, fetchDatasets, uploadDataset, removeDataset } = useDatasetStore();
   const { activeDatasetId, setActiveDataset } = useSessionStore();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => { fetchDatasets(); }, [fetchDatasets]);
 
+  const handleUpload = useCallback(async (file: File) => {
+    setUploading(true);
+    try {
+      const ds = await uploadDataset(file);
+      setActiveDataset(ds.dataset_id);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }, [uploadDataset, setActiveDataset]);
+
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border">
-        <h2 className="text-sm font-semibold text-text-primary tracking-tight">Datasets</h2>
+      <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+        <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Datasets</h2>
+        <input ref={fileRef} type="file" className="hidden" accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }} />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          aria-label="Upload dataset"
+          className="w-6 h-6 flex items-center justify-center rounded text-text-tertiary hover:text-accent hover:bg-accent-soft transition-colors"
+        >
+          <Upload size={13} strokeWidth={2} />
+        </button>
       </div>
-      <div className="flex-1 overflow-y-auto py-2">
+
+      <div className="flex-1 overflow-y-auto py-1">
         {datasets.length === 0 && (
-          <p className="px-4 py-8 text-sm text-text-tertiary text-center">
-            Drop a CSV to get started
+          <p className="px-3 py-6 text-xs text-text-tertiary text-center">
+            Upload a CSV to get started
           </p>
         )}
         {datasets.map((ds) => (
@@ -29,44 +52,40 @@ function DatasetsSidebar() {
             key={ds.dataset_id}
             onClick={() => setActiveDataset(ds.dataset_id)}
             className={cn(
-              "group w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors duration-100",
+              "group w-full text-left px-3 py-2 flex items-center gap-2 transition-colors duration-100",
               activeDatasetId === ds.dataset_id
-                ? "bg-accent-soft"
-                : "hover:bg-surface-2",
+                ? "bg-accent-soft border-l-2 border-l-accent"
+                : "hover:bg-surface-2 border-l-2 border-l-transparent",
             )}
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-primary truncate">
+              <p className="text-[13px] font-medium text-text-primary truncate">
                 {ds.name}
               </p>
-              <p className="text-xs text-text-tertiary">
+              <p className="text-[11px] text-text-tertiary mt-0.5">
                 {formatNumber(ds.row_count)} rows · {ds.column_count} cols
               </p>
             </div>
-            <span
-              className={cn(
-                "text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider",
-                ds.status === "gold" && "bg-success-soft text-success",
-                ds.status === "silver" && "bg-warning-soft text-warning",
-                ds.status === "bronze" && "bg-surface-3 text-text-tertiary",
-              )}
-            >
-              {ds.status}
-            </span>
+            {ds.status === "gold" && (
+              <span className="text-[9px] font-medium px-1 py-px rounded text-text-tertiary bg-surface-2 uppercase tracking-widest">
+                ready
+              </span>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                removeDataset(ds.dataset_id);
+                if (confirm(`Delete ${ds.name}?`)) removeDataset(ds.dataset_id);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-error-soft text-text-tertiary hover:text-error transition-all"
+              aria-label={`Delete ${ds.name}`}
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-error-soft text-text-tertiary hover:text-error transition-all"
             >
-              <Trash2 size={14} />
+              <Trash2 size={12} />
             </button>
           </button>
         ))}
       </div>
+
       {activeDatasetId && <SchemaViewer datasetId={activeDatasetId} />}
-      <DatasetUploader />
     </div>
   );
 }
@@ -74,15 +93,13 @@ function DatasetsSidebar() {
 function MemorySidebar() {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border">
-        <h2 className="text-sm font-semibold text-text-primary tracking-tight">Memory</h2>
+      <div className="px-3 py-2.5 border-b border-border">
+        <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Memory</h2>
       </div>
-      <div className="px-4 py-8 text-center space-y-2">
-        <p className="text-sm text-text-secondary">
-          The analyst remembers
-        </p>
-        <p className="text-xs text-text-tertiary leading-relaxed">
-          After a complex analysis, key findings are saved here. Next time you ask a related question, the agent recalls this context automatically.
+      <div className="px-3 py-6 text-center space-y-1.5">
+        <p className="text-xs text-text-secondary font-medium">The analyst remembers</p>
+        <p className="text-[11px] text-text-tertiary leading-relaxed">
+          Key findings from past analyses appear here. The agent recalls them automatically.
         </p>
       </div>
     </div>
@@ -93,25 +110,24 @@ function HistorySidebar() {
   const { queryHistory } = useSessionStore();
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border">
-        <h2 className="text-sm font-semibold text-text-primary tracking-tight">History</h2>
+      <div className="px-3 py-2.5 border-b border-border">
+        <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">History</h2>
       </div>
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto py-1">
         {queryHistory.length === 0 && (
-          <div className="px-4 py-8 text-center space-y-2">
-            <p className="text-sm text-text-secondary">No queries yet</p>
-            <p className="text-xs text-text-tertiary leading-relaxed">
-              Every analysis you run appears here with its output mode — simple, moderate, or complex.
+          <div className="px-3 py-6 text-center">
+            <p className="text-[11px] text-text-tertiary leading-relaxed">
+              Queries appear here after you run them.
             </p>
           </div>
         )}
         {queryHistory.map((q) => (
-          <div key={q.id} className="px-4 py-2.5 hover:bg-surface-2 transition-colors">
-            <p className="text-sm text-text-primary truncate">{q.message}</p>
-            <p className="text-xs text-text-tertiary mt-0.5">
+          <div key={q.id} className="px-3 py-2 hover:bg-surface-2 transition-colors cursor-pointer">
+            <p className="text-xs text-text-primary truncate">{q.message}</p>
+            <p className="text-[11px] text-text-tertiary mt-0.5">
               {new Date(q.timestamp).toLocaleTimeString()}
               {q.renderMode && (
-                <span className="ml-2 text-accent">{q.renderMode}</span>
+                <span className="ml-1.5 text-accent font-medium">{q.renderMode}</span>
               )}
             </p>
           </div>
@@ -127,7 +143,7 @@ export function Sidebar() {
   if (!sidebarOpen) return null;
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border bg-surface-1 overflow-hidden">
+    <aside className="w-56 shrink-0 border-r border-border bg-surface-1 overflow-hidden">
       {sidebarView === "datasets" && <DatasetsSidebar />}
       {sidebarView === "memory" && <MemorySidebar />}
       {sidebarView === "history" && <HistorySidebar />}
