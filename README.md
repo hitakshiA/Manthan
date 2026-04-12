@@ -284,9 +284,21 @@ All models have free tiers. No credit card needed to run.
 
 ---
 
-## Stress Test Results
+## Benchmark Results
 
-Live-tested with 4 real public datasets, 5 complexity tiers, 24 scenarios — **all passing**:
+### CORGI Benchmark (hardest public text-to-SQL benchmark for business)
+
+Tested against [CORGI](https://github.com/corgibenchmark/CORGI) — synthetic databases modeled after DoorDash, Lululemon, Turo with 18-35 tables per database, 25-68 foreign keys, and queries requiring 7+ JOINs on average.
+
+| Database | Tables | FKs | Rows | Agent Result |
+|---|---|---|---|---|
+| Food Delivery (DoorDash) | 32 | 25 | 75K | **8/8 passed** — top restaurants, delivery analysis, promotion recommendations |
+| Clothing E-commerce (Lululemon) | 35 | 40 | 140K | **6/6 passed** — return rate analysis, overstock detection, sales breakdown |
+| Car Rental (Turo) | 31 | 68 | 169K | **6/6 passed** — vehicle pricing, cancellation patterns, segment comparison |
+
+The agent autonomously discovers 30+ tables via `SHOW TABLES`, describes relevant ones, writes multi-table JOINs, and produces structured answers — all without human guidance.
+
+### Layer 1 Stress Test
 
 | Dataset | Rows | Cols | Ingest Time |
 |---|---|---|---|
@@ -294,8 +306,6 @@ Live-tested with 4 real public datasets, 5 complexity tiers, 24 scenarios — **
 | UCI Adult Census | 48,842 | 15 | 6.1s |
 | Ames Housing | 2,930 | 82 | 17.9s |
 | Lahman Baseball (10 files) | 366,639 | 7-50/table | 51s |
-
-6 real bugs found and fixed during the stress test. Details: [`docs/layer1_stress_test_report.md`](docs/layer1_stress_test_report.md)
 
 ---
 
@@ -305,8 +315,7 @@ Live-tested with 4 real public datasets, 5 complexity tiers, 24 scenarios — **
 |---|---|---|
 | API Server | FastAPI + uvicorn | Async, SSE streaming, OpenAPI docs |
 | Database | DuckDB (in-memory + Parquet) | Analytical queries, zero-config |
-| Layer 1 Classifier | Qwen3 Next 80B (3.5s/dataset) | Fastest + most accurate on our benchmark |
-| Layer 2 Agent | Nemotron 3 Super 120B (1M context) | Strongest reasoning, longest context |
+| LLM (both layers) | gpt-oss-120b (4.3s/call, 100% uptime) | Fast, reliable, free+paid tiers |
 | Persistence | SQLite WAL | Memory + plan audit survive restart |
 | Sandbox | Python subprocess REPL | Stateful sessions, variable persistence |
 
