@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://manthan.quest">manthan.quest</a></strong>
+</p>
+
+<p align="center">
   <a href="https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml"><img src="https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License" /></a>
