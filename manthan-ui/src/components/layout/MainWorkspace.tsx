@@ -5,69 +5,73 @@ import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
 import { Database, ArrowUpRight, Clock, Wrench, RotateCcw } from "lucide-react";
-import { useAgentStore as useAgentStoreRef } from "@/stores/agent-store";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
+import { useCallback } from "react";
 
 function EmptyState() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
+  const sessionId = useSessionStore((s) => s.sessionId);
+  const addQuery = useSessionStore((s) => s.addQuery);
+  const pushEvent = useAgentStore((s) => s.pushEvent);
+  const reset = useAgentStore((s) => s.reset);
 
-  if (!activeDatasetId) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8">
-        <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center">
-          <Database size={22} className="text-text-tertiary" />
-        </div>
-        <div className="text-center max-w-sm">
-          <h2 className="text-lg font-semibold text-text-primary">
-            Select a dataset
-          </h2>
-          <p className="text-sm text-text-secondary mt-1.5 leading-relaxed">
-            Upload a CSV, Parquet, or Excel file from the sidebar, then ask any question about your data.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const { sessionId, addQuery } = useSessionStore();
-  const pushEvent = useAgentStoreRef((s) => s.pushEvent);
-  const reset = useAgentStoreRef((s) => s.reset);
-
-  const runSuggestion = async (q: string) => {
+  const runSuggestion = useCallback(async (q: string) => {
     if (!activeDatasetId) return;
     reset();
     addQuery(q, activeDatasetId);
     try {
       await queryStream(sessionId, activeDatasetId, q, pushEvent);
     } catch (e) {
-      pushEvent({ type: "error", message: e instanceof Error ? e.message : "Failed", recoverable: false });
+      pushEvent({
+        type: "error",
+        message: e instanceof Error ? e.message : "Failed",
+        recoverable: false,
+      });
     }
-  };
+  }, [activeDatasetId, sessionId, addQuery, pushEvent, reset]);
+
+  if (!activeDatasetId) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-8">
+        <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center">
+          <Database size={20} className="text-text-tertiary" />
+        </div>
+        <div className="text-center max-w-xs">
+          <h2 className="text-base font-semibold text-text-primary">
+            Upload a dataset to begin
+          </h2>
+          <p className="text-sm text-text-secondary mt-1.5 leading-relaxed">
+            Drop a CSV, Parquet, or Excel file in the sidebar.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
-      <div className="text-center max-w-md">
-        <h2 className="text-lg font-semibold text-text-primary">
+      <div className="text-center max-w-sm">
+        <h2 className="text-base font-semibold text-text-primary">
           What would you like to know?
         </h2>
         <p className="text-sm text-text-secondary mt-1.5 leading-relaxed">
-          Ask a question and the analyst team will investigate — running SQL, building charts, and writing insights.
+          The analyst team will run SQL, build charts, and write insights.
         </p>
       </div>
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center max-w-lg">
         {[
-          "What percentage of people earn over $50k?",
+          "What percentage earn over $50k?",
           "Compare income across education levels",
-          "Full income inequality analysis with recommendations",
+          "Full income inequality report",
         ].map((q) => (
           <button
             key={q}
             onClick={() => runSuggestion(q)}
-            className="flex items-center gap-1.5 text-xs text-text-secondary bg-surface-1 hover:bg-surface-2 border border-border px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-secondary bg-surface-1 hover:bg-surface-2 hover:text-text-primary border border-border px-3 py-2 rounded-lg transition-all duration-150"
           >
             {q}
-            <ArrowUpRight size={12} className="text-text-tertiary" />
+            <ArrowUpRight size={11} className="text-text-tertiary" />
           </button>
         ))}
       </div>
@@ -83,8 +87,7 @@ function ResultView() {
   const reset = useAgentStore((s) => s.reset);
 
   return (
-    <div className="px-6 py-5 space-y-5">
-      {/* Stats bar */}
+    <div className="px-6 py-5 space-y-5 animate-fade-up">
       <div className="flex items-center gap-4 text-xs text-text-tertiary">
         <span className="flex items-center gap-1">
           <Clock size={12} />
@@ -92,10 +95,11 @@ function ResultView() {
         </span>
         <span className="flex items-center gap-1">
           <Wrench size={12} />
-          {toolCalls} tool calls
+          {toolCalls} tools
         </span>
         <button
           onClick={reset}
+          aria-label="Start new query"
           className="flex items-center gap-1 ml-auto text-text-tertiary hover:text-accent transition-colors"
         >
           <RotateCcw size={12} />
@@ -103,7 +107,6 @@ function ResultView() {
         </button>
       </div>
 
-      {/* Render spec output */}
       {renderSpec ? (
         <RenderRouter spec={renderSpec as RenderSpec} />
       ) : agentText ? (
@@ -120,7 +123,7 @@ export function MainWorkspace() {
   const isDone = phase === "done";
 
   return (
-    <main className="flex-1 flex flex-col min-w-0 bg-surface-0">
+    <main className="flex-1 flex flex-col min-w-0 bg-surface-0" role="main">
       <QueryInput />
       <div className="flex-1 overflow-y-auto">
         {!hasContent && <EmptyState />}
@@ -128,10 +131,12 @@ export function MainWorkspace() {
         {hasContent && isDone && (
           <>
             <details className="px-6 pt-4">
-              <summary className="text-xs text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors">
-                Show agent activity ({events.length} events)
+              <summary className="text-xs text-text-tertiary cursor-pointer hover:text-text-secondary transition-colors select-none">
+                Agent activity ({events.length} events)
               </summary>
-              <ActivityFeed />
+              <div className="mt-2">
+                <ActivityFeed />
+              </div>
             </details>
             <ResultView />
           </>

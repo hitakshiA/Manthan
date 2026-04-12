@@ -79,6 +79,13 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* ── Typography: heading line-heights tighter than body ── */
+  h1, h2, h3 { line-height: 1.2; }
+  h4, h5, h6 { line-height: 1.35; }
+
+  /* ── Readable prose ── */
+  p, li { max-width: 65ch; }
+
   ::selection {
     background: var(--color-accent-soft);
     color: var(--color-text-primary);
@@ -87,6 +94,32 @@
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+
+  /* ── Interactive elements: consistent cursor + transition ── */
+  button, [role="button"], a {
+    cursor: pointer;
+    transition: all 150ms var(--ease-out-quart);
+  }
+
+  button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* ── Scrollbar styling ── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-tertiary);
   }
 }
 
@@ -129,7 +162,7 @@
   animation: pulse-border 1.2s ease-in-out infinite;
 }
 
-/* ── Shimmer for thinking state ── */
+/* ── Shimmer for loading states ── */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -156,19 +189,24 @@ details > summary::-webkit-details-marker {
 details > summary::before {
   content: "▸ ";
   display: inline;
-  transition: transform 150ms var(--ease-out-quart);
 }
 details[open] > summary::before {
   content: "▾ ";
 }
 
-/* ── Reduced motion ── */
+/* ── Reduced motion — ALWAYS respected ── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Responsive: sidebar collapses below 768px ── */
+@media (max-width: 768px) {
+  .sidebar-desktop {
+    display: none;
   }
 }
