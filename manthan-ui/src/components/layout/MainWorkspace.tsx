@@ -1,26 +1,23 @@
 import { useAgentStore } from "@/stores/agent-store";
 import { useSessionStore } from "@/stores/session-store";
+import { useDatasetStore } from "@/stores/dataset-store";
 import { QueryInput } from "@/components/workspace/QueryInput";
 import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
-import { Clock, Wrench, RotateCcw } from "lucide-react";
+import { Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText } from "lucide-react";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
 import { useCallback } from "react";
 
-const SUGGESTIONS = [
-  "What percentage earn over $50k?",
-  "Compare income by education level",
-  "Full income inequality report",
-];
-
-function EmptyState() {
+function WelcomeState() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
   const sessionId = useSessionStore((s) => s.sessionId);
   const addQuery = useSessionStore((s) => s.addQuery);
   const pushEvent = useAgentStore((s) => s.pushEvent);
   const reset = useAgentStore((s) => s.reset);
+  const datasets = useDatasetStore((s) => s.datasets);
+  const activeDs = datasets.find((d) => d.dataset_id === activeDatasetId);
 
   const runSuggestion = useCallback(async (q: string) => {
     if (!activeDatasetId) return;
@@ -37,34 +34,46 @@ function EmptyState() {
     }
   }, [activeDatasetId, sessionId, addQuery, pushEvent, reset]);
 
-  if (!activeDatasetId) {
-    return (
-      <div className="flex-1 flex items-center justify-center px-8">
-        <p className="text-sm text-text-tertiary">
-          Select a dataset from the sidebar to begin
-        </p>
-      </div>
-    );
-  }
+  const suggestions = activeDs ? [
+    { icon: BarChart3, text: `What are the key metrics in ${activeDs.name}?` },
+    { icon: TrendingUp, text: `Compare the top categories by volume` },
+    { icon: FileText, text: `Full analytical report with recommendations` },
+  ] : [];
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
-      <div className="text-center">
-        <p className="text-sm text-text-secondary">
-          What would you like to know?
+    <div className="flex-1 flex flex-col items-center justify-center px-8 pb-16">
+      {/* Hero greeting */}
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+          {activeDs ? (
+            <>Explore <span className="text-accent">{activeDs.name}</span></>
+          ) : (
+            "Manthan"
+          )}
+        </h1>
+        <p className="text-sm text-text-secondary mt-2 max-w-sm mx-auto leading-relaxed">
+          {activeDs
+            ? `${activeDs.row_count.toLocaleString()} rows · ${activeDs.column_count} columns — ask anything`
+            : "Select a dataset from the sidebar to start analyzing"
+          }
         </p>
       </div>
-      <div className="flex flex-col gap-1.5 w-full max-w-md">
-        {SUGGESTIONS.map((q) => (
-          <button
-            key={q}
-            onClick={() => runSuggestion(q)}
-            className="w-full text-left text-[13px] text-text-secondary hover:text-text-primary bg-surface-1 hover:bg-surface-2 border border-border px-3 py-2 rounded-md transition-all duration-150"
-          >
-            {q}
-          </button>
-        ))}
-      </div>
+
+      {/* Suggestion chips */}
+      {activeDs && (
+        <div className="grid gap-2 w-full max-w-lg">
+          {suggestions.map(({ icon: Icon, text }) => (
+            <button
+              key={text}
+              onClick={() => runSuggestion(text)}
+              className="flex items-center gap-3 text-left text-[13px] text-text-secondary hover:text-text-primary bg-surface-1 hover:bg-surface-2 border border-border hover:border-border-strong px-4 py-3 rounded-lg transition-all duration-150 group"
+            >
+              <Icon size={16} className="text-text-tertiary group-hover:text-accent shrink-0 transition-colors" />
+              <span>{text}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -115,7 +124,7 @@ export function MainWorkspace() {
   return (
     <main className="flex-1 flex flex-col min-w-0 bg-surface-0" role="main">
       <div className="flex-1 overflow-y-auto">
-        {!hasContent && <EmptyState />}
+        {!hasContent && <WelcomeState />}
         {hasContent && !isDone && <ActivityFeed />}
         {hasContent && isDone && (
           <>
