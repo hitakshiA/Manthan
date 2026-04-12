@@ -4,7 +4,7 @@
 
 If you discover a security vulnerability in Manthan, **please report it privately** rather than opening a public issue.
 
-**Email:** akash@manthan.dev
+**Email:** hitakshi220@gmail.com
 
 Include:
 - Description of the vulnerability

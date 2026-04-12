@@ -13,7 +13,7 @@
   <a href="https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml"><img src="https://github.com/hitakshiA/Manthan/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License" /></a>
-  <a href="http://142.93.213.82:8000"><img src="https://img.shields.io/badge/demo-live-brightgreen.svg" alt="Live" /></a>
+  <a href="https://manthan.quest"><img src="https://img.shields.io/badge/demo-live-brightgreen.svg" alt="Live" /></a>
 </p>
 
 ---
@@ -97,7 +97,7 @@ cd manthan-ui && npm install && npm run dev
 
 **Get an API key:** Sign up at [openrouter.ai](https://openrouter.ai) — free tier works out of the box.
 
-### Live demo: **http://142.93.213.82:8000**
+### Live demo: **https://manthan.quest**
 
 ---
 

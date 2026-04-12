@@ -5,7 +5,7 @@ description = "A 3-layer autonomous data analyst platform: data pipeline + seman
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Akash Mondal", email = "akash@manthan.dev" }]
+authors = [{ name = "Hitakshi Arora", email = "hitakshi220@gmail.com" }]
 keywords = [
     "data-analysis",
     "llm",
@@ -59,7 +59,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hitakshiA/Manthan"
+Homepage = "https://manthan.quest"
 Repository = "https://github.com/hitakshiA/Manthan"
 Documentation = "https://github.com/hitakshiA/Manthan/tree/main/docs"
 "Bug Tracker" = "https://github.com/hitakshiA/Manthan/issues"
