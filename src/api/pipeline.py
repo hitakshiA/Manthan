@@ -9,6 +9,7 @@ Two entry points share the same Silver + Gold tail:
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -234,93 +235,119 @@ async def _finish_pipeline(
     state.clarifications[entry.dataset_id] = clarification_questions
 
     if clarification_questions:
+        import asyncio
+
         _pipeline_logger.info(
             "pipeline.clarification_needed",
             dataset_id=entry.dataset_id,
             questions=len(clarification_questions),
             columns=[q.column_name for q in clarification_questions],
         )
-        # Post all questions as a single ask_user prompt
-        col_lines = "\n".join(
-            f"- {q.column_name}: currently '{q.current_role}' — {q.prompt}"
-            for q in clarification_questions
-        )
+
+        # Post each column as a separate ask_user question so Layer 3
+        # can render them as individual cards with clickable options.
         session_id = f"pipeline_{entry.dataset_id}"
-        question = state.ask_user.ask(
-            session_id=session_id,
-            prompt=(
-                f"The classifier is unsure about {len(clarification_questions)} "
-                f"column(s). Please confirm or correct their roles:\n\n"
-                f"{col_lines}\n\n"
-                "Reply with corrections in the format: "
-                "column_name=role (e.g., age=dimension, income=dimension). "
-                "Or reply 'ok' to accept all current roles."
-            ),
-            options=["ok"],
-            allow_free_text=True,
-            context=f"Dataset {entry.dataset_id} profiling clarification",
-        )
+        pending_ids: list[tuple[str, str]] = []  # (question_id, column_name)
+
+        for cq in clarification_questions:
+            option_labels = [opt.label for opt in cq.options]
+            question = state.ask_user.ask(
+                session_id=session_id,
+                prompt=cq.prompt,
+                options=option_labels,
+                allow_free_text=False,
+                context=json.dumps(
+                    {
+                        "column": cq.column_name,
+                        "current_role": cq.current_role,
+                        "recommended": cq.recommended,
+                        "options": [
+                            {
+                                "label": o.label,
+                                "value": o.value,
+                                "aggregation": o.aggregation,
+                            }
+                            for o in cq.options
+                        ],
+                    }
+                ),
+            )
+            pending_ids.append((question.id, cq.column_name))
+
         _record_progress(
             state,
             entry.dataset_id,
             "silver",
-            f"waiting for user clarification on {len(clarification_questions)} columns",
+            f"waiting for user to answer {len(pending_ids)} question(s)",
         )
 
-        # Block for up to 5 minutes waiting for the user's answer.
-        # Must run in a thread executor because threading.Event.wait()
-        # is synchronous and would block the async event loop, preventing
-        # the /ask_user/{id}/answer POST from getting through.
-        import asyncio
+        # Wait for all answers (each blocks independently).
+        corrections: list[ClarificationAnswer] = []
+        for q_id, col_name in pending_ids:
+            answered = await asyncio.to_thread(
+                state.ask_user.wait,
+                q_id,
+                timeout_seconds=300.0,
+            )
+            if answered.status != "answered" or not answered.answer:
+                continue
 
-        answered = await asyncio.to_thread(
-            state.ask_user.wait, question.id, timeout_seconds=300.0
-        )
+            # The answer is the label text the user clicked. Map it
+            # back to the internal role value via the options list.
+            cq = next(
+                (q for q in clarification_questions if q.column_name == col_name),
+                None,
+            )
+            if cq is None:
+                continue
 
-        if (
-            answered.status == "answered"
-            and answered.answer
-            and answered.answer.strip().lower() != "ok"
-        ):
-            # Parse corrections like "age=dimension, income=dimension"
-            corrections: list[ClarificationAnswer] = []
-            for part in answered.answer.split(","):
-                part = part.strip()
-                if "=" in part:
-                    col, role = part.split("=", 1)
-                    col = col.strip()
-                    role = role.strip().lower()
-                    if role in (
-                        "metric",
-                        "dimension",
-                        "temporal",
-                        "identifier",
-                        "auxiliary",
-                    ):
-                        agg = "SUM" if role == "metric" else None
-                        corrections.append(
-                            ClarificationAnswer(
-                                question_id="user_correction",
-                                column_name=col,
-                                chosen_role=role,
-                                aggregation=agg,
-                            )
+            chosen_label = answered.answer.strip()
+            matched_opt = next(
+                (o for o in cq.options if o.label == chosen_label),
+                None,
+            )
+            if matched_opt:
+                corrections.append(
+                    ClarificationAnswer(
+                        question_id=q_id,
+                        column_name=col_name,
+                        chosen_role=matched_opt.value,
+                        aggregation=matched_opt.aggregation,
+                    )
+                )
+            else:
+                # Fallback: try matching by value directly (for
+                # backward compat with clients that send the role)
+                role = chosen_label.lower().strip()
+                if role in (
+                    "metric",
+                    "dimension",
+                    "temporal",
+                    "identifier",
+                    "auxiliary",
+                ):
+                    corrections.append(
+                        ClarificationAnswer(
+                            question_id=q_id,
+                            column_name=col_name,
+                            chosen_role=role,
+                            aggregation="SUM" if role == "metric" else None,
                         )
-            if corrections:
-                profiling_result = merge_answers(profiling_result, corrections)
-                _pipeline_logger.info(
-                    "pipeline.clarification_applied",
-                    dataset_id=entry.dataset_id,
-                    corrections=[
-                        f"{c.column_name}={c.chosen_role}" for c in corrections
-                    ],
-                )
-                _record_progress(
-                    state,
-                    entry.dataset_id,
-                    "silver",
-                    f"applied {len(corrections)} user corrections",
-                )
+                    )
+
+        if corrections:
+            profiling_result = merge_answers(profiling_result, corrections)
+            _pipeline_logger.info(
+                "pipeline.clarification_applied",
+                dataset_id=entry.dataset_id,
+                corrections=[f"{c.column_name}={c.chosen_role}" for c in corrections],
+            )
+            _record_progress(
+                state,
+                entry.dataset_id,
+                "silver",
+                f"applied {len(corrections)} user corrections",
+            )
 
     dcd = build_dcd(
         dataset_id=entry.dataset_id,
