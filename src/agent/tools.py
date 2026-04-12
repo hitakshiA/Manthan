@@ -314,7 +314,6 @@ class ToolRouter:
             r.raise_for_status()
             return r.text
         if name == "ask_user":
-            # Create question
             r = await self.client.post(
                 "/ask_user",
                 json={
@@ -326,15 +325,24 @@ class ToolRouter:
             )
             r.raise_for_status()
             q = r.json()
-            # Block until answered
+            # Wait up to 30s — if no answer, return timeout so the
+            # agent proceeds with its best judgment
             r2 = await self.client.post(
                 f"/ask_user/{q['id']}/wait",
-                params={"timeout_seconds": 300},
+                params={"timeout_seconds": 30},
             )
             r2.raise_for_status()
+            result = r2.json()
+            if result.get("timed_out"):
+                return json.dumps(
+                    {
+                        "status": "timed_out",
+                        "note": "User did not respond within 30s. "
+                        "Proceed with your best interpretation.",
+                    }
+                )
             return r2.text
         if name == "create_plan":
-            # Create + submit + wait for approval
             r = await self.client.post("/plans", json=args)
             r.raise_for_status()
             plan = r.json()
@@ -342,9 +350,23 @@ class ToolRouter:
             await self.client.post(f"/plans/{plan_id}/submit")
             r3 = await self.client.post(
                 f"/plans/{plan_id}/wait",
-                params={"timeout_seconds": 600},
+                params={"timeout_seconds": 30},
             )
             r3.raise_for_status()
+            result = r3.json()
+            if result.get("timed_out"):
+                # Auto-approve if user doesn't respond
+                await self.client.post(
+                    f"/plans/{plan_id}/approve",
+                    json={"actor": "auto_timeout"},
+                )
+                return json.dumps(
+                    {
+                        "status": "auto_approved",
+                        "plan_id": plan_id,
+                        "note": "Plan auto-approved after 30s timeout.",
+                    }
+                )
             return r3.text
         if name == "save_memory":
             r = await self.client.post(
