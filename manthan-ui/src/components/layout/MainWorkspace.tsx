@@ -216,61 +216,37 @@ function DatasetProfile() {
           )}
         </div>
 
-        {loading && (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl animate-shimmer" />)}
-          </div>
-        )}
-
-        {schema && (
+        {schema ? (
           <div className="space-y-6">
-            {/* Metrics */}
             {metrics.length > 0 && (
               <ColumnGroup icon={<BarChart3 size={14} className="text-accent" />} title="Metrics" subtitle="Values you measure" columns={metrics} />
             )}
-
-            {/* Dimensions */}
             {dimensions.length > 0 && (
-              <ColumnGroup icon={<Layers size={14} className="text-[oklch(60%_0.15_300)]" />} title="Dimensions" subtitle="Categories you group by" columns={dimensions} />
+              <ColumnGroup icon={<Layers size={14} className="text-border-strong" />} title="Dimensions" subtitle="Categories you group by" columns={dimensions} />
             )}
-
-            {/* Temporal */}
             {temporal.length > 0 && (
               <ColumnGroup icon={<Clock size={14} className="text-success" />} title="Temporal" subtitle="Time axis for trends" columns={temporal} />
             )}
-
-            {/* Other */}
             {other.length > 0 && (
               <ColumnGroup icon={<Table2 size={14} className="text-text-faint" />} title="Other" subtitle="Identifiers and auxiliary" columns={other} />
             )}
-
-            {/* Summary tables */}
-            {schema.summary_tables.length > 0 && (
-              <div className="p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap size={14} className="text-warning" />
-                  <h3 className="text-sm font-semibold text-text-primary">{schema.summary_tables.length} pre-built summary tables</h3>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {schema.summary_tables.map((t) => (
-                    <span key={t} className="text-[10px] font-mono text-text-faint bg-surface-sunken px-2 py-0.5 rounded">
-                      {t.replace(/^gold_/, "").replace(/_[a-f0-9]+$/, "")}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* CTA */}
-            <button
-              onClick={() => setShowQuery(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              Start analyzing
-              <ChevronRight size={15} />
-            </button>
           </div>
-        )}
+        ) : loading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="h-14 rounded-xl animate-shimmer" />)}
+          </div>
+        ) : null}
+
+        {/* CTA — always visible, never blocked by schema loading */}
+        <div className="mt-8">
+          <button
+            onClick={() => setShowQuery(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            Start analyzing
+            <ChevronRight size={15} />
+          </button>
+        </div>
       </div>
     </div>
   );

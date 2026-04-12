@@ -245,19 +245,19 @@ def get_dataset_schema(dataset_id: str, state: StateDep) -> SchemaSummary:
     dcd = state.dcds.get(dataset_id)
     if dcd is None:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
+    # Discover ALL summary tables (not just hardcoded suffixes)
     summary_tables: list[str] = []
     gold_table = state.gold_table_names.get(dataset_id)
     if gold_table:
-        summary_tables = [
-            name
-            for name in (
-                f"{gold_table}_daily",
-                f"{gold_table}_monthly",
-                f"{gold_table}_by_region",
-                f"{gold_table}_by_customer_segment",
-            )
-            if _table_exists(state, name)
-        ]
+        try:
+            rows = state.connection.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_name LIKE ? AND table_name != ?",
+                [f"{gold_table}%", gold_table],
+            ).fetchall()
+            summary_tables = [r[0] for r in rows]
+        except Exception:
+            pass
     return get_schema(dcd, summary_tables=summary_tables)
 
 

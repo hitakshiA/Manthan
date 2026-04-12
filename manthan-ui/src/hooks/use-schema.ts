@@ -3,6 +3,7 @@ import type { SchemaSummary } from "@/types/api";
 import { getSchema } from "@/api/datasets";
 
 const cache = new Map<string, SchemaSummary>();
+const failed = new Set<string>();
 
 export function useSchema(datasetId: string | null) {
   const [schema, setSchema] = useState<SchemaSummary | null>(
@@ -19,26 +20,29 @@ export function useSchema(datasetId: string | null) {
       setSchema(cache.get(datasetId)!);
       return;
     }
+    if (failed.has(datasetId)) return; // Don't retry failed fetches
+
     setLoading(true);
     getSchema(datasetId)
       .then((s) => {
         cache.set(datasetId, s);
         setSchema(s);
       })
-      .catch(() => {})
+      .catch(() => {
+        failed.add(datasetId);
+      })
       .finally(() => setLoading(false));
   }, [datasetId]);
 
   return { schema, loading };
 }
 
-/** Pre-fetch schemas for a list of dataset IDs */
 export function prefetchSchemas(ids: string[]) {
   for (const id of ids) {
-    if (!cache.has(id)) {
+    if (!cache.has(id) && !failed.has(id)) {
       getSchema(id)
         .then((s) => cache.set(id, s))
-        .catch(() => {});
+        .catch(() => failed.add(id));
     }
   }
 }
