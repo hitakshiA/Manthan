@@ -20,6 +20,7 @@ from src.profiling.statistical import ColumnProfile
 
 _LOW_CARDINALITY_QUESTION_THRESHOLD = 3
 _SHORT_NAME_LENGTH = 3
+_LOW_CONFIDENCE_THRESHOLD = 0.8
 
 
 class ClarificationQuestion(BaseModel):
@@ -117,6 +118,12 @@ def _needs_clarification(
     profile: ColumnProfile,
     classification: ColumnClassification,
 ) -> bool:
+    # Low confidence from the LLM = ask the user
+    if (
+        classification.confidence is not None
+        and classification.confidence < _LOW_CONFIDENCE_THRESHOLD
+    ):
+        return True
     if len(profile.name) <= _SHORT_NAME_LENGTH:
         return True
     if classification.role == "auxiliary" and profile.dtype.upper() in {

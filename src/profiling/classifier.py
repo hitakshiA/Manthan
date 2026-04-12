@@ -147,8 +147,10 @@ _SYSTEM_PROMPT = (
     "auxiliary (everything else).\n\n"
     "Return ONLY valid JSON, no markdown, no prose:\n"
     '{"classifications": [{"name": "col", "role": "metric", '
-    '"description": "short sentence", "aggregation": "SUM"}]}\n\n'
+    '"description": "short sentence", "aggregation": "SUM", '
+    '"confidence": 0.95}]}\n\n'
     "aggregation: SUM/AVG/COUNT/MIN/MAX for metrics, null otherwise.\n"
+    "confidence: 0.0-1.0, how sure you are about the role.\n"
 )
 
 

@@ -16,6 +16,7 @@ from pathlib import Path
 
 from src.core import metrics
 from src.core.llm import LlmClient
+from src.core.logger import get_logger
 from src.core.state import AppState
 from src.ingestion.base import LoadResult, validate_identifier
 from src.ingestion.gateway import create_default_gateway
@@ -29,12 +30,18 @@ from src.materialization.quality import run_quality_suite
 from src.materialization.query_generator import generate_verified_queries
 from src.materialization.summarizer import create_summary_tables
 from src.profiling.agent import profile_dataset
-from src.profiling.clarification import generate_questions
+from src.profiling.clarification import (
+    ClarificationAnswer,
+    generate_questions,
+    merge_answers,
+)
 from src.semantic.generator import (
     build_dcd,
     build_dcd_table_from_profile,
     dcd_table_from_primary_dcd,
 )
+
+_pipeline_logger = get_logger()
 
 _INVALID_NAME_CHARS = re.compile(r"[^A-Za-z0-9_]")
 
@@ -218,7 +225,102 @@ async def _finish_pipeline(
     _record_progress(state, entry.dataset_id, "silver", "profiling complete")
     metrics.increment("profiling.datasets_total")
 
-    state.clarifications[entry.dataset_id] = generate_questions(profiling_result)
+    # --- Interactive clarification gate ---
+    # If the classifier was unsure about any columns, ask the user
+    # via the ask_user primitive and block until they answer (or
+    # timeout fires). This happens BEFORE Gold materialization so the
+    # corrected roles feed into summary tables and verified queries.
+    clarification_questions = generate_questions(profiling_result)
+    state.clarifications[entry.dataset_id] = clarification_questions
+
+    if clarification_questions:
+        _pipeline_logger.info(
+            "pipeline.clarification_needed",
+            dataset_id=entry.dataset_id,
+            questions=len(clarification_questions),
+            columns=[q.column_name for q in clarification_questions],
+        )
+        # Post all questions as a single ask_user prompt
+        col_lines = "\n".join(
+            f"- {q.column_name}: currently '{q.current_role}' — {q.prompt}"
+            for q in clarification_questions
+        )
+        session_id = f"pipeline_{entry.dataset_id}"
+        question = state.ask_user.ask(
+            session_id=session_id,
+            prompt=(
+                f"The classifier is unsure about {len(clarification_questions)} "
+                f"column(s). Please confirm or correct their roles:\n\n"
+                f"{col_lines}\n\n"
+                "Reply with corrections in the format: "
+                "column_name=role (e.g., age=dimension, income=dimension). "
+                "Or reply 'ok' to accept all current roles."
+            ),
+            options=["ok"],
+            allow_free_text=True,
+            context=f"Dataset {entry.dataset_id} profiling clarification",
+        )
+        _record_progress(
+            state,
+            entry.dataset_id,
+            "silver",
+            f"waiting for user clarification on {len(clarification_questions)} columns",
+        )
+
+        # Block for up to 5 minutes waiting for the user's answer.
+        # Must run in a thread executor because threading.Event.wait()
+        # is synchronous and would block the async event loop, preventing
+        # the /ask_user/{id}/answer POST from getting through.
+        import asyncio
+
+        answered = await asyncio.to_thread(
+            state.ask_user.wait, question.id, timeout_seconds=300.0
+        )
+
+        if (
+            answered.status == "answered"
+            and answered.answer
+            and answered.answer.strip().lower() != "ok"
+        ):
+            # Parse corrections like "age=dimension, income=dimension"
+            corrections: list[ClarificationAnswer] = []
+            for part in answered.answer.split(","):
+                part = part.strip()
+                if "=" in part:
+                    col, role = part.split("=", 1)
+                    col = col.strip()
+                    role = role.strip().lower()
+                    if role in (
+                        "metric",
+                        "dimension",
+                        "temporal",
+                        "identifier",
+                        "auxiliary",
+                    ):
+                        agg = "SUM" if role == "metric" else None
+                        corrections.append(
+                            ClarificationAnswer(
+                                question_id="user_correction",
+                                column_name=col,
+                                chosen_role=role,
+                                aggregation=agg,
+                            )
+                        )
+            if corrections:
+                profiling_result = merge_answers(profiling_result, corrections)
+                _pipeline_logger.info(
+                    "pipeline.clarification_applied",
+                    dataset_id=entry.dataset_id,
+                    corrections=[
+                        f"{c.column_name}={c.chosen_role}" for c in corrections
+                    ],
+                )
+                _record_progress(
+                    state,
+                    entry.dataset_id,
+                    "silver",
+                    f"applied {len(corrections)} user corrections",
+                )
 
     dcd = build_dcd(
         dataset_id=entry.dataset_id,
