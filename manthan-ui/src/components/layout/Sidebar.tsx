@@ -2,23 +2,16 @@ import { useUIStore } from "@/stores/ui-store";
 import { useDatasetStore } from "@/stores/dataset-store";
 import { useSessionStore } from "@/stores/session-store";
 import { cn, formatNumber } from "@/lib/utils";
-import { Upload, Trash2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Trash2 } from "lucide-react";
+import { useEffect } from "react";
+import { DatasetUploader } from "@/components/datasets/DatasetUploader";
+import { SchemaViewer } from "@/components/datasets/SchemaViewer";
 
 function DatasetsSidebar() {
-  const { datasets, fetchDatasets, uploadDataset, uploading, removeDataset } = useDatasetStore();
+  const { datasets, fetchDatasets, removeDataset } = useDatasetStore();
   const { activeDatasetId, setActiveDataset } = useSessionStore();
-  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchDatasets(); }, [fetchDatasets]);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const ds = await uploadDataset(file);
-    setActiveDataset(ds.dataset_id);
-    if (fileRef.current) fileRef.current.value = "";
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -72,22 +65,8 @@ function DatasetsSidebar() {
           </button>
         ))}
       </div>
-      <div className="p-3 border-t border-border">
-        <input ref={fileRef} type="file" className="hidden" accept=".csv,.tsv,.parquet,.json,.xlsx,.xls" onChange={handleUpload} />
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className={cn(
-            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150",
-            uploading
-              ? "bg-surface-2 text-text-tertiary"
-              : "bg-accent text-accent-text hover:bg-accent-hover",
-          )}
-        >
-          <Upload size={15} />
-          {uploading ? "Uploading..." : "Upload dataset"}
-        </button>
-      </div>
+      {activeDatasetId && <SchemaViewer datasetId={activeDatasetId} />}
+      <DatasetUploader />
     </div>
   );
 }
