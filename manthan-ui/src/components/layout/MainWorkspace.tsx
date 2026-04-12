@@ -18,6 +18,33 @@ import type { RenderSpec } from "@/types/render-spec";
 import type { DatasetSummary } from "@/types/api";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
+import type { ColumnSchema, SchemaSummary } from "@/types/api";
+
+/** Generate a human-readable dataset description from schema intelligence */
+function describeDataset(schema: SchemaSummary): string {
+  const metrics = schema.columns.filter((c) => c.role === "metric");
+  const dims = schema.columns.filter((c) => c.role === "dimension");
+  const temporal = schema.columns.filter((c) => c.role === "temporal");
+
+  const parts: string[] = [];
+
+  if (metrics.length > 0) {
+    const names = metrics.slice(0, 2).map((c) => c.name.replace(/_/g, " "));
+    parts.push(`tracks ${names.join(" and ")}${metrics.length > 2 ? ` and ${metrics.length - 2} more metrics` : ""}`);
+  }
+
+  if (dims.length > 0) {
+    const names = dims.slice(0, 3).map((c) => c.name.replace(/_/g, " "));
+    parts.push(`segmented by ${names.join(", ")}${dims.length > 3 ? ` and ${dims.length - 3} more` : ""}`);
+  }
+
+  if (temporal.length > 0) {
+    parts.push(`with time data for trending`);
+  }
+
+  if (parts.length === 0) return `${schema.columns.length} columns across ${schema.row_count.toLocaleString()} records.`;
+  return parts.join(", ") + `. ${schema.row_count.toLocaleString()} records.`;
+}
 
 /* ═══════════════════════════════════════════════════════
    VIEW 1: First Open — Upload or Explore
@@ -118,9 +145,11 @@ function ExploreCard({ dataset }: { dataset: DatasetSummary }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold text-text-primary truncate">{dataset.name}</p>
-        <p className="text-[11px] text-text-faint mt-0.5">
-          {formatNumber(dataset.row_count)} rows · {dataset.column_count} cols
-        </p>
+        {schema ? (
+          <p className="text-[11px] text-text-faint mt-0.5 truncate capitalize">{describeDataset(schema)}</p>
+        ) : (
+          <p className="text-[11px] text-text-faint mt-0.5">{formatNumber(dataset.row_count)} rows · {dataset.column_count} cols</p>
+        )}
         {schema && <RoleBar columns={schema.columns} className="mt-2" />}
       </div>
       <ChevronRight size={14} className="text-text-faint group-hover:text-text-secondary transition-colors shrink-0" />
@@ -197,6 +226,9 @@ function DatasetProfile() {
           <div className="flex-1">
             <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
             <p className="text-sm text-text-secondary mt-0.5">{activeDs.source_type.toUpperCase()} · {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns</p>
+            {schema && (
+              <p className="text-sm text-text-secondary mt-1 capitalize leading-relaxed">{describeDataset(schema)}</p>
+            )}
           </div>
           <button
             onClick={() => setShowQuery(true)}
