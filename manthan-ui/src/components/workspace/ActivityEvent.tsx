@@ -1,177 +1,196 @@
 import type { AgentEvent } from "@/types/events";
 import {
   Play, Search, TableProperties, FileJson, Brain, Sparkles,
-  GitBranch, Wrench, CheckCircle, XCircle, MessageCircle,
-  ListChecks, ArrowRight, GitFork, GitMerge,
-  AlertTriangle, Loader, Database,
+  Wrench, CheckCircle2, XCircle, ChevronDown,
+  GitFork, GitMerge, AlertTriangle, Loader2,
 } from "lucide-react";
 import { cn, formatMs } from "@/lib/utils";
 import { AskUserCard } from "@/components/hitl/AskUserCard";
 import { PlanApprovalCard } from "@/components/hitl/PlanApprovalCard";
 
-const TOOL_ICONS: Record<string, string> = {
-  run_sql: "SQL",
-  run_python: "PY",
-  get_schema: "SCH",
-  get_context: "DCD",
-  ask_user: "ASK",
-  create_plan: "PLAN",
-  save_memory: "MEM",
-  recall_memory: "RCL",
+const TOOL_LABELS: Record<string, string> = {
+  run_sql: "Running SQL query",
+  run_python: "Executing Python",
+  get_schema: "Loading schema",
+  get_context: "Reading data context",
+  ask_user: "Asking for input",
+  create_plan: "Creating plan",
+  save_memory: "Saving to memory",
+  recall_memory: "Checking memory",
 };
 
-function EventIcon({ type }: { type: string }) {
-  const size = 14;
-  const sw = 1.8;
-  switch (type) {
-    case "session_start": return <Play size={size} strokeWidth={sw} />;
-    case "discovering_tables": return <Search size={size} strokeWidth={sw} />;
-    case "tables_found": return <TableProperties size={size} strokeWidth={sw} />;
-    case "loading_schema": return <FileJson size={size} strokeWidth={sw} />;
-    case "checking_memory": case "memory_found": return <Brain size={size} strokeWidth={sw} />;
-    case "thinking": return <Sparkles size={size} strokeWidth={sw} />;
-    case "deciding": return <GitBranch size={size} strokeWidth={sw} />;
-    case "tool_start": return <Wrench size={size} strokeWidth={sw} />;
-    case "tool_complete": return <CheckCircle size={size} strokeWidth={sw} />;
-    case "tool_error": return <XCircle size={size} strokeWidth={sw} />;
-    case "waiting_for_user": return <MessageCircle size={size} strokeWidth={sw} />;
-    case "user_answered": return <CheckCircle size={size} strokeWidth={sw} />;
-    case "plan_created": case "plan_pending": return <ListChecks size={size} strokeWidth={sw} />;
-    case "plan_approved": return <CheckCircle size={size} strokeWidth={sw} />;
-    case "progress": return <Loader size={size} strokeWidth={sw} />;
-    case "turn_complete": return <ArrowRight size={size} strokeWidth={sw} />;
-    case "subagent_spawned": return <GitFork size={size} strokeWidth={sw} />;
-    case "subagent_complete": return <GitMerge size={size} strokeWidth={sw} />;
-    case "error": return <AlertTriangle size={size} strokeWidth={sw} />;
-    default: return <Database size={size} strokeWidth={sw} />;
-  }
-}
-
-function eventColor(type: string): string {
-  if (type === "tool_error" || type === "error") return "text-error";
-  if (type === "tool_complete" || type === "plan_approved" || type === "user_answered" || type === "subagent_complete") return "text-success";
-  if (type === "tool_start" || type === "waiting_for_user" || type === "plan_pending") return "text-warning";
-  if (type === "thinking" || type === "plan_created" || type === "subagent_spawned" || type === "tables_found" || type === "session_start") return "text-accent";
-  return "text-text-tertiary";
-}
-
 export function ActivityEvent({ event }: { event: AgentEvent }) {
-  // Skip done events — the RenderRouter handles those
   if (event.type === "done") return null;
 
-  // HITL: inline ask_user card
+  // HITL cards
   if (event.type === "waiting_for_user") {
     return <AskUserCard questionId={event.question_id} prompt={event.prompt} options={event.options} />;
   }
-
-  // HITL: inline plan approval card
   if (event.type === "plan_created") {
     return <PlanApprovalCard planId={event.plan_id} interpretation={event.interpretation} stepCount={event.steps} />;
   }
 
-  // Turn dividers are subtle
+  // Turn dividers
   if (event.type === "turn_complete") {
     return (
-      <div className="flex items-center gap-3 py-1 text-xs text-text-tertiary">
+      <div className="flex items-center gap-3 py-2">
         <div className="h-px flex-1 bg-border" />
-        <span>Turn {event.turn}</span>
+        <span className="text-[10px] text-text-faint font-medium">Turn {event.turn}</span>
         <div className="h-px flex-1 bg-border" />
       </div>
     );
   }
 
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-2.5 py-1.5 text-sm animate-fade-up",
-        event.type === "tool_start" && "font-medium animate-tool-active pl-2",
-      )}
-    >
-      <span className={cn("mt-0.5 shrink-0", eventColor(event.type))}>
-        <EventIcon type={event.type} />
-      </span>
-      <div className="flex-1 min-w-0">
-        <EventContent event={event} />
+  // Tool calls — card treatment
+  if (event.type === "tool_start") {
+    return (
+      <div className="animate-fade-up my-1.5 rounded-xl bg-surface-raised border border-border shadow-xs p-3 flex items-center gap-3 animate-tool-active">
+        <div className="w-7 h-7 rounded-lg bg-warning-soft flex items-center justify-center shrink-0">
+          <Loader2 size={14} className="text-warning animate-spin-slow" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-text-primary">
+            {TOOL_LABELS[event.tool] ?? event.tool}
+          </p>
+          <p className="text-[11px] text-text-faint font-mono truncate mt-0.5">
+            {event.args_preview.slice(0, 100)}
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function EventContent({ event }: { event: AgentEvent }) {
-  switch (event.type) {
-    case "session_start":
-      return <span className="text-text-secondary">Starting analysis with <span className="text-accent font-medium">{event.model}</span></span>;
-    case "discovering_tables":
-      return <span className="text-text-secondary">Scanning available tables...</span>;
-    case "tables_found":
-      return <span className="text-text-secondary"><span className="font-medium text-text-primary">{event.total}</span> tables found</span>;
-    case "loading_schema":
-      return <span className="text-text-secondary">Loading schema...</span>;
-    case "checking_memory":
-      return <span className="text-text-secondary">Checking prior analyses...</span>;
-    case "memory_found":
-      return <span className="text-text-secondary"><span className="font-medium text-text-primary">{event.prior_analyses}</span> prior analyses found</span>;
-    case "thinking":
-      return <span className="text-text-secondary italic">{event.text.slice(0, 200)}{event.text.length > 200 ? "..." : ""}</span>;
-    case "deciding":
-      return <span className="text-text-secondary">{event.gate}: <span className="font-medium text-text-primary">{event.decision}</span></span>;
-    case "tool_start":
-      return (
-        <span className="text-text-primary">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-warning-soft text-warning text-xs font-mono font-semibold mr-1.5">
-            {TOOL_ICONS[event.tool] ?? event.tool}
-          </span>
-          <span className="text-text-secondary text-xs font-mono truncate">{event.args_preview.slice(0, 80)}</span>
-        </span>
-      );
-    case "tool_complete":
-      return (
-        <span className="text-text-secondary">
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-success-soft text-success text-xs font-mono font-semibold mr-1.5">
-            {TOOL_ICONS[event.tool] ?? event.tool}
-          </span>
-          <span className="text-xs text-text-tertiary">{formatMs(event.elapsed_ms)}</span>
-        </span>
-      );
-    case "tool_error":
-      return (
-        <span className="text-error">
-          {event.tool} failed: {event.error.slice(0, 100)}
-          {event.will_retry && <span className="text-xs text-warning ml-2">retrying</span>}
-        </span>
-      );
-    case "waiting_for_user":
-      return <span className="text-warning font-medium">Needs your input: {event.prompt}</span>;
-    case "user_answered":
-      return <span className="text-text-secondary">Answered: <span className="font-medium text-text-primary">{event.answer}</span></span>;
-    case "plan_created":
-      return <span className="text-accent font-medium">Plan created ({event.steps} steps): {event.interpretation.slice(0, 100)}</span>;
-    case "plan_pending":
-      return <span className="text-warning">Awaiting approval...</span>;
-    case "plan_approved":
-      return <span className="text-success font-medium">Plan approved</span>;
-    case "progress":
-      return (
-        <span className="text-text-secondary">
-          Step {event.step}/{event.total}: {event.description}
-        </span>
-      );
-    case "subagent_spawned":
-      return <span className="text-accent">Spawned agent: {event.task.slice(0, 80)}</span>;
-    case "subagent_complete":
-      return <span className="text-success">Agent complete: {event.result.slice(0, 80)}</span>;
-    case "error":
-      return (
-        <span className="text-error">
-          <span className="font-medium">{event.message}</span>
-          {!event.recoverable && (
-            <span className="ml-2 text-xs text-text-tertiary">
-              Try rephrasing your question or check the dataset
-            </span>
-          )}
-        </span>
-      );
-    default:
-      return null;
+    );
   }
+
+  if (event.type === "tool_complete") {
+    return (
+      <div className="animate-fade-up my-1.5 rounded-xl bg-surface-raised border border-border shadow-xs p-3 flex items-center gap-3">
+        <div className="w-7 h-7 rounded-lg bg-success-soft flex items-center justify-center shrink-0">
+          <CheckCircle2 size={14} className="text-success" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-text-primary">
+            {TOOL_LABELS[event.tool] ?? event.tool}
+          </p>
+        </div>
+        <span className="text-[10px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">
+          {formatMs(event.elapsed_ms)}
+        </span>
+      </div>
+    );
+  }
+
+  if (event.type === "tool_error") {
+    return (
+      <div className="animate-fade-up my-1.5 rounded-xl bg-error-soft border border-error/20 p-3 flex items-center gap-3">
+        <div className="w-7 h-7 rounded-lg bg-error/10 flex items-center justify-center shrink-0">
+          <XCircle size={14} className="text-error" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-medium text-error">{event.tool} failed</p>
+          <p className="text-[11px] text-text-secondary mt-0.5">{event.error.slice(0, 80)}</p>
+        </div>
+        {event.will_retry && (
+          <span className="text-[10px] text-warning font-medium">retrying</span>
+        )}
+      </div>
+    );
+  }
+
+  // Thinking — collapsible
+  if (event.type === "thinking") {
+    return (
+      <details className="my-2 animate-fade-up">
+        <summary className="flex items-center gap-2 text-[13px] text-text-secondary cursor-pointer hover:text-text-primary transition-colors select-none">
+          <Sparkles size={13} className="text-accent" />
+          <span className="font-medium">Thinking</span>
+          <ChevronDown size={12} className="text-text-faint ml-auto" />
+        </summary>
+        <div className="mt-2 pl-5 text-[13px] text-text-secondary leading-relaxed border-l-2 border-accent-soft">
+          {event.text.slice(0, 400)}{event.text.length > 400 ? "…" : ""}
+        </div>
+      </details>
+    );
+  }
+
+  // Discovery phase — subtle inline
+  if (["session_start", "discovering_tables", "loading_schema", "checking_memory"].includes(event.type)) {
+    const labels: Record<string, string> = {
+      session_start: "Starting analysis",
+      discovering_tables: "Scanning tables",
+      loading_schema: "Loading schema",
+      checking_memory: "Checking memory",
+    };
+    return (
+      <div className="flex items-center gap-2 py-1 animate-fade-up">
+        <Loader2 size={12} className="text-text-faint animate-spin-slow" />
+        <span className="text-xs text-text-faint">{labels[event.type] ?? event.type}…</span>
+      </div>
+    );
+  }
+
+  if (event.type === "tables_found") {
+    return (
+      <div className="flex items-center gap-2 py-1 animate-fade-up">
+        <TableProperties size={12} className="text-accent" />
+        <span className="text-xs text-text-secondary">
+          <span className="font-medium">{event.total}</span> tables found
+        </span>
+      </div>
+    );
+  }
+
+  if (event.type === "memory_found") {
+    return (
+      <div className="flex items-center gap-2 py-1 animate-fade-up">
+        <Brain size={12} className="text-accent" />
+        <span className="text-xs text-text-secondary">
+          <span className="font-medium">{event.prior_analyses}</span> prior analyses recalled
+        </span>
+      </div>
+    );
+  }
+
+  if (event.type === "plan_approved") {
+    return (
+      <div className="flex items-center gap-2 py-1.5 animate-fade-up">
+        <CheckCircle2 size={13} className="text-success" />
+        <span className="text-[13px] text-success font-medium">Plan approved</span>
+      </div>
+    );
+  }
+
+  if (event.type === "subagent_spawned") {
+    return (
+      <div className="flex items-center gap-2 py-1.5 animate-fade-up">
+        <GitFork size={13} className="text-accent" />
+        <span className="text-[13px] text-text-secondary">Spawned agent: {event.task.slice(0, 60)}</span>
+      </div>
+    );
+  }
+
+  if (event.type === "subagent_complete") {
+    return (
+      <div className="flex items-center gap-2 py-1.5 animate-fade-up">
+        <GitMerge size={13} className="text-success" />
+        <span className="text-[13px] text-text-secondary">Agent finished</span>
+      </div>
+    );
+  }
+
+  if (event.type === "error") {
+    return (
+      <div className="my-2 rounded-xl bg-error-soft border border-error/20 p-4 animate-fade-up">
+        <div className="flex items-center gap-2 mb-1">
+          <AlertTriangle size={14} className="text-error" />
+          <span className="text-[13px] font-medium text-error">Error</span>
+        </div>
+        <p className="text-[13px] text-text-secondary">{event.message}</p>
+        {!event.recoverable && (
+          <p className="text-[11px] text-text-faint mt-1">Try rephrasing your question</p>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback for remaining types
+  return null;
 }

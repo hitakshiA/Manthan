@@ -1,12 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Sparkles } from "lucide-react";
 import { useAgentStore } from "@/stores/agent-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useDatasetStore } from "@/stores/dataset-store";
 import { queryStream } from "@/api/agent";
 import { cn } from "@/lib/utils";
 
-export function QueryInput() {
+interface Props {
+  variant?: "hero" | "compact";
+}
+
+export function QueryInput({ variant = "compact" }: Props) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const phase = useAgentStore((s) => s.phase);
@@ -17,15 +21,14 @@ export function QueryInput() {
   const activeDs = datasets.find((d) => d.dataset_id === activeDatasetId);
 
   const busy = phase !== "idle" && phase !== "done" && phase !== "error";
+  const isHero = variant === "hero";
 
-  // Auto-focus on mount and dataset change
   useEffect(() => {
-    if (activeDatasetId && !busy) {
+    if (activeDatasetId && !busy && isHero) {
       inputRef.current?.focus();
     }
-  }, [activeDatasetId, busy]);
+  }, [activeDatasetId, busy, isHero]);
 
-  // Cmd+K global shortcut to focus
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -43,15 +46,10 @@ export function QueryInput() {
     reset();
     addQuery(msg, activeDatasetId);
     setValue("");
-
     try {
       await queryStream(sessionId, activeDatasetId, msg, pushEvent);
     } catch (e) {
-      pushEvent({
-        type: "error",
-        message: e instanceof Error ? e.message : "Connection failed",
-        recoverable: false,
-      });
+      pushEvent({ type: "error", message: e instanceof Error ? e.message : "Connection failed", recoverable: false });
     }
   }, [value, activeDatasetId, busy, sessionId, pushEvent, reset, addQuery]);
 
@@ -63,20 +61,15 @@ export function QueryInput() {
   };
 
   return (
-    <div className="px-6 py-3 border-t border-border">
-      <div
-        className={cn(
-          "flex items-end gap-3 rounded-lg border border-border bg-surface-0 px-4 py-3",
-          "transition-all duration-200",
-          "focus-within:border-accent focus-within:shadow-[0_0_0_3px_var(--color-accent-soft)]",
-          busy && "opacity-60",
-        )}
-      >
-        {activeDs && (
-          <span className="shrink-0 text-xs font-medium text-accent bg-accent-soft px-2 py-1 rounded mb-0.5">
-            {activeDs.name}
-          </span>
-        )}
+    <div
+      className={cn(
+        "rounded-2xl bg-surface-raised border border-border transition-all duration-200",
+        isHero ? "shadow-input" : "shadow-xs",
+        "focus-within:shadow-md focus-within:border-border-strong",
+        busy && "opacity-60",
+      )}
+    >
+      <div className={cn("flex items-end gap-3", isHero ? "px-5 py-4" : "px-4 py-2.5")}>
         <textarea
           ref={inputRef}
           value={value}
@@ -91,9 +84,8 @@ export function QueryInput() {
           disabled={!activeDatasetId || busy}
           rows={1}
           className={cn(
-            "flex-1 bg-transparent text-sm text-text-primary",
-            "placeholder:text-text-tertiary resize-none outline-none",
-            "leading-relaxed min-h-[24px] max-h-[120px]",
+            "flex-1 bg-transparent text-text-primary placeholder:text-text-faint resize-none outline-none leading-relaxed min-h-[24px] max-h-[120px]",
+            isHero ? "text-base" : "text-sm",
           )}
           style={{ fieldSizing: "content" } as React.CSSProperties}
         />
@@ -102,25 +94,35 @@ export function QueryInput() {
           disabled={!value.trim() || !activeDatasetId || busy}
           aria-label={busy ? "Analysis in progress" : "Send query"}
           className={cn(
-            "shrink-0 w-8 h-8 flex items-center justify-center rounded-md",
-            "transition-all duration-150",
+            "shrink-0 flex items-center justify-center rounded-xl transition-all duration-200",
+            isHero ? "w-10 h-10" : "w-8 h-8",
             "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
             value.trim() && activeDatasetId && !busy
-              ? "bg-accent text-accent-text hover:bg-accent-hover hover:scale-105 active:scale-95"
-              : "text-text-tertiary",
+              ? "bg-accent text-accent-text shadow-sm hover:bg-accent-hover hover:shadow-md hover:scale-105 active:scale-95"
+              : "bg-surface-sunken text-text-faint",
           )}
         >
           {busy ? (
-            <Loader2 size={15} className="animate-spin" />
+            <Loader2 size={isHero ? 18 : 15} className="animate-spin-slow" />
           ) : (
-            <Send size={15} />
+            <Send size={isHero ? 18 : 15} />
           )}
         </button>
       </div>
-      {activeDatasetId && !busy && (
-        <p className="text-[11px] text-text-tertiary mt-1.5 pl-1">
-          <kbd className="px-1 py-0.5 rounded bg-surface-2 text-[10px] font-mono">⌘K</kbd> to focus · <kbd className="px-1 py-0.5 rounded bg-surface-2 text-[10px] font-mono">Enter</kbd> to send
-        </p>
+
+      {/* Bottom row with context */}
+      {isHero && (
+        <div className="flex items-center gap-3 px-5 pb-3 pt-0">
+          {activeDs && (
+            <span className="flex items-center gap-1.5 text-xs text-text-tertiary">
+              <Sparkles size={11} className="text-accent" />
+              {activeDs.name}
+            </span>
+          )}
+          <span className="ml-auto text-[10px] text-text-faint">
+            <kbd className="px-1 py-0.5 rounded bg-surface-sunken font-mono">⌘K</kbd> to focus
+          </span>
+        </div>
       )}
     </div>
   );
