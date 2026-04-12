@@ -103,6 +103,8 @@ ignore = []
 "tests/**" = ["S101"]
 # Stress test scripts use 1A/1B/1C/1D cell function names that intentionally
 # mirror the tier matrix from the plan and can use pragmatic error handling.
+# Agent prompt strings use × (multiplication sign) for data shape notation
+"src/agent/prompt.py" = ["RUF001"]
 "scripts/stress_test/**" = [
     "N802",   # cell_1A_taxi etc. deliberately match the plan's tier matrix
     "SIM105", # pragmatic try/except/pass is fine in ad-hoc harness scripts

@@ -16,6 +16,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from src import __version__
 from src.api import (
+    agent,
     agent_tasks,
     ask_user,
     clarification,
@@ -88,6 +89,7 @@ app.include_router(ask_user.router)
 app.include_router(plans.router)
 app.include_router(subagents.router)
 app.include_router(tool_discovery.router)
+app.include_router(agent.router)
 
 
 @app.get("/metrics", tags=["observability"])
