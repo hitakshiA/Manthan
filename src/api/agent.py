@@ -56,9 +56,19 @@ async def agent_query_sync(request: QueryRequest, config: AgentConfigDep) -> dic
             dataset_id=request.dataset_id,
             user_message=request.message,
         )
-    return {
+    # Extract render_spec from the done event if present
+    render_spec = None
+    for e in reversed(result.events_emitted):
+        if e.type == "done" and e.data.get("render_spec"):
+            render_spec = e.data["render_spec"]
+            break
+
+    resp: dict = {
         "text": result.text,
         "turns": result.turns,
         "tool_calls": result.tool_calls_total,
         "elapsed_seconds": result.elapsed_seconds,
     }
+    if render_spec:
+        resp["render_spec"] = render_spec
+    return resp

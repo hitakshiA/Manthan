@@ -272,6 +272,25 @@ def delete_dataset(dataset_id: str, state: StateDep) -> dict[str, str]:
     return {"dataset_id": dataset_id, "status": "deleted"}
 
 
+@router.get("/{dataset_id}/output/{filename:path}")
+def get_output_artifact(
+    dataset_id: str,
+    filename: str,
+    state: StateDep,
+) -> Response:
+    """Serve an artifact written by the Python sandbox (e.g. render_spec.json)."""
+    if dataset_id not in state.dcds:
+        raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
+    # Prevent path traversal
+    safe = Path(filename).name
+    artifact = Path(state.data_directory) / dataset_id / "output" / safe
+    if not artifact.exists() or not artifact.is_file():
+        raise HTTPException(status_code=404, detail=f"Artifact not found: {safe}")
+    content = artifact.read_text(encoding="utf-8")
+    media = "application/json" if safe.endswith(".json") else "text/plain"
+    return Response(content=content, media_type=media)
+
+
 def _table_exists(state: AppState, table_name: str) -> bool:
     row = state.connection.execute(
         "SELECT 1 FROM information_schema.tables WHERE table_name = ? LIMIT 1",

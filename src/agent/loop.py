@@ -21,6 +21,7 @@ import json
 import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -182,13 +183,15 @@ class ManthanAgent:
 
             tool_calls = assistant_msg.get("tool_calls") or []
             if not tool_calls:
-                # Agent is done
+                # Agent is done — try to load render_spec from disk
                 elapsed = time.perf_counter() - t0
+                render_spec = await self._load_render_spec(dataset_id)
                 yield events.done(
                     content or "",
                     turns,
                     tool_calls=tool_calls_total,
                     elapsed=elapsed,
+                    render_spec=render_spec,
                 )
                 return
 
@@ -291,3 +294,18 @@ class ManthanAgent:
                 last_error = exc
 
         raise RuntimeError(f"LLM failed after 3 attempts: {last_error}")
+
+    # ── Render spec loader ──────────────────────────────────
+
+    async def _load_render_spec(self, dataset_id: str) -> dict[str, Any] | None:
+        """Try to read render_spec.json from the dataset output directory."""
+        try:
+            from src.core.config import get_settings
+
+            out = Path(get_settings().data_directory) / dataset_id
+            spec_path = out / "output" / "render_spec.json"
+            if spec_path.exists() and spec_path.stat().st_size > 0:
+                return json.loads(spec_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+        return None

@@ -204,7 +204,7 @@ class PythonSession:
                 ) from exc
 
             after = _snapshot_output_files(self.output_directory)
-            new_files = _diff_output_files(before, after)
+            new_files = _diff_output_files(self.output_directory, before, after)
 
             return SessionResponse(
                 stdout=result.get("stdout", ""),
@@ -340,6 +340,7 @@ def _snapshot_output_files(output_directory: Path) -> dict[str, float]:
 
 
 def _diff_output_files(
+    output_directory: Path,
     before: dict[str, float],
     after: dict[str, float],
 ) -> list[dict[str, Any]]:
@@ -347,7 +348,12 @@ def _diff_output_files(
     diff: list[dict[str, Any]] = []
     for relative, mtime in after.items():
         if relative not in before or before[relative] < mtime:
-            diff.append({"name": Path(relative).name, "path": relative, "size": 0})
+            file_path = output_directory / relative
+            try:
+                size = file_path.stat().st_size
+            except OSError:
+                size = 0
+            diff.append({"name": Path(relative).name, "path": relative, "size": size})
     return diff
 
 

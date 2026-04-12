@@ -43,6 +43,7 @@ def done(
     tool_calls: int = 0,
     elapsed: float = 0.0,
     mode: str | None = None,
+    render_spec: dict[str, Any] | None = None,
 ) -> AgentEvent:
     return AgentEvent(
         type="done",
@@ -52,6 +53,7 @@ def done(
             "tool_calls": tool_calls,
             "elapsed_seconds": round(elapsed, 2),
             "mode": mode,
+            "render_spec": render_spec,
         },
     )
 
