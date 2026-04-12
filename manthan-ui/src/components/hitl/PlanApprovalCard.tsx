@@ -72,7 +72,7 @@ export function PlanApprovalCard({ planId, interpretation, stepCount, onDecided 
           <button
             onClick={handleApprove}
             disabled={submitting}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-success text-white hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-success text-accent-text hover:opacity-90 transition-opacity"
           >
             <Check size={14} />
             Approve
@@ -99,7 +99,7 @@ export function PlanApprovalCard({ planId, interpretation, stepCount, onDecided 
           <button
             onClick={handleReject}
             disabled={submitting}
-            className="px-3 py-1.5 rounded-md text-sm font-medium bg-error text-white hover:opacity-90"
+            className="px-3 py-1.5 rounded-md text-sm font-medium bg-error text-accent-text hover:opacity-90"
           >
             Reject
           </button>

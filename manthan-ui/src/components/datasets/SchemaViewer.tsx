@@ -5,11 +5,11 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ROLE_COLORS: Record<string, string> = {
-  metric: "bg-blue-100 text-blue-700",
-  dimension: "bg-purple-100 text-purple-700",
-  temporal: "bg-emerald-100 text-emerald-700",
-  identifier: "bg-gray-100 text-gray-600",
-  auxiliary: "bg-orange-100 text-orange-600",
+  metric: "bg-accent-soft text-accent",
+  dimension: "bg-surface-3 text-text-secondary",
+  temporal: "bg-success-soft text-success",
+  identifier: "bg-surface-2 text-text-tertiary",
+  auxiliary: "bg-warning-soft text-warning",
 };
 
 export function SchemaViewer({ datasetId }: { datasetId: string }) {

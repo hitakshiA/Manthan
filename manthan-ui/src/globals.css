@@ -96,6 +96,72 @@
   }
 }
 
+/* ── Staggered fade-up animation ── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 300ms var(--ease-out-quart) both;
+}
+
+/* ── Stagger via custom property ── */
+.stagger-item {
+  animation: fade-up 300ms var(--ease-out-quart) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* ── Pulse border for active tools ── */
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--color-warning); }
+  50% { border-color: transparent; }
+}
+
+.animate-tool-active {
+  border-left: 2px solid var(--color-warning);
+  animation: pulse-border 1.2s ease-in-out infinite;
+}
+
+/* ── Shimmer for thinking state ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-1) 25%,
+    var(--color-surface-2) 50%,
+    var(--color-surface-1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ── Styled details/summary ── */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  content: "▸ ";
+  display: inline;
+  transition: transform 150ms var(--ease-out-quart);
+}
+details[open] > summary::before {
+  content: "▾ ";
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -6,7 +6,7 @@ import { DashboardSection } from "./moderate/DashboardSection";
 export function ModerateView({ spec }: { spec: ModerateRenderSpec }) {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div>
+      <div className="stagger-item" style={{ "--i": 0 } as React.CSSProperties}>
         <h2 className="text-xl font-bold text-text-primary text-balance">
           {spec.title}
         </h2>
@@ -15,11 +15,15 @@ export function ModerateView({ spec }: { spec: ModerateRenderSpec }) {
         )}
       </div>
 
-      <KPIRow cards={spec.kpi_row} />
+      <div className="stagger-item" style={{ "--i": 1 } as React.CSSProperties}>
+        <KPIRow cards={spec.kpi_row} />
+      </div>
 
       <div className="space-y-8">
         {spec.sections.map((section, i) => (
-          <DashboardSection key={section.id || i} section={section} index={i} />
+          <div key={section.id || i} className="stagger-item" style={{ "--i": i + 2 } as React.CSSProperties}>
+            <DashboardSection section={section} index={i} />
+          </div>
         ))}
       </div>
 

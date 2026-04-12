@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Skills (installed locally via npx skills add)
+.agents/
+.claude/skills/
+.trae/
+skills-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -83,8 +83,8 @@ export function ActivityEvent({ event }: { event: AgentEvent }) {
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 py-1.5 text-sm animate-in fade-in slide-in-from-left-2 duration-200",
-        event.type === "tool_start" && "font-medium",
+        "flex items-start gap-2.5 py-1.5 text-sm animate-fade-up",
+        event.type === "tool_start" && "font-medium animate-tool-active pl-2",
       )}
     >
       <span className={cn("mt-0.5 shrink-0", eventColor(event.type))}>
@@ -161,7 +161,16 @@ function EventContent({ event }: { event: AgentEvent }) {
     case "subagent_complete":
       return <span className="text-success">Agent complete: {event.result.slice(0, 80)}</span>;
     case "error":
-      return <span className="text-error font-medium">{event.message}</span>;
+      return (
+        <span className="text-error">
+          <span className="font-medium">{event.message}</span>
+          {!event.recoverable && (
+            <span className="ml-2 text-xs text-text-tertiary">
+              Try rephrasing your question or check the dataset
+            </span>
+          )}
+        </span>
+      );
     default:
       return null;
   }

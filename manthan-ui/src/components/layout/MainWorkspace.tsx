@@ -5,6 +5,8 @@ import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
 import { Database, ArrowUpRight, Clock, Wrench, RotateCcw } from "lucide-react";
+import { useAgentStore as useAgentStoreRef } from "@/stores/agent-store";
+import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
 
 function EmptyState() {
@@ -28,6 +30,21 @@ function EmptyState() {
     );
   }
 
+  const { sessionId, addQuery } = useSessionStore();
+  const pushEvent = useAgentStoreRef((s) => s.pushEvent);
+  const reset = useAgentStoreRef((s) => s.reset);
+
+  const runSuggestion = async (q: string) => {
+    if (!activeDatasetId) return;
+    reset();
+    addQuery(q, activeDatasetId);
+    try {
+      await queryStream(sessionId, activeDatasetId, q, pushEvent);
+    } catch (e) {
+      pushEvent({ type: "error", message: e instanceof Error ? e.message : "Failed", recoverable: false });
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8">
       <div className="text-center max-w-md">
@@ -46,6 +63,7 @@ function EmptyState() {
         ].map((q) => (
           <button
             key={q}
+            onClick={() => runSuggestion(q)}
             className="flex items-center gap-1.5 text-xs text-text-secondary bg-surface-1 hover:bg-surface-2 border border-border px-3 py-2 rounded-lg transition-colors"
           >
             {q}

@@ -29,7 +29,7 @@ function DatasetsSidebar() {
             key={ds.dataset_id}
             onClick={() => setActiveDataset(ds.dataset_id)}
             className={cn(
-              "w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors duration-100",
+              "group w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors duration-100",
               activeDatasetId === ds.dataset_id
                 ? "bg-accent-soft"
                 : "hover:bg-surface-2",
@@ -77,9 +77,14 @@ function MemorySidebar() {
       <div className="px-4 py-3 border-b border-border">
         <h2 className="text-sm font-semibold text-text-primary tracking-tight">Memory</h2>
       </div>
-      <p className="px-4 py-8 text-sm text-text-tertiary text-center">
-        Cross-session memory entries will appear here after analyses
-      </p>
+      <div className="px-4 py-8 text-center space-y-2">
+        <p className="text-sm text-text-secondary">
+          The analyst remembers
+        </p>
+        <p className="text-xs text-text-tertiary leading-relaxed">
+          After a complex analysis, key findings are saved here. Next time you ask a related question, the agent recalls this context automatically.
+        </p>
+      </div>
     </div>
   );
 }
@@ -93,9 +98,12 @@ function HistorySidebar() {
       </div>
       <div className="flex-1 overflow-y-auto py-2">
         {queryHistory.length === 0 && (
-          <p className="px-4 py-8 text-sm text-text-tertiary text-center">
-            Your queries will appear here
-          </p>
+          <div className="px-4 py-8 text-center space-y-2">
+            <p className="text-sm text-text-secondary">No queries yet</p>
+            <p className="text-xs text-text-tertiary leading-relaxed">
+              Every analysis you run appears here with its output mode — simple, moderate, or complex.
+            </p>
+          </div>
         )}
         {queryHistory.map((q) => (
           <div key={q.id} className="px-4 py-2.5 hover:bg-surface-2 transition-colors">
