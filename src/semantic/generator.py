@@ -82,6 +82,7 @@ def build_dcd(
         computed_metrics=metrics,
         quality=quality,
         agent_instructions=_build_agent_instructions(columns),
+        profiler_mode=profiling_result.profiler_mode,
     )
 
     return DataContextDocument(dataset=dataset)

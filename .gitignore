@@ -64,9 +64,13 @@ data/*
 *.duckdb
 *.duckdb.wal
 *.parquet
+*.db
 logs/
 tmp/
 /tmp/
+
+# Stress test artifacts (generated during live testing)
+docs/stress_test_artifacts/
 
 # Node (frontend, if/when added)
 node_modules/

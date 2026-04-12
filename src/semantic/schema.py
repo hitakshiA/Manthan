@@ -218,6 +218,15 @@ class DcdDataset(BaseModel):
     quality: DcdQuality = Field(default_factory=DcdQuality)
     verified_queries: list[DcdVerifiedQuery] = Field(default_factory=list)
     agent_instructions: list[str] = Field(default_factory=list)
+    profiler_mode: str = Field(
+        default="llm",
+        description=(
+            "How the column classifications were produced: "
+            "'llm' (OpenRouter model), 'heuristic' (deterministic "
+            "fallback when LLM unavailable), or 'mixed' (some "
+            "columns LLM, some heuristic)."
+        ),
+    )
 
 
 class DataContextDocument(BaseModel):

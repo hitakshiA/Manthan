@@ -1,19 +1,32 @@
 [project]
 name = "manthan"
-version = "0.1.0"
-description = "Seamless Self-Service Intelligence — Talk to Data. NatWest Code for Purpose India Hackathon."
+version = "1.0.0"
+description = "Seamless Self-Service Intelligence — Talk to Data. A 3-layer autonomous data analyst platform: data pipeline + semantic layer + agent toolbox."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Manthan Engineering" }]
-keywords = ["data", "llm", "duckdb", "semantic-layer", "profiling", "hackathon"]
+authors = [{ name = "Akash Mondal", email = "akash@manthan.dev" }]
+keywords = [
+    "data",
+    "llm",
+    "duckdb",
+    "semantic-layer",
+    "profiling",
+    "agent",
+    "autonomous-analyst",
+    "data-context-document",
+    "talk-to-data",
+]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Database",
     "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Framework :: FastAPI",
 ]
 
 # Runtime dependencies. All licenses must be Apache 2.0, MIT, BSD, or PSF.
@@ -28,6 +41,7 @@ dependencies = [
     "docker>=7.0",                 # Apache-2.0 — sandbox management
     "httpx>=0.28.0",               # BSD-3 — async HTTP client (OpenRouter)
     "pandas>=2.2.0",               # BSD-3 — DataFrame interop
+    "pyarrow>=17.0",               # Apache-2.0 — Parquet read/write for agent artifacts
     "pydantic>=2.9.0",             # MIT — data models
     "pydantic-settings>=2.5.0",    # MIT — typed env-var configuration
     "structlog>=24.4.0",           # MIT / Apache-2.0 dual — structured JSON logs
@@ -47,7 +61,10 @@ dev = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/hitakshiA/Manthan"
 Repository = "https://github.com/hitakshiA/Manthan"
+Documentation = "https://github.com/hitakshiA/Manthan/tree/main/docs"
+"Bug Tracker" = "https://github.com/hitakshiA/Manthan/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -83,6 +100,17 @@ ignore = []
 [tool.ruff.lint.per-file-ignores]
 # Tests may use asserts and skip some strictness.
 "tests/**" = ["S101"]
+# Stress test scripts use 1A/1B/1C/1D cell function names that intentionally
+# mirror the tier matrix from the plan and can use pragmatic error handling.
+"scripts/stress_test/**" = [
+    "N802",   # cell_1A_taxi etc. deliberately match the plan's tier matrix
+    "SIM105", # pragmatic try/except/pass is fine in ad-hoc harness scripts
+    "E501",   # f-string Python code blocks can legitimately exceed 88 cols
+    "RUF001", # narrative strings use × (multiplication sign) — intentional
+    "RUF002", # same — in docstrings
+    "RUF003", # same — in inline comments
+    "RUF100", # unused noqa comments in ad-hoc scripts aren't worth chasing
+]
 
 [tool.ruff.format]
 quote-style = "double"

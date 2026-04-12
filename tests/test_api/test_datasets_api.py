@@ -17,6 +17,8 @@ from fastapi.testclient import TestClient
 from src.api.datasets import get_llm_client_factory
 from src.core.database import create_connection
 from src.core.llm import LlmClient
+from src.core.memory import MemoryStore
+from src.core.plans import PlanStore
 from src.core.state import AppState, get_state
 from src.ingestion.registry import DatasetRegistry
 from src.main import app
@@ -99,6 +101,8 @@ def api_client(tmp_path: Path) -> Iterator[TestClient]:
         registry=DatasetRegistry(),
         connection=connection,
         data_directory=tmp_path,
+        memory=MemoryStore(tmp_path / "agent_memory.db"),
+        plans=PlanStore(tmp_path / "plan_audit.db"),
     )
     app.dependency_overrides[get_state] = lambda: state
     app.dependency_overrides[get_llm_client_factory] = _mock_llm_factory

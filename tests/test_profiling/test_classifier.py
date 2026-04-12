@@ -17,6 +17,7 @@ from src.profiling.classifier import (
     _align_to_profiles,
     _parse_classifications,
     classify_columns,
+    heuristic_classify,
 )
 from src.profiling.statistical import ColumnProfile
 
@@ -191,7 +192,86 @@ class TestClassifyColumns:
             result = await classify_columns([], llm)
         assert result == []
 
-    async def test_llm_returns_bad_json_raises_profiling_error(self) -> None:
+    async def test_llm_bad_json_falls_back_to_heuristic(self) -> None:
+        """Malformed LLM output no longer raises; heuristic fallback kicks in.
+
+        Silver stage should stay robust if the model sends back garbage —
+        the DCD must still be produced so Gold materialization can proceed.
+        Provenance is tracked via the ``heuristic-fallback:`` reasoning
+        prefix so the miss is auditable.
+        """
         async with _build_mock_llm("this is not json") as llm:
-            with pytest.raises(ProfilingError):
-                await classify_columns([_make_profile("x")], llm)
+            result = await classify_columns([_make_profile("x")], llm)
+        assert len(result) == 1
+        assert result[0].reasoning is not None
+        assert result[0].reasoning.startswith("heuristic-fallback:")
+
+
+def _numeric_profile(
+    name: str, *, dtype: str = "DOUBLE", distinct: int = 100, rows: int = 1000
+) -> ColumnProfile:
+    return ColumnProfile(
+        name=name,
+        dtype=dtype,
+        row_count=rows,
+        null_count=0,
+        completeness=1.0,
+        distinct_count=distinct,
+        cardinality_ratio=distinct / rows if rows else 0.0,
+        sample_values=[1, 2, 3],
+    )
+
+
+def _string_profile(name: str, *, distinct: int = 5, rows: int = 1000) -> ColumnProfile:
+    return ColumnProfile(
+        name=name,
+        dtype="VARCHAR",
+        row_count=rows,
+        null_count=0,
+        completeness=1.0,
+        distinct_count=distinct,
+        cardinality_ratio=distinct / rows if rows else 0.0,
+        sample_values=["a", "b"],
+    )
+
+
+class TestHeuristicClassify:
+    def test_temporal_dtype_detected(self) -> None:
+        result = heuristic_classify(_numeric_profile("order_date", dtype="DATE"))
+        assert result.role == "temporal"
+        assert result.reasoning is not None
+        assert "temporal" in result.reasoning
+
+    def test_identifier_by_name_and_high_cardinality(self) -> None:
+        profile = _string_profile("customer_id", distinct=1000, rows=1000)
+        result = heuristic_classify(profile)
+        assert result.role == "identifier"
+
+    def test_numeric_with_metric_name_hint_becomes_metric(self) -> None:
+        result = heuristic_classify(
+            _numeric_profile("tip_amount", dtype="DOUBLE", distinct=500, rows=1000)
+        )
+        assert result.role == "metric"
+        assert result.aggregation == "SUM"
+
+    def test_numeric_low_cardinality_becomes_dimension(self) -> None:
+        # payment_type has only 5 distinct values across 1000 rows
+        result = heuristic_classify(
+            _numeric_profile("payment_type", dtype="BIGINT", distinct=5, rows=1000)
+        )
+        assert result.role == "dimension"
+
+    def test_string_with_dimension_hint_becomes_dimension(self) -> None:
+        result = heuristic_classify(_string_profile("region", distinct=4, rows=1000))
+        assert result.role == "dimension"
+
+    def test_auxiliary_name_hint(self) -> None:
+        result = heuristic_classify(
+            _string_profile("description", distinct=900, rows=1000)
+        )
+        assert result.role == "auxiliary"
+
+    def test_reasoning_prefixed_with_heuristic_fallback(self) -> None:
+        result = heuristic_classify(_numeric_profile("trip_distance"))
+        assert result.reasoning is not None
+        assert result.reasoning.startswith("heuristic-fallback:")

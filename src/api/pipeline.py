@@ -232,7 +232,9 @@ async def _finish_pipeline(
     summary_tables = create_summary_tables(state.connection, gold_table_name, dcd)
     metrics.increment("materialization.summary_tables", len(summary_tables))
 
-    verified_queries = generate_verified_queries(dcd, gold_table=gold_table_name)
+    verified_queries = generate_verified_queries(
+        dcd, gold_table=gold_table_name, connection=state.connection
+    )
     dcd = dcd.model_copy(
         update={
             "dataset": dcd.dataset.model_copy(

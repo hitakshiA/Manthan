@@ -96,7 +96,19 @@ def _is_value_subset(
     parent_table: str,
     parent_column: str,
 ) -> bool:
-    """Return ``True`` when every non-null value in child appears in parent."""
+    """Return ``True`` when every non-null value in child appears in parent.
+
+    Both sides are cast to ``VARCHAR`` before the comparison so the check
+    is type-agnostic. Real-world multi-file uploads routinely produce
+    tables where the same semantic FK key is stored as BIGINT in one
+    file and VARCHAR in another (e.g. Lahman's ``team_ID`` as string in
+    ``Salaries`` but as integer in ``Teams``). Without the cast, DuckDB
+    raises ``BinderException: Cannot compare values of type BIGINT and
+    VARCHAR in IN/ANY/ALL clause``, and the whole multi-file upload
+    fails. Casting to VARCHAR keeps the containment test honest (the
+    string form of each value still has to match exactly) while
+    surviving mixed-dtype inputs.
+    """
     validate_identifier(child_table)
     validate_identifier(parent_table)
     qc = quote_identifier(child_column)
@@ -110,11 +122,19 @@ def _is_value_subset(
     if child_count is None or int(child_count[0]) == 0:
         return False
 
-    orphan_count = connection.execute(
-        f"SELECT COUNT(*) FROM ("
-        f"  SELECT DISTINCT {qc} AS v FROM {child_table} WHERE {qc} IS NOT NULL"
-        f") child WHERE child.v NOT IN ("
-        f"  SELECT {qp} FROM {parent_table} WHERE {qp} IS NOT NULL"
-        f")"
-    ).fetchone()
+    try:
+        orphan_count = connection.execute(
+            f"SELECT COUNT(*) FROM ("
+            f"  SELECT DISTINCT CAST({qc} AS VARCHAR) AS v FROM {child_table} "
+            f"  WHERE {qc} IS NOT NULL"
+            f") child WHERE child.v NOT IN ("
+            f"  SELECT CAST({qp} AS VARCHAR) FROM {parent_table} "
+            f"  WHERE {qp} IS NOT NULL"
+            f")"
+        ).fetchone()
+    except duckdb.Error:
+        # If even the string-cast comparison fails (e.g. binary types or
+        # struct/list columns), treat the pair as not a subset and move
+        # on — FK detection is best-effort.
+        return False
     return orphan_count is not None and int(orphan_count[0]) == 0
