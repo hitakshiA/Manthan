@@ -108,6 +108,16 @@ class Settings(BaseSettings):
     sandbox_timeout_seconds: int = Field(default=60, ge=1)
     sandbox_network_disabled: bool = Field(default=True)
 
+    # --- Rate Limiting -----------------------------------------------------
+    rate_limit_whitelist: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Additional IPs to whitelist from rate limits. "
+            "127.0.0.1 and ::1 are always whitelisted. "
+            "Add your Layer 2/3 server IPs here."
+        ),
+    )
+
     # --- Storage -----------------------------------------------------------
     data_directory: Path = Field(
         default=Path("./data"),

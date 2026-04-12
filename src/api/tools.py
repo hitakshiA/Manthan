@@ -13,10 +13,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from src.core.exceptions import SandboxError, SqlValidationError, ToolError
+from src.core.rate_limit import limiter
 from src.core.state import AppState, get_state
 from src.tools.context_tool import get_context
 from src.tools.schema_tool import SchemaSummary, get_schema
@@ -36,13 +37,16 @@ class SqlRequest(BaseModel):
 
 
 @router.post("/sql", response_model=SqlResult)
-def execute_sql(request: SqlRequest, state: StateDep) -> SqlResult:
-    if request.dataset_id not in state.dcds:
+@limiter.limit("120/minute")
+def execute_sql(
+    request: Request, sql_request: SqlRequest, state: StateDep
+) -> SqlResult:
+    if sql_request.dataset_id not in state.dcds:
         raise HTTPException(
-            status_code=404, detail=f"Unknown dataset: {request.dataset_id}"
+            status_code=404, detail=f"Unknown dataset: {sql_request.dataset_id}"
         )
     try:
-        return run_sql(state.connection, request.sql, max_rows=request.max_rows)
+        return run_sql(state.connection, sql_request.sql, max_rows=sql_request.max_rows)
     except SqlValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ToolError as exc:

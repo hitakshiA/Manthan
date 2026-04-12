@@ -11,7 +11,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from pydantic import BaseModel
 
 from src.api.pipeline import (
@@ -28,6 +36,7 @@ from src.core.exceptions import (
     SqlValidationError,
 )
 from src.core.llm import LlmClient
+from src.core.rate_limit import limiter
 from src.core.state import AppState, get_state
 from src.ingestion.loaders.db_loader import DbLoadRequest
 from src.semantic.editor import DcdEditRequest, apply_edits
@@ -74,7 +83,9 @@ def _summarize(state: AppState, dataset_id: str) -> DatasetSummary:
 
 
 @router.post("/upload", response_model=DatasetSummary)
+@limiter.limit("10/minute")
 async def upload_dataset(
+    request: Request,
     state: StateDep,
     llm_client_factory: LlmFactoryDep,
     file: Annotated[UploadFile, File(...)],
