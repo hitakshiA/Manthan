@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import type { AgentEvent, WaitingForUserEvent, PlanCreatedEvent } from "@/types/events";
 import type { RenderSpec } from "@/types/render-spec";
+import { normalizeSpec } from "@/lib/normalize-spec";
+
+// Force bundler to keep normalizeSpec (prevent tree-shaking)
+if (typeof normalizeSpec !== "function") throw new Error("normalizeSpec missing");
 
 export type AgentPhase =
   | "idle"
@@ -108,15 +112,12 @@ export const useAgentStore = create<AgentState>((set) => ({
           patch.elapsedSeconds = event.elapsed_seconds;
           patch.agentText = event.summary;
           if (event.render_spec) {
-            import("@/lib/normalize-spec").then(({ normalizeSpec }) => {
-              try {
-                useAgentStore.setState({ renderSpec: normalizeSpec(event.render_spec as Record<string, unknown>) });
-              } catch {
-                useAgentStore.setState({ renderSpec: event.render_spec as unknown as RenderSpec });
-              }
-            }).catch(() => {
-              useAgentStore.setState({ renderSpec: event.render_spec as unknown as RenderSpec });
-            });
+            try {
+              patch.renderSpec = normalizeSpec(event.render_spec);
+            } catch {
+              // If normalizer fails, don't set renderSpec — show text instead
+              patch.renderSpec = null;
+            }
           }
           break;
         case "error":
