@@ -22,14 +22,17 @@ function LoadingFallback() {
 }
 
 export function RenderRouter({ spec }: { spec: RenderSpec }) {
+  // Normalize mode to lowercase — agent may return "SIMPLE", "MODERATE", "COMPLEX"
+  const mode = (spec.mode as string).toLowerCase();
+
   return (
     <Suspense fallback={<LoadingFallback />}>
-      {spec.mode === "simple" && <SimpleView spec={spec} />}
-      {spec.mode === "moderate" && <ModerateView spec={spec} />}
-      {spec.mode === "complex" && <ComplexView spec={spec} />}
-      {!["simple", "moderate", "complex"].includes(spec.mode) && (
+      {mode === "simple" && <SimpleView spec={{ ...spec, mode: "simple" }} />}
+      {mode === "moderate" && <ModerateView spec={{ ...spec, mode: "moderate" } as RenderSpec & { mode: "moderate" }} />}
+      {mode === "complex" && <ComplexView spec={{ ...spec, mode: "complex" } as RenderSpec & { mode: "complex" }} />}
+      {!["simple", "moderate", "complex"].includes(mode) && (
         <div className="text-sm text-text-tertiary p-4">
-          Unknown render mode: {(spec as { mode: string }).mode}
+          Unknown render mode: {spec.mode}
         </div>
       )}
     </Suspense>
