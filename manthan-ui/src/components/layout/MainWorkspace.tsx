@@ -109,60 +109,51 @@ function ExploreCard({ dataset }: { dataset: DatasetSummary }) {
   return (
     <button
       onClick={() => setActiveDataset(dataset.dataset_id)}
-      className="w-full flex flex-col p-4 rounded-xl bg-surface-raised border border-border shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong transition-all duration-200 text-left group"
+      className="w-full flex items-center gap-3 p-4 rounded-xl bg-surface-raised border border-border shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong transition-all duration-200 text-left group"
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-lg bg-accent-soft flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-          <span className="text-sm font-bold text-accent group-hover:text-accent-text transition-colors">
-            {dataset.name.charAt(0).toUpperCase()}
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-text-primary truncate">{dataset.name}</p>
-          <p className="text-[11px] text-text-faint">
-            {formatNumber(dataset.row_count)} rows · {dataset.column_count} cols · {dataset.source_type.toUpperCase()}
-          </p>
-        </div>
-        <ChevronRight size={14} className="text-text-faint group-hover:text-text-secondary transition-colors shrink-0" />
+      <div className="w-9 h-9 rounded-lg bg-accent-soft flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
+        <span className="text-sm font-bold text-accent group-hover:text-accent-text transition-colors">
+          {dataset.name.charAt(0).toUpperCase()}
+        </span>
       </div>
-
-      {schema && (
-        <>
-          <RoleBar columns={schema.columns} showLabels className="mb-2" />
-          <div className="flex flex-wrap gap-1.5 mt-1">
-            {schema.columns.slice(0, 5).map((c) => (
-              <span key={c.name} className="text-[10px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">
-                {c.name}
-              </span>
-            ))}
-            {schema.columns.length > 5 && (
-              <span className="text-[10px] text-text-faint">+{schema.columns.length - 5}</span>
-            )}
-          </div>
-        </>
-      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-text-primary truncate">{dataset.name}</p>
+        <p className="text-[11px] text-text-faint mt-0.5">
+          {formatNumber(dataset.row_count)} rows · {dataset.column_count} cols
+        </p>
+        {schema && <RoleBar columns={schema.columns} className="mt-2" />}
+      </div>
+      <ChevronRight size={14} className="text-text-faint group-hover:text-text-secondary transition-colors shrink-0" />
     </button>
   );
 }
 
 function ExploreView({ datasets, onBack }: { datasets: DatasetSummary[]; onBack: () => void }) {
+  // Deduplicate by name — keep the first occurrence of each unique name
+  const seen = new Set<string>();
+  const unique = datasets.filter((ds) => {
+    if (seen.has(ds.name)) return false;
+    seen.add(ds.name);
+    return true;
+  });
+
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-6 py-8 animate-fade-up">
+      <div className="max-w-xl mx-auto px-6 py-8 animate-fade-up">
         <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
           <ArrowLeft size={13} /> Back
         </button>
         <h2 className="text-lg font-semibold text-text-primary mb-1">Choose a dataset</h2>
         <p className="text-sm text-text-secondary mb-6">Each has a semantic layer — column roles classified, summary tables materialized.</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {datasets.map((ds, i) => (
+        <div className="space-y-2">
+          {unique.map((ds, i) => (
             <div key={ds.dataset_id} className="stagger-item" style={{ "--i": i } as React.CSSProperties}>
               <ExploreCard dataset={ds} />
             </div>
           ))}
         </div>
-        {datasets.length === 0 && (
+        {unique.length === 0 && (
           <p className="text-sm text-text-faint py-12 text-center">No datasets loaded yet. Upload one first.</p>
         )}
       </div>
