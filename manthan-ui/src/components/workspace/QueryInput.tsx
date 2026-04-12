@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send, Loader2, Sparkles } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
+import { ManthanLogo } from "@/components/ManthanLogo";
 import { useAgentStore } from "@/stores/agent-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useDatasetStore } from "@/stores/dataset-store";
@@ -115,7 +116,7 @@ export function QueryInput({ variant = "compact" }: Props) {
         <div className="flex items-center gap-3 px-5 pb-3 pt-0">
           {activeDs && (
             <span className="flex items-center gap-1.5 text-xs text-text-tertiary">
-              <Sparkles size={11} className="text-accent" />
+              <ManthanLogo size={13} animate={busy} className="text-accent" />
               {activeDs.name}
             </span>
           )}

@@ -5,7 +5,8 @@ import { QueryInput } from "@/components/workspace/QueryInput";
 import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
-import { Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText, Sparkles } from "lucide-react";
+import { Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText } from "lucide-react";
+import { ManthanLogo } from "@/components/ManthanLogo";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
 import { useCallback } from "react";
@@ -40,8 +41,8 @@ function WelcomeState() {
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       {/* Hero */}
       <div className="text-center mb-8 stagger-item" style={{ "--i": 0 } as React.CSSProperties}>
-        <div className="inline-flex items-center gap-2 mb-4">
-          <Sparkles size={28} className="text-accent" strokeWidth={1.5} />
+        <div className="inline-flex items-center justify-center mb-4">
+          <ManthanLogo size={40} className="text-accent" />
         </div>
         <h1 className="text-3xl font-bold text-text-primary tracking-tight">
           {activeDs ? (
