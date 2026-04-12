@@ -36,11 +36,10 @@ def test_default_values_are_applied(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(var, raising=False)
     settings = Settings(_env_file=None, openrouter_api_key="sk-test")  # type: ignore[call-arg]
     assert settings.duckdb_memory_limit == "4GB"
-    assert settings.openrouter_model == "qwen/qwen3-next-80b-a3b-instruct"
+    assert settings.openrouter_model == "openai/gpt-oss-120b"
     assert settings.openrouter_free_tier is True
-    # resolved_model appends :free when free_tier is enabled
-    assert settings.resolved_model == "qwen/qwen3-next-80b-a3b-instruct:free"
-    assert "openai/gpt-oss-120b" in settings.openrouter_fallback_models
+    assert settings.resolved_model == "openai/gpt-oss-120b:free"
+    assert "qwen/qwen3-next-80b-a3b-instruct" in settings.openrouter_fallback_models
     assert "nvidia/nemotron-3-nano-30b-a3b" in settings.openrouter_fallback_models
     assert settings.sandbox_network_disabled is True
     assert settings.max_upload_size_mb == 500

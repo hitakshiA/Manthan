@@ -34,7 +34,12 @@ class AgentConfig(BaseSettings):
 
     model: str = Field(
         default="openai/gpt-oss-120b",
-        description="LLM for agent reasoning (fast + good tool calling)",
+        description=(
+            "LLM for agent reasoning. gpt-oss-120b: 4.3s/call, 100% uptime, "
+            "no rate limit issues. Override via AGENT_MODEL env var. "
+            "Alternatives: google/gemma-4-31b-it (better quality, rate limited), "
+            "nvidia/nemotron-3-super-120b-a12b (deep reasoning, slow)."
+        ),
     )
     free_tier: bool = Field(
         default=True,

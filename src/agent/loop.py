@@ -112,13 +112,12 @@ class ManthanAgent:
                     args = {}
 
                 all_events.append(events.tool_call(name, json.dumps(args)[:200]))
-                print(
-                    f"  [agent] turn={turns + 1} tool={name} args={json.dumps(args)[:120]}"
-                )
+                args_s = json.dumps(args)[:100]
+                print(f"  [agent] t={turns + 1} {name} {args_s}")
 
                 result_str = await self.router.execute(name, args)
                 tool_calls_total += 1
-                print(f"  [agent] result={result_str[:150]}")
+                print(f"  [agent] -> {result_str[:120]}")
 
                 all_events.append(events.tool_result(name, result_str[:300]))
 
@@ -211,24 +210,38 @@ class ManthanAgent:
             "temperature": self.config.temperature,
         }
 
+        last_error: Exception | None = None
         for attempt in range(3):
             try:
                 r = await self._llm.post("/chat/completions", json=payload)
                 r.raise_for_status()
                 data = r.json()
-                if data.get("choices"):
+                if isinstance(data, dict) and "error" in data:
+                    err = str(data["error"])[:150]
+                    print(f"  [llm] #{attempt + 1}: err={err}")
+                    last_error = RuntimeError(f"LLM error: {err}")
+                    continue
+                choices = data.get("choices")
+                if choices and isinstance(choices, list):
                     return data
-                # Retry on malformed response
+                preview = str(data)[:150]
+                print(f"  [llm] #{attempt + 1}: no choices: {preview}")
+                last_error = RuntimeError("No choices in LLM response")
             except httpx.HTTPStatusError as exc:
+                print(f"  [llm] attempt {attempt + 1}: HTTP {exc.response.status_code}")
                 if exc.response.status_code == 429:
                     import asyncio
 
-                    await asyncio.sleep(5 * (attempt + 1))
+                    await asyncio.sleep(10 * (attempt + 1))
                     continue
-                raise
-            except httpx.TimeoutException:
+                last_error = exc
+            except httpx.TimeoutException as exc:
+                print(f"  [llm] attempt {attempt + 1}: timeout")
+                last_error = exc
                 if attempt < 2:
                     continue
-                raise
+            except Exception as exc:
+                print(f"  [llm] attempt {attempt + 1}: {type(exc).__name__}: {exc}")
+                last_error = exc
 
-        raise RuntimeError("LLM call failed after 3 attempts")
+        raise RuntimeError(f"LLM call failed after 3 attempts: {last_error}")

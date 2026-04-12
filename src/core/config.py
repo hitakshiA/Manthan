@@ -45,15 +45,16 @@ class Settings(BaseSettings):
         ),
     )
     openrouter_model: str = Field(
-        default="qwen/qwen3-next-80b-a3b-instruct",
+        default="openai/gpt-oss-120b",
         description=(
-            "Primary OpenRouter model for profiling. Qwen3 Next "
-            "80B benchmarked at 3.5s/19-col with 5/5 quality."
+            "Primary model for Layer 1 classification. "
+            "gpt-oss-120b: 4.3s/call, 5/5 quality, 100% "
+            "uptime, free+paid tiers."
         ),
     )
     openrouter_fallback_models: list[str] = Field(
         default=[
-            "openai/gpt-oss-120b",
+            "qwen/qwen3-next-80b-a3b-instruct",
             "nvidia/nemotron-3-nano-30b-a3b",
         ],
         description=(
