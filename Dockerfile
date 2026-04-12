@@ -1,18 +1,19 @@
-# Manthan — top-level FastAPI application image (Layer 1 runtime).
+# Manthan — Full stack: FastAPI backend + React frontend
 #
-# This is the image that serves the /datasets, /tools, /clarification,
-# /metrics, and websocket endpoints. It runs uvicorn with the
-# stateful Python sandbox running as a host-subprocess inside the
-# container (same Python interpreter — no nested Docker).
-#
-# Build:
-#   docker build -t manthan:latest .
-# Run:
-#   docker run -p 8000:8000 \
-#     -e OPENROUTER_API_KEY=sk-or-... \
-#     -v $(pwd)/data:/app/data \
-#     manthan:latest
+# Multi-stage build:
+#   Stage 1: Build the frontend (Node)
+#   Stage 2: Serve everything from Python (FastAPI + static files)
 
+# ── Stage 1: Build frontend ──────────────────────────────────
+FROM node:22-slim AS frontend
+
+WORKDIR /frontend
+COPY manthan-ui/package.json manthan-ui/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY manthan-ui/ ./
+RUN npm run build
+
+# ── Stage 2: Python runtime ─────────────────────────────────
 FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -22,9 +23,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# System packages — build-essential for any wheels that need compilation,
-# curl for container health checks, and libpq for the DuckDB Postgres
-# scanner (only loaded on demand, but the shared lib must be present).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       build-essential \
@@ -34,8 +32,10 @@ RUN apt-get update \
 COPY pyproject.toml README.md /app/
 COPY src /app/src
 
-# Install runtime deps (skip dev + test extras).
 RUN pip install --no-cache-dir -e .
+
+# Copy built frontend from stage 1
+COPY --from=frontend /frontend/dist /app/manthan-ui/dist
 
 RUN mkdir -p /app/data
 

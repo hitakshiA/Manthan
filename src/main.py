@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
@@ -104,3 +106,25 @@ app.include_router(agent.router)
 def read_metrics() -> dict[str, object]:
     """Return a snapshot of in-process metrics."""
     return metrics.snapshot()
+
+
+# ── Layer 3 SPA serving ──────────────────────────────────────
+# Serve the built frontend from manthan-ui/dist/ if it exists.
+# All non-API routes fall through to index.html (SPA routing).
+
+_FRONTEND_DIR = Path(__file__).resolve().parent.parent / "manthan-ui" / "dist"
+
+if _FRONTEND_DIR.is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=_FRONTEND_DIR / "assets"),
+        name="frontend-assets",
+    )
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def serve_spa(path: str) -> FileResponse:
+        """Serve SPA — any non-API route returns index.html."""
+        file = _FRONTEND_DIR / path
+        if file.is_file() and ".." not in path:
+            return FileResponse(file)
+        return FileResponse(_FRONTEND_DIR / "index.html")

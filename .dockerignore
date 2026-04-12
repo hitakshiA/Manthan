@@ -50,3 +50,10 @@ scripts
 # Environment
 .env
 .env.*
+
+# Frontend build artifacts (built in Docker stage 1)
+manthan-ui/node_modules
+manthan-ui/dist
+manthan-ui/.agents
+manthan-ui/.claude
+manthan-ui/.trae
