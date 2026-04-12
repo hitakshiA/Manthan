@@ -67,6 +67,43 @@ def validate_identifier(name: str) -> str:
     return name
 
 
+def sanitize_for_identifier(name: str) -> str:
+    """Convert an arbitrary column name into a safe SQL identifier token.
+
+    Real-world column names routinely contain characters the SQL grammar
+    won't accept as bare identifiers — dots (``MS.SubClass``), dashes
+    (``user-id``), spaces (``Order Date``), or leading digits
+    (``2024_revenue``). Most places in this codebase correctly wrap user
+    column references in :func:`quote_identifier` double-quotes so they
+    survive verbatim. But a few places — summary table names, enum type
+    names, query aliases — compose synthetic SQL identifiers from the
+    column name, and those fail :func:`validate_identifier`.
+
+    This helper sanitizes the column name into a token that will pass
+    the validator: any character outside ``[A-Za-z0-9_]`` becomes an
+    underscore, consecutive underscores collapse to one, and a leading
+    digit is prefixed with an underscore.
+
+    Args:
+        name: The column name to sanitize.
+
+    Returns:
+        A string that matches :data:`_IDENTIFIER_PATTERN`.
+
+    Raises:
+        SqlValidationError: If the input is empty.
+    """
+    if not isinstance(name, str) or not name:
+        raise SqlValidationError("Cannot sanitize empty name")
+    safe = re.sub(r"[^A-Za-z0-9_]", "_", name)
+    safe = re.sub(r"_+", "_", safe).strip("_")
+    if not safe:
+        raise SqlValidationError(f"Sanitizing {name!r} produced an empty identifier")
+    if safe[0].isdigit():
+        safe = f"_{safe}"
+    return safe
+
+
 def quote_identifier(name: str) -> str:
     """Return ``name`` wrapped as an injection-safe quoted SQL identifier.
 

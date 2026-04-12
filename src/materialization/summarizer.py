@@ -18,7 +18,11 @@ from __future__ import annotations
 
 import duckdb
 
-from src.ingestion.base import quote_identifier, validate_identifier
+from src.ingestion.base import (
+    quote_identifier,
+    sanitize_for_identifier,
+    validate_identifier,
+)
 from src.semantic.schema import DataContextDocument, DcdColumn
 
 _GRAIN_TO_TRUNC: dict[str, str] = {
@@ -40,6 +44,68 @@ _ADDITIONAL_ROLLUPS: dict[str, list[tuple[str, str]]] = {
 }
 _VALID_AGGREGATIONS = {"SUM", "AVG", "COUNT", "MIN", "MAX"}
 
+# DuckDB types that can be meaningfully SUM/AVG'd. MIN/MAX/COUNT work on
+# any type, but we still prefer to filter aggregations to numeric columns
+# so the Gold rollups produce sensible summaries. Columns the classifier
+# labelled as metrics but stored as VARCHAR (e.g. the Ames Housing CSV
+# where some numeric columns contain the literal string "NA") are dropped
+# from the metric list at materialization time and surfaced in the DCD's
+# known_limitations instead.
+_NUMERIC_DUCKDB_TYPES: frozenset[str] = frozenset(
+    {
+        "TINYINT",
+        "SMALLINT",
+        "INTEGER",
+        "BIGINT",
+        "HUGEINT",
+        "UTINYINT",
+        "USMALLINT",
+        "UINTEGER",
+        "UBIGINT",
+        "UHUGEINT",
+        "FLOAT",
+        "REAL",
+        "DOUBLE",
+        "DECIMAL",
+        "NUMERIC",
+    }
+)
+
+
+def filter_numeric_metrics(
+    connection: duckdb.DuckDBPyConnection,
+    gold_table: str,
+    metric_columns: list[DcdColumn],
+) -> list[DcdColumn]:
+    """Drop metric columns whose actual DuckDB dtype is non-numeric.
+
+    The LLM classifier sometimes tags a column as ``metric`` based on its
+    name (``Lot.Frontage``, ``MasVnrArea``) even though the raw CSV stored
+    ``NA`` placeholders so DuckDB inferred VARCHAR. Attempting SUM/AVG on
+    those columns raises a BinderException. Filter them out here so Gold
+    materialization stays crash-free; the classifier output in the DCD is
+    still preserved for agent reference.
+    """
+    try:
+        rows = connection.execute(f"DESCRIBE SELECT * FROM {gold_table}").fetchall()
+    except duckdb.Error:
+        # If DESCRIBE fails, fall back to returning all columns unchanged.
+        return metric_columns
+    dtype_by_name: dict[str, str] = {}
+    for row in rows:
+        name = row[0]
+        # DuckDB sometimes returns types like DECIMAL(10,2) — strip
+        # parametrization before comparing.
+        raw_dtype = str(row[1]).upper()
+        base_dtype = raw_dtype.split("(", 1)[0]
+        dtype_by_name[name] = base_dtype
+    numeric: list[DcdColumn] = []
+    for col in metric_columns:
+        base = dtype_by_name.get(col.name, "")
+        if base in _NUMERIC_DUCKDB_TYPES:
+            numeric.append(col)
+    return numeric
+
 
 def create_summary_tables(
     connection: duckdb.DuckDBPyConnection,
@@ -54,8 +120,9 @@ def create_summary_tables(
     """
     validate_identifier(gold_table)
 
-    metric_columns = [c for c in dcd.dataset.columns if c.role == "metric"]
+    metric_columns_all = [c for c in dcd.dataset.columns if c.role == "metric"]
     dimension_columns = [c for c in dcd.dataset.columns if c.role == "dimension"]
+    metric_columns = filter_numeric_metrics(connection, gold_table, metric_columns_all)
     if not metric_columns:
         return []
 
@@ -89,7 +156,7 @@ def create_summary_tables(
             )
 
     for dimension in dimension_columns:
-        breakdown_name = f"{gold_table}_by_{dimension.name}"
+        breakdown_name = f"{gold_table}_by_{sanitize_for_identifier(dimension.name)}"
         validate_identifier(breakdown_name)
         connection.execute(
             _build_dimension_breakdown_sql(

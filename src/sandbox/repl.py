@@ -69,17 +69,58 @@ _SESSION_GLOBALS: dict[str, Any] = {}
 
 
 def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
-    """Populate ``_SESSION_GLOBALS`` with the dataset prelude."""
+    """Populate ``_SESSION_GLOBALS`` with the dataset prelude.
+
+    Every ``gold_*.parquet`` file under ``data_dir`` is attached as a
+    DuckDB view whose name is the parquet stem (e.g.
+    ``gold_teams_40db28``). The *first* parquet file (alphabetically)
+    is additionally aliased as ``dataset`` for backward compatibility —
+    agents can always ``SELECT * FROM dataset`` to reach the primary
+    Gold table. ``df`` is a pandas DataFrame loaded from ``dataset``.
+
+    For multi-file uploads this means all Gold tables are queryable
+    without manual ``read_parquet()`` calls:
+
+    .. code-block:: python
+
+        # primary table
+        con.execute("SELECT * FROM dataset LIMIT 5")
+
+        # additional table from a multi-file upload
+        con.execute("SELECT * FROM gold_teams_40db28 LIMIT 5")
+
+        # discover available views
+        con.execute("SHOW TABLES").df()
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
 
     con = duckdb.connect(":memory:")
     parquet_files = sorted(data_dir.glob("*.parquet"))
     df = pd.DataFrame()
+    attached_views: list[str] = []
+
+    for pf in parquet_files:
+        view_name = pf.stem
+        escaped = str(pf).replace("'", "''")
+        try:
+            con.execute(
+                f'CREATE VIEW "{view_name}" '
+                f"AS SELECT * FROM read_parquet('{escaped}')"
+            )
+            attached_views.append(view_name)
+        except Exception:
+            # Skip files with names that DuckDB can't accept as
+            # identifiers (shouldn't happen with Gold parquets, but
+            # defensive).
+            pass
 
     if parquet_files:
+        # Alias the first parquet as the canonical ``dataset`` view.
         primary = parquet_files[0]
         escaped = str(primary).replace("'", "''")
-        con.execute(f"CREATE VIEW dataset AS SELECT * FROM read_parquet('{escaped}')")
+        con.execute(
+            f"CREATE OR REPLACE VIEW dataset AS SELECT * FROM read_parquet('{escaped}')"
+        )
         df = con.execute("SELECT * FROM dataset").df()
 
     _SESSION_GLOBALS.clear()
@@ -99,6 +140,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
     return {
         "ready": True,
         "bootstrapped_files": [p.name for p in parquet_files],
+        "attached_views": attached_views,
     }
 
 

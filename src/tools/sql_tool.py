@@ -28,10 +28,18 @@ from src.core.exceptions import SqlValidationError, ToolError
 _DEFAULT_MAX_ROWS = 1000
 _DEFAULT_TIMEOUT_SECONDS = 30
 
-# Anchored regex for the four statement shapes we allow. Order matters —
+# Anchored regex for the statement shapes we allow. Order matters —
 # the CREATE/DROP variants must be checked before a generic prefix match.
 _SELECT_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 _WITH_RE = re.compile(r"^\s*WITH\b", re.IGNORECASE)
+_DESCRIBE_RE = re.compile(
+    r"^\s*DESCRIBE\b",
+    re.IGNORECASE,
+)
+_SHOW_RE = re.compile(
+    r"^\s*SHOW\s+(TABLES|ALL\s+TABLES)\b",
+    re.IGNORECASE,
+)
 _CREATE_TEMP_RE = re.compile(
     r"^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:TEMP|TEMPORARY)\s+(TABLE|VIEW)\s+"
     r"(?:IF\s+NOT\s+EXISTS\s+)?"
@@ -163,6 +171,9 @@ def _validate_sql(
     if _SELECT_RE.match(stripped) or _WITH_RE.match(stripped):
         return "query", None, None
 
+    if _DESCRIBE_RE.match(stripped) or _SHOW_RE.match(stripped):
+        return "query", None, None
+
     create_match = _CREATE_TEMP_RE.match(stripped)
     if create_match:
         return "create_temp", create_match.group("name"), None
@@ -177,7 +188,8 @@ def _validate_sql(
     first_word = stripped.split(None, 1)[0].upper()
     raise SqlValidationError(
         f"Statement type {first_word!r} is not allowed. "
-        "Supported: SELECT, WITH, CREATE TEMP TABLE/VIEW, "
+        "Supported: SELECT, WITH, DESCRIBE, SHOW TABLES, "
+        "CREATE TEMP TABLE/VIEW, "
         "and DROP TABLE/VIEW on temp objects only."
     )
 

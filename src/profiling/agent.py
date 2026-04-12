@@ -59,6 +59,10 @@ class ProfilingResult(BaseModel):
     metric_proposals: list[MetricProposal] = Field(default_factory=list)
     hierarchies: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
+    profiler_mode: str = Field(
+        default="llm",
+        description="'llm', 'heuristic', or 'mixed'",
+    )
 
 
 async def profile_dataset(
@@ -103,6 +107,8 @@ async def profile_dataset(
         warnings=len(warnings),
     )
 
+    profiler_mode = _detect_profiler_mode(classifications)
+
     return ProfilingResult(
         table_name=table_name,
         column_profiles=profiles,
@@ -112,7 +118,24 @@ async def profile_dataset(
         metric_proposals=metric_proposals,
         hierarchies=hierarchies,
         warnings=warnings,
+        profiler_mode=profiler_mode,
     )
+
+
+def _detect_profiler_mode(
+    classifications: list[ColumnClassification],
+) -> str:
+    """Determine whether classifications came from LLM, heuristic, or both."""
+    heuristic_count = sum(
+        1
+        for c in classifications
+        if c.reasoning and c.reasoning.startswith("heuristic-fallback:")
+    )
+    if heuristic_count == 0:
+        return "llm"
+    if heuristic_count == len(classifications):
+        return "heuristic"
+    return "mixed"
 
 
 def _pick_temporal_column(
