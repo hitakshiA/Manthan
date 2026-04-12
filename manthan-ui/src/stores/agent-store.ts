@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { AgentEvent, WaitingForUserEvent, PlanCreatedEvent } from "@/types/events";
 import type { RenderSpec } from "@/types/render-spec";
+import { normalizeSpec } from "@/lib/normalize-spec";
 
 export type AgentPhase =
   | "idle"
@@ -108,7 +109,11 @@ export const useAgentStore = create<AgentState>((set) => ({
           patch.elapsedSeconds = event.elapsed_seconds;
           patch.agentText = event.summary;
           if (event.render_spec) {
-            patch.renderSpec = event.render_spec as unknown as RenderSpec;
+            try {
+              patch.renderSpec = normalizeSpec(event.render_spec as Record<string, unknown>);
+            } catch {
+              patch.renderSpec = event.render_spec as unknown as RenderSpec;
+            }
           }
           break;
         case "error":

@@ -2,12 +2,15 @@ import type { Visual } from "@/types/render-spec";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EChartsOption = Record<string, any>;
 
-/** Map a render_spec Visual's encoding to an ECharts option object */
+/** Map a render_spec Visual's encoding to an ECharts option object.
+ *  Handles both normalized (encoding.x/y/data) and raw agent format (top-level x/y/data). */
 export function toEChartsOption(visual: Visual): EChartsOption {
-  const enc = visual.encoding;
-  const data = (enc.data ?? []) as Array<Record<string, unknown>>;
-  const xField = (enc.x as string) ?? "";
-  const yField = (enc.y as string) ?? "";
+  const enc = visual.encoding ?? {};
+  const raw = visual as Record<string, unknown>;
+  // Agent may put x/y/data at top level OR inside encoding
+  const data = ((enc.data ?? raw.data ?? []) as Array<Record<string, unknown>>);
+  const xField = ((enc.x ?? raw.x ?? "") as string);
+  const yField = ((enc.y ?? raw.y ?? "") as string);
   const type = visual.type;
 
   const xValues = data.map((d) => d[xField] as string);

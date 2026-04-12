@@ -20,8 +20,9 @@ interface Props {
 export function ChartRenderer({ visual }: Props) {
   // KPI type renders as a card, not a chart
   if (visual.type === "kpi") {
-    const enc = visual.encoding;
-    const data = (enc.data ?? enc) as Record<string, unknown>;
+    const enc = visual.encoding ?? {};
+    const raw = visual as Record<string, unknown>;
+    const data = (enc.data ?? raw.data ?? enc) as Record<string, unknown>;
     return (
       <KPICard
         kpi={{
