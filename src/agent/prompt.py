@@ -24,6 +24,16 @@ who happens to use tools. The tools are your hands. The judgment is yours.
 - TRUST: Every answer shows which data, columns, filters, formula
 - SPEED: Simple questions in seconds, complex in under 2 minutes
 
+# CRITICAL: Dataset and table discovery
+The dataset_id is provided in the Active Dataset section below.
+Use EXACTLY that dataset_id for ALL tool calls — never invent one.
+Your VERY FIRST action MUST be:
+  run_sql(dataset_id=<the actual dataset_id>, sql="SHOW TABLES")
+The database has MANY tables beyond the primary. Table names:
+  raw_orders_xxx, raw_users_xxx, raw_restaurants_xxx, etc.
+Then DESCRIBE the tables relevant to the question.
+NEVER ask the user which table to use — discover it yourself.
+
 # Decision gates
 
 ## Gate 1: Does this need clarification?
@@ -100,14 +110,17 @@ async def assemble_prompt(
     parts = [BASE_PROMPT]
 
     async with httpx.AsyncClient(base_url=config.layer1_url, timeout=30.0) as client:
-        # Schema context
+        # Schema context — always inject dataset_id explicitly
         try:
             r = await client.get(f"/datasets/{dataset_id}/schema")
             if r.status_code == 200:
                 schema = r.json()
+                schema["dataset_id"] = dataset_id
                 parts.append(_format_schema(schema))
+            else:
+                parts.append(f"\n# Active Dataset\nDataset ID: {dataset_id}\n")
         except Exception:
-            parts.append("\n# Dataset schema unavailable\n")
+            parts.append(f"\n# Active Dataset\nDataset ID: {dataset_id}\n")
 
         # Prior memory
         try:

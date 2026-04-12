@@ -112,9 +112,13 @@ class ManthanAgent:
                     args = {}
 
                 all_events.append(events.tool_call(name, json.dumps(args)[:200]))
+                print(
+                    f"  [agent] turn={turns + 1} tool={name} args={json.dumps(args)[:120]}"
+                )
 
                 result_str = await self.router.execute(name, args)
                 tool_calls_total += 1
+                print(f"  [agent] result={result_str[:150]}")
 
                 all_events.append(events.tool_result(name, result_str[:300]))
 

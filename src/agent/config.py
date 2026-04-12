@@ -33,8 +33,8 @@ class AgentConfig(BaseSettings):
         )
 
     model: str = Field(
-        default="nvidia/nemotron-3-super-120b-a12b",
-        description="LLM for agent reasoning (strong reasoning + 1M context)",
+        default="openai/gpt-oss-120b",
+        description="LLM for agent reasoning (fast + good tool calling)",
     )
     free_tier: bool = Field(
         default=True,
