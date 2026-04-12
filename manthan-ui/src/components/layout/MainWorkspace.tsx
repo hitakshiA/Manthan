@@ -5,17 +5,23 @@ import { QueryInput } from "@/components/workspace/QueryInput";
 import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { RenderRouter } from "@/components/render/RenderRouter";
 import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
+import { RoleBar } from "@/components/datasets/RoleBar";
+import { useSchema, prefetchSchemas } from "@/hooks/use-schema";
 import {
   Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText,
-  Upload, Database, ArrowLeft, FileSpreadsheet,
+  Upload, Database, ArrowLeft, FileSpreadsheet, ChevronRight,
+  Layers, Table2, Zap,
 } from "lucide-react";
 import { ManthanLogo } from "@/components/ManthanLogo";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
-import { useCallback, useRef, useState } from "react";
+import type { DatasetSummary } from "@/types/api";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
 
-/* ─── First-open: two-path welcome ─── */
+/* ═══════════════════════════════════════════════════════
+   VIEW 1: First Open — Upload or Explore
+   ═══════════════════════════════════════════════════════ */
 
 function FirstOpen() {
   const [view, setView] = useState<"home" | "explore">("home");
@@ -24,125 +30,59 @@ function FirstOpen() {
   const { uploadDataset, datasets, fetchDatasets, uploading } = useDatasetStore();
   const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
 
-  // Fetch datasets when switching to explore
-  const showExplore = () => {
-    fetchDatasets();
-    setView("explore");
-  };
+  const showExplore = () => { fetchDatasets(); setView("explore"); };
 
   const handleFile = useCallback(async (file: File) => {
     const ds = await uploadDataset(file);
     setActiveDataset(ds.dataset_id);
   }, [uploadDataset, setActiveDataset]);
 
-  if (view === "explore") {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fade-up">
-        <div className="w-full max-w-lg">
-          <button
-            onClick={() => setView("home")}
-            className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors"
-          >
-            <ArrowLeft size={13} />
-            Back
-          </button>
+  // Pre-fetch schemas for explore cards
+  useEffect(() => {
+    if (view === "explore" && datasets.length > 0) {
+      prefetchSchemas(datasets.map((d) => d.dataset_id));
+    }
+  }, [view, datasets]);
 
-          <h2 className="text-lg font-semibold text-text-primary mb-1">Choose a dataset</h2>
-          <p className="text-sm text-text-secondary mb-5">
-            Each dataset has a semantic layer ready — column roles confirmed, summary tables materialized.
-          </p>
+  if (view === "explore") return <ExploreView datasets={datasets} onBack={() => setView("home")} />;
 
-          <div className="space-y-2">
-            {datasets.length === 0 && (
-              <p className="text-sm text-text-faint py-8 text-center">
-                No datasets loaded yet. Upload one first.
-              </p>
-            )}
-            {datasets.map((ds) => (
-              <button
-                key={ds.dataset_id}
-                onClick={() => setActiveDataset(ds.dataset_id)}
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-surface-raised border border-border shadow-xs hover:shadow-sm hover:border-border-strong transition-all duration-200 text-left group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-accent-soft flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-                  <span className="text-sm font-bold text-accent group-hover:text-accent-text transition-colors">
-                    {ds.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-text-primary">{ds.name}</p>
-                  <p className="text-[11px] text-text-faint mt-0.5">
-                    {formatNumber(ds.row_count)} rows · {ds.column_count} columns · {ds.source_type.toUpperCase()}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Home view — two action cards
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6">
-      {/* Logo + title */}
       <div className="text-center mb-10 stagger-item" style={{ "--i": 0 } as React.CSSProperties}>
         <ManthanLogo size={36} className="text-accent mx-auto mb-3" />
         <h1 className="text-2xl font-bold text-text-primary tracking-tight">Manthan</h1>
         <p className="text-sm text-text-secondary mt-1">Your autonomous data analyst</p>
       </div>
 
-      {/* Two action cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl stagger-item" style={{ "--i": 1 } as React.CSSProperties}>
-        {/* Upload card */}
         <input ref={fileRef} type="file" className="hidden" accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
         <button
           onClick={() => fileRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const f = e.dataTransfer.files[0];
-            if (f) handleFile(f);
-          }}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
           disabled={uploading}
           className={cn(
             "flex flex-col items-start p-5 rounded-xl bg-surface-raised border shadow-xs text-left transition-all duration-200",
-            "hover:shadow-md hover:-translate-y-0.5",
-            "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+            "hover:shadow-md hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-accent",
             dragOver ? "border-accent bg-accent-soft shadow-md -translate-y-0.5" : "border-border hover:border-border-strong",
             uploading && "opacity-60 pointer-events-none",
           )}
         >
           <div className="w-10 h-10 rounded-lg bg-accent-soft flex items-center justify-center mb-4">
-            {uploading ? (
-              <FileSpreadsheet size={20} className="text-accent animate-pulse" />
-            ) : (
-              <Upload size={20} className="text-accent" />
-            )}
+            {uploading ? <FileSpreadsheet size={20} className="text-accent animate-pulse" /> : <Upload size={20} className="text-accent" />}
           </div>
-          <h3 className="text-[15px] font-semibold text-text-primary">
-            {uploading ? "Processing…" : "Upload a dataset"}
-          </h3>
+          <h3 className="text-[15px] font-semibold text-text-primary">{uploading ? "Processing…" : "Upload a dataset"}</h3>
           <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
             Drop a CSV, Parquet, Excel, or JSON file. Manthan classifies every column and asks about ambiguous ones before analysis.
           </p>
-          <span className="text-[10px] text-text-faint mt-3">
-            Drag & drop or click to browse
-          </span>
+          <span className="text-[10px] text-text-faint mt-3">Drag & drop or click to browse</span>
         </button>
 
-        {/* Explore card */}
         <button
           onClick={showExplore}
-          className={cn(
-            "flex flex-col items-start p-5 rounded-xl bg-surface-raised border border-border shadow-xs text-left transition-all duration-200",
-            "hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong",
-            "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
-          )}
+          className="flex flex-col items-start p-5 rounded-xl bg-surface-raised border border-border shadow-xs text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong focus-visible:ring-2 focus-visible:ring-accent"
         >
           <div className="w-10 h-10 rounded-lg bg-success-soft flex items-center justify-center mb-4">
             <Database size={20} className="text-success" />
@@ -151,18 +91,247 @@ function FirstOpen() {
           <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
             Pick from datasets already on the server. Each has a semantic layer built — column roles confirmed, summary tables ready.
           </p>
-          <span className="text-[10px] text-text-faint mt-3">
-            {datasets.length} dataset{datasets.length !== 1 ? "s" : ""} available
-          </span>
+          <span className="text-[10px] text-text-faint mt-3">{datasets.length} dataset{datasets.length !== 1 ? "s" : ""} available</span>
         </button>
       </div>
     </div>
   );
 }
 
-/* ─── Dataset selected: suggestions ─── */
+/* ═══════════════════════════════════════════════════════
+   VIEW 2: Explore — Rich dataset cards
+   ═══════════════════════════════════════════════════════ */
 
-function DatasetSelected() {
+function ExploreCard({ dataset }: { dataset: DatasetSummary }) {
+  const { schema } = useSchema(dataset.dataset_id);
+  const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
+
+  return (
+    <button
+      onClick={() => setActiveDataset(dataset.dataset_id)}
+      className="w-full flex flex-col p-4 rounded-xl bg-surface-raised border border-border shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong transition-all duration-200 text-left group"
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-lg bg-accent-soft flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
+          <span className="text-sm font-bold text-accent group-hover:text-accent-text transition-colors">
+            {dataset.name.charAt(0).toUpperCase()}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-text-primary truncate">{dataset.name}</p>
+          <p className="text-[11px] text-text-faint">
+            {formatNumber(dataset.row_count)} rows · {dataset.column_count} cols · {dataset.source_type.toUpperCase()}
+          </p>
+        </div>
+        <ChevronRight size={14} className="text-text-faint group-hover:text-text-secondary transition-colors shrink-0" />
+      </div>
+
+      {schema && (
+        <>
+          <RoleBar columns={schema.columns} showLabels className="mb-2" />
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {schema.columns.slice(0, 5).map((c) => (
+              <span key={c.name} className="text-[10px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">
+                {c.name}
+              </span>
+            ))}
+            {schema.columns.length > 5 && (
+              <span className="text-[10px] text-text-faint">+{schema.columns.length - 5}</span>
+            )}
+          </div>
+        </>
+      )}
+    </button>
+  );
+}
+
+function ExploreView({ datasets, onBack }: { datasets: DatasetSummary[]; onBack: () => void }) {
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-6 py-8 animate-fade-up">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
+          <ArrowLeft size={13} /> Back
+        </button>
+        <h2 className="text-lg font-semibold text-text-primary mb-1">Choose a dataset</h2>
+        <p className="text-sm text-text-secondary mb-6">Each has a semantic layer — column roles classified, summary tables materialized.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {datasets.map((ds, i) => (
+            <div key={ds.dataset_id} className="stagger-item" style={{ "--i": i } as React.CSSProperties}>
+              <ExploreCard dataset={ds} />
+            </div>
+          ))}
+        </div>
+        {datasets.length === 0 && (
+          <p className="text-sm text-text-faint py-12 text-center">No datasets loaded yet. Upload one first.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW 3: Dataset Profile — the semantic layer showcase
+   ═══════════════════════════════════════════════════════ */
+
+function DatasetProfile() {
+  const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
+  const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
+  const datasets = useDatasetStore((s) => s.datasets);
+  const activeDs = datasets.find((d) => d.dataset_id === activeDatasetId);
+  const { schema, loading } = useSchema(activeDatasetId);
+  const [showQuery, setShowQuery] = useState(false);
+
+  if (!activeDs) return null;
+
+  const metrics = schema?.columns.filter((c) => c.role === "metric") ?? [];
+  const dimensions = schema?.columns.filter((c) => c.role === "dimension") ?? [];
+  const temporal = schema?.columns.filter((c) => c.role === "temporal") ?? [];
+  const other = schema?.columns.filter((c) => !["metric", "dimension", "temporal"].includes(c.role)) ?? [];
+
+  if (showQuery) return <ReadyToQuery />;
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-6 py-8 animate-fade-up">
+        <button onClick={() => setActiveDataset(null)} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
+          <ArrowLeft size={13} /> All datasets
+        </button>
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center">
+              <span className="text-lg font-bold text-accent-text">{activeDs.name.charAt(0).toUpperCase()}</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
+              <p className="text-sm text-text-secondary">
+                {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns · {activeDs.source_type.toUpperCase()}
+              </p>
+            </div>
+          </div>
+
+          {schema && (
+            <div className="mt-4 p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
+              <p className="text-sm text-text-secondary leading-relaxed mb-3">
+                Manthan classified {schema.columns.length} columns and identified{" "}
+                <span className="font-medium text-text-primary">{metrics.length} measurable value{metrics.length !== 1 ? "s" : ""}</span>,{" "}
+                <span className="font-medium text-text-primary">{dimensions.length} grouping categor{dimensions.length !== 1 ? "ies" : "y"}</span>
+                {temporal.length > 0 && <>, and <span className="font-medium text-text-primary">{temporal.length} time dimension</span></>}.
+              </p>
+              <RoleBar columns={schema.columns} showLabels />
+            </div>
+          )}
+        </div>
+
+        {loading && (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl animate-shimmer" />)}
+          </div>
+        )}
+
+        {schema && (
+          <div className="space-y-6">
+            {/* Metrics */}
+            {metrics.length > 0 && (
+              <ColumnGroup icon={<BarChart3 size={14} className="text-accent" />} title="Metrics" subtitle="Values you measure" columns={metrics} />
+            )}
+
+            {/* Dimensions */}
+            {dimensions.length > 0 && (
+              <ColumnGroup icon={<Layers size={14} className="text-[oklch(60%_0.15_300)]" />} title="Dimensions" subtitle="Categories you group by" columns={dimensions} />
+            )}
+
+            {/* Temporal */}
+            {temporal.length > 0 && (
+              <ColumnGroup icon={<Clock size={14} className="text-success" />} title="Temporal" subtitle="Time axis for trends" columns={temporal} />
+            )}
+
+            {/* Other */}
+            {other.length > 0 && (
+              <ColumnGroup icon={<Table2 size={14} className="text-text-faint" />} title="Other" subtitle="Identifiers and auxiliary" columns={other} />
+            )}
+
+            {/* Summary tables */}
+            {schema.summary_tables.length > 0 && (
+              <div className="p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap size={14} className="text-warning" />
+                  <h3 className="text-sm font-semibold text-text-primary">{schema.summary_tables.length} pre-built summary tables</h3>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {schema.summary_tables.map((t) => (
+                    <span key={t} className="text-[10px] font-mono text-text-faint bg-surface-sunken px-2 py-0.5 rounded">
+                      {t.replace(/^gold_/, "").replace(/_[a-f0-9]+$/, "")}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA */}
+            <button
+              onClick={() => setShowQuery(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            >
+              Start analyzing
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ColumnGroup({ icon, title, subtitle, columns }: {
+  icon: React.ReactNode; title: string; subtitle: string;
+  columns: Array<{ name: string; dtype: string; role: string; description: string; aggregation: string | null }>;
+}) {
+  const [expanded, setExpanded] = useState(columns.length <= 4);
+
+  const visible = expanded ? columns : columns.slice(0, 3);
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+        <span className="text-[11px] text-text-faint">· {subtitle}</span>
+      </div>
+      <div className="space-y-1.5">
+        {visible.map((col) => (
+          <div key={col.name} className="flex items-start gap-3 py-2 px-3 rounded-lg hover:bg-surface-raised transition-colors">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-medium text-text-primary font-mono">{col.name}</span>
+                <span className="text-[10px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded">{col.dtype}</span>
+                {col.aggregation && (
+                  <span className="text-[10px] text-accent bg-accent-soft px-1.5 py-0.5 rounded font-medium">{col.aggregation}</span>
+                )}
+              </div>
+              {col.description && (
+                <p className="text-[11px] text-text-faint mt-0.5 leading-relaxed">{col.description}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {columns.length > 3 && !expanded && (
+        <button onClick={() => setExpanded(true)} className="text-xs text-accent hover:text-accent-hover mt-1 ml-3 transition-colors">
+          Show {columns.length - 3} more
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW 4: Ready to Query — input + suggestions
+   ═══════════════════════════════════════════════════════ */
+
+function ReadyToQuery() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
   const sessionId = useSessionStore((s) => s.sessionId);
   const addQuery = useSessionStore((s) => s.addQuery);
@@ -174,50 +343,34 @@ function DatasetSelected() {
 
   const runSuggestion = useCallback(async (q: string) => {
     if (!activeDatasetId) return;
-    reset();
-    addQuery(q, activeDatasetId);
-    try {
-      await queryStream(sessionId, activeDatasetId, q, pushEvent);
-    } catch (e) {
-      pushEvent({ type: "error", message: e instanceof Error ? e.message : "Failed", recoverable: false });
-    }
+    reset(); addQuery(q, activeDatasetId);
+    try { await queryStream(sessionId, activeDatasetId, q, pushEvent); }
+    catch (e) { pushEvent({ type: "error", message: e instanceof Error ? e.message : "Failed", recoverable: false }); }
   }, [activeDatasetId, sessionId, addQuery, pushEvent, reset]);
 
   if (!activeDs) return null;
 
-  const suggestions = [
-    { icon: BarChart3, label: "Overview", text: `What are the key metrics in ${activeDs.name}?` },
-    { icon: TrendingUp, label: "Compare", text: "Compare the top categories by volume" },
-    { icon: FileText, label: "Report", text: "Full analytical report with recommendations" },
-  ];
-
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6">
-      <div className="text-center mb-8 stagger-item" style={{ "--i": 0 } as React.CSSProperties}>
-        <ManthanLogo size={32} className="text-accent mx-auto mb-3" />
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
-        <p className="text-sm text-text-secondary mt-1">
-          {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns
-        </p>
-        <button
-          onClick={() => setActiveDataset(null)}
-          className="text-[11px] text-text-faint hover:text-accent mt-2 transition-colors"
-        >
-          Change dataset
-        </button>
+    <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fade-up">
+      <div className="text-center mb-8">
+        <ManthanLogo size={28} className="text-accent mx-auto mb-2" />
+        <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
+        <p className="text-sm text-text-secondary mt-1">{activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns</p>
+        <button onClick={() => setActiveDataset(null)} className="text-[11px] text-text-faint hover:text-accent mt-1.5 transition-colors">Change dataset</button>
       </div>
 
-      <div className="w-full max-w-2xl mb-6 stagger-item" style={{ "--i": 1 } as React.CSSProperties}>
+      <div className="w-full max-w-2xl mb-6">
         <QueryInput variant="hero" />
       </div>
 
-      <div className="flex gap-2 stagger-item" style={{ "--i": 2 } as React.CSSProperties}>
-        {suggestions.map(({ icon: Icon, label, text }) => (
-          <button
-            key={label}
-            onClick={() => runSuggestion(text)}
-            className="flex items-center gap-2 text-[13px] text-text-secondary hover:text-text-primary bg-surface-raised hover:bg-surface-1 border border-border hover:border-border-strong px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition-all duration-200"
-          >
+      <div className="flex gap-2">
+        {[
+          { icon: BarChart3, label: "Overview", text: `What are the key metrics in ${activeDs.name}?` },
+          { icon: TrendingUp, label: "Compare", text: "Compare the top categories by volume" },
+          { icon: FileText, label: "Report", text: "Full analytical report with recommendations" },
+        ].map(({ icon: Icon, label, text }) => (
+          <button key={label} onClick={() => runSuggestion(text)}
+            className="flex items-center gap-2 text-[13px] text-text-secondary hover:text-text-primary bg-surface-raised hover:bg-surface-1 border border-border hover:border-border-strong px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition-all duration-200">
             <Icon size={14} className="text-text-tertiary" />
             {label}
           </button>
@@ -227,7 +380,9 @@ function DatasetSelected() {
   );
 }
 
-/* ─── Active workspace: agent running / results ─── */
+/* ═══════════════════════════════════════════════════════
+   VIEW 5: Active Workspace — agent running / results
+   ═══════════════════════════════════════════════════════ */
 
 function ActiveWorkspace() {
   const events = useAgentStore((s) => s.events);
@@ -247,40 +402,23 @@ function ActiveWorkspace() {
           <div className="animate-fade-up">
             <div className="px-8 pt-6 pb-4 flex items-center gap-4">
               <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
-                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md">
-                  <Clock size={11} />
-                  {elapsed.toFixed(1)}s
-                </span>
-                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md">
-                  <Wrench size={11} />
-                  {toolCalls} tools
-                </span>
+                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md"><Clock size={11} />{elapsed.toFixed(1)}s</span>
+                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md"><Wrench size={11} />{toolCalls} tools</span>
               </div>
               <div className="flex-1" />
-              <details className="text-[11px]">
-                <summary className="text-text-faint cursor-pointer hover:text-text-secondary transition-colors select-none">
-                  {events.length} agent events
-                </summary>
-                <div className="absolute right-8 mt-1 w-96 max-h-80 overflow-y-auto bg-surface-raised border border-border rounded-xl shadow-lg p-3 z-50">
+              <details className="text-[11px] relative">
+                <summary className="text-text-faint cursor-pointer hover:text-text-secondary transition-colors select-none">{events.length} events</summary>
+                <div className="absolute right-0 mt-1 w-96 max-h-80 overflow-y-auto bg-surface-raised border border-border rounded-xl shadow-lg p-3 z-50">
                   <ActivityFeed />
                 </div>
               </details>
-              <button
-                onClick={reset}
-                aria-label="New query"
-                className="flex items-center gap-1.5 text-[11px] text-text-faint hover:text-accent bg-surface-sunken hover:bg-accent-soft px-2.5 py-1 rounded-md transition-all"
-              >
-                <RotateCcw size={11} />
-                New
+              <button onClick={reset} className="flex items-center gap-1.5 text-[11px] text-text-faint hover:text-accent bg-surface-sunken hover:bg-accent-soft px-2.5 py-1 rounded-md transition-all">
+                <RotateCcw size={11} /> New
               </button>
             </div>
             <div className="px-8 pb-8">
-              {renderSpec ? (
-                <RenderRouter spec={renderSpec as RenderSpec} />
-              ) : agentText ? (
-                <div className="bg-surface-raised border border-border rounded-xl shadow-sm p-6">
-                  <NarrativeBlock text={agentText} />
-                </div>
+              {renderSpec ? <RenderRouter spec={renderSpec as RenderSpec} /> : agentText ? (
+                <div className="bg-surface-raised border border-border rounded-xl shadow-sm p-6"><NarrativeBlock text={agentText} /></div>
               ) : null}
             </div>
           </div>
@@ -293,7 +431,9 @@ function ActiveWorkspace() {
   );
 }
 
-/* ─── Root: route between states ─── */
+/* ═══════════════════════════════════════════════════════
+   ROOT: Route between all views
+   ═══════════════════════════════════════════════════════ */
 
 export function MainWorkspace() {
   const events = useAgentStore((s) => s.events);
@@ -302,13 +442,7 @@ export function MainWorkspace() {
 
   return (
     <main className="flex-1 flex flex-col min-w-0 bg-surface-0 relative" role="main">
-      {hasContent ? (
-        <ActiveWorkspace />
-      ) : activeDatasetId ? (
-        <DatasetSelected />
-      ) : (
-        <FirstOpen />
-      )}
+      {hasContent ? <ActiveWorkspace /> : activeDatasetId ? <DatasetProfile /> : <FirstOpen />}
     </main>
   );
 }
