@@ -40,6 +40,7 @@ from src.semantic.generator import (
     build_dcd,
     build_dcd_table_from_profile,
     dcd_table_from_primary_dcd,
+    generate_dataset_description,
 )
 
 _pipeline_logger = get_logger()
@@ -354,6 +355,25 @@ async def _finish_pipeline(
         load_result=load_result,
         profiling_result=profiling_result,
     )
+
+    # Generate an LLM-written dataset description (non-blocking)
+    try:
+        ai_desc = await generate_dataset_description(dcd)
+        dcd = dcd.model_copy(
+            update={
+                "dataset": dcd.dataset.model_copy(
+                    update={"description": ai_desc},
+                ),
+            },
+        )
+        _record_progress(
+            state,
+            entry.dataset_id,
+            "silver",
+            "generated description",
+        )
+    except Exception:
+        pass  # Keep the template description
 
     gold_table_name = f"gold_{stem}_{entry.dataset_id[3:]}"
     validate_identifier(gold_table_name)

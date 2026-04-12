@@ -20,30 +20,26 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
 import type { ColumnSchema, SchemaSummary } from "@/types/api";
 
-/** Generate a human-readable dataset description from schema intelligence */
+/** Get the dataset description — prefer backend LLM description, fallback to template */
 function describeDataset(schema: SchemaSummary): string {
+  // If the backend generated an LLM description, use it
+  const desc = schema.description;
+  if (desc && !desc.includes("dataset loaded from") && desc.length > 20) {
+    return desc;
+  }
+
+  // Fallback: template from column roles
   const metrics = schema.columns.filter((c) => c.role === "metric");
   const dims = schema.columns.filter((c) => c.role === "dimension");
-  const temporal = schema.columns.filter((c) => c.role === "temporal");
-
   const parts: string[] = [];
-
   if (metrics.length > 0) {
-    const names = metrics.slice(0, 2).map((c) => c.name.replace(/_/g, " "));
-    parts.push(`tracks ${names.join(" and ")}${metrics.length > 2 ? ` and ${metrics.length - 2} more metrics` : ""}`);
+    parts.push(`tracks ${metrics.slice(0, 2).map((c) => c.name.replace(/_/g, " ")).join(" and ")}`);
   }
-
   if (dims.length > 0) {
-    const names = dims.slice(0, 3).map((c) => c.name.replace(/_/g, " "));
-    parts.push(`segmented by ${names.join(", ")}${dims.length > 3 ? ` and ${dims.length - 3} more` : ""}`);
+    parts.push(`segmented by ${dims.slice(0, 3).map((c) => c.name.replace(/_/g, " ")).join(", ")}`);
   }
-
-  if (temporal.length > 0) {
-    parts.push(`with time data for trending`);
-  }
-
   if (parts.length === 0) return `${schema.columns.length} columns across ${schema.row_count.toLocaleString()} records.`;
-  return parts.join(", ") + `. ${schema.row_count.toLocaleString()} records.`;
+  return `${parts.join(", ")}. ${schema.row_count.toLocaleString()} records.`;
 }
 
 /* ═══════════════════════════════════════════════════════

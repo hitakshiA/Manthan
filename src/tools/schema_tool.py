@@ -70,9 +70,7 @@ def get_schema(
                 aggregation=col.aggregation,
                 cardinality=col.cardinality,
                 completeness=col.completeness,
-                sample_values=[
-                    str(v) for v in (col.sample_values or [])[:5]
-                ],
+                sample_values=[str(v) for v in (col.sample_values or [])[:5]],
                 stats=(
                     {
                         "min": col.stats.min,
@@ -91,7 +89,9 @@ def get_schema(
         summary_tables=summary_tables or [],
         verified_queries=[
             SchemaSummaryVerifiedQuery(
-                question=q.question, sql=q.sql, intent=q.intent,
+                question=q.question,
+                sql=q.sql,
+                intent=q.intent,
             )
             for q in dcd.dataset.verified_queries
         ],

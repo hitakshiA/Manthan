@@ -265,6 +265,65 @@ def _describe_dataset(load_result: LoadResult) -> str:
     )
 
 
+async def generate_dataset_description(
+    dcd: DataContextDocument,
+) -> str:
+    """Use the LLM to write a 1-2 sentence dataset description.
+
+    Falls back to a template description if the LLM is unavailable.
+    """
+    from src.core.llm import LlmClient
+
+    cols = dcd.dataset.columns
+    metrics = [c for c in cols if c.role == "metric"]
+    dims = [c for c in cols if c.role == "dimension"]
+    temporal = [c for c in cols if c.role == "temporal"]
+
+    col_summary = "\n".join(
+        f"- {c.name} ({c.role}): {c.description}" for c in cols[:15]
+    )
+
+    prompt = (
+        f"Dataset: {dcd.dataset.name}\n"
+        f"Rows: {dcd.dataset.source.row_count:,}\n"
+        f"Columns:\n{col_summary}\n\n"
+        "Write a 1-2 sentence description of what this dataset "
+        "contains and what it could be used to analyze. "
+        "Be specific about the domain (e.g., 'census income data', "
+        "'e-commerce transactions', 'corporate client records'). "
+        "Do NOT mention file formats, column counts, or technical "
+        "details. Write for a business user."
+    )
+
+    try:
+        async with LlmClient() as llm:
+            reply = await llm.chat(
+                [{"role": "user", "content": prompt}],
+                temperature=0.3,
+            )
+        desc = reply.strip().strip('"').strip("'")
+        if len(desc) > 10:
+            return desc
+    except Exception:
+        pass
+
+    # Fallback: template from column roles
+    parts: list[str] = []
+    if metrics:
+        names = ", ".join(c.name.replace("_", " ") for c in metrics[:2])
+        parts.append(f"tracks {names}")
+    if dims:
+        names = ", ".join(c.name.replace("_", " ") for c in dims[:3])
+        parts.append(f"segmented by {names}")
+    if temporal:
+        parts.append("with time-series data")
+    if parts:
+        return (
+            f"{', '.join(parts)}. {dcd.dataset.source.row_count:,} records."
+        ).capitalize()
+    return _describe_dataset(dcd.dataset.source)
+
+
 def _coerce_to_date(value: object) -> date | None:
     if value is None:
         return None
