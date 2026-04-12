@@ -1,8 +1,18 @@
 """The agent loop — one while-loop, well-defined tools.
 
-This is Layer 2's entire brain. The LLM reasons, emits tool calls,
-observes results, and iterates until it responds with plain text.
-No framework, no state machine, no multi-agent swarm.
+Architecture follows Claude Code's pattern: a single async loop
+where the LLM reasons, emits tool calls, observes results, and
+iterates. Rich SSE events emitted at every decision point so
+any frontend can render a live, transparent agent experience.
+
+Key production features:
+- Auto-discovery: tables are discovered BEFORE the first LLM call
+  and injected into the system prompt (no reliance on the LLM
+  remembering to call SHOW TABLES)
+- Micro-level SSE: events emitted for discovery, thinking, tool
+  start/complete, errors, plan gates, subagent lifecycle
+- Tool result truncation: large results trimmed to stay within
+  context budget
 """
 
 from __future__ import annotations
@@ -37,7 +47,6 @@ class ManthanAgent:
 
     def __init__(self, config: AgentConfig | None = None) -> None:
         self.config = config or AgentConfig()
-        # Resolve API key: agent config → env var → Layer 1 settings
         api_key = self.config.openrouter_api_key
         if not api_key:
             from src.core.config import get_settings
@@ -63,82 +72,62 @@ class ManthanAgent:
     async def __aexit__(self, *exc: object) -> None:
         await self.close()
 
+    # ── Auto-discovery ────────────────────────────────────────
+
+    async def _discover_tables(self, dataset_id: str) -> list[str]:
+        """Run SHOW TABLES before the loop starts. Returns table names."""
+        try:
+            r = await self.router.client.post(
+                "/tools/sql",
+                json={
+                    "dataset_id": dataset_id,
+                    "sql": "SHOW TABLES",
+                    "max_rows": 200,
+                },
+            )
+            if r.status_code == 200:
+                data = r.json()
+                return [row[0] for row in data.get("rows", [])]
+        except Exception:
+            pass
+        return []
+
+    # ── Synchronous run (for /agent/query/sync) ───────────────
+
     async def run(
         self,
         session_id: str,
         dataset_id: str,
         user_message: str,
     ) -> AgentResult:
-        """Run the full agent loop. Returns when the LLM is done."""
-        t0 = time.perf_counter()
-        system = await assemble_prompt(self.config, dataset_id)
-        messages: list[dict[str, Any]] = [
-            {"role": "user", "content": user_message},
-        ]
+        """Run the full agent loop. Collects events internally."""
+        all_events: list[events.AgentEvent] = []
+
+        async for event in self.run_stream(session_id, dataset_id, user_message):
+            all_events.append(event)
+
+        # Extract final text from the done event
+        final_text = ""
         turns = 0
         tool_calls_total = 0
-        all_events: list[events.AgentEvent] = []
-        final_text = ""
-
-        while turns < self.config.max_turns:
-            # Call the LLM
-            response = await self._call_llm(system, messages)
-            assistant_msg = response["choices"][0]["message"]
-
-            # Build the assistant message for the messages list
-            msg_to_append: dict[str, Any] = {
-                "role": "assistant",
-            }
-            if assistant_msg.get("content"):
-                msg_to_append["content"] = assistant_msg["content"]
-            if assistant_msg.get("tool_calls"):
-                msg_to_append["tool_calls"] = assistant_msg["tool_calls"]
-            messages.append(msg_to_append)
-
-            tool_calls = assistant_msg.get("tool_calls") or []
-            if not tool_calls:
-                # Agent is done — responded with plain text
-                final_text = assistant_msg.get("content", "")
-                all_events.append(events.done(final_text, turns))
+        elapsed = 0.0
+        for e in reversed(all_events):
+            if e.type == "done":
+                final_text = e.data.get("summary", "")
+                turns = e.data.get("turns", 0)
+                tool_calls_total = e.data.get("tool_calls", 0)
+                elapsed = e.data.get("elapsed_seconds", 0.0)
                 break
 
-            # Execute each tool call
-            for tc in tool_calls:
-                fn = tc["function"]
-                name = fn["name"]
-                try:
-                    args = json.loads(fn["arguments"])
-                except (json.JSONDecodeError, KeyError):
-                    args = {}
-
-                all_events.append(events.tool_call(name, json.dumps(args)[:200]))
-                args_s = json.dumps(args)[:100]
-                print(f"  [agent] t={turns + 1} {name} {args_s}")
-
-                result_str = await self.router.execute(name, args)
-                tool_calls_total += 1
-                print(f"  [agent] -> {result_str[:120]}")
-
-                all_events.append(events.tool_result(name, result_str[:300]))
-
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": tc["id"],
-                        "content": result_str,
-                    }
-                )
-
-            turns += 1
-
-        elapsed = time.perf_counter() - t0
         return AgentResult(
             text=final_text,
             turns=turns,
             tool_calls_total=tool_calls_total,
-            elapsed_seconds=round(elapsed, 2),
+            elapsed_seconds=elapsed,
             events_emitted=all_events,
         )
+
+    # ── Streaming run (for /agent/query SSE) ──────────────────
 
     async def run_stream(
         self,
@@ -146,30 +135,65 @@ class ManthanAgent:
         dataset_id: str,
         user_message: str,
     ) -> AsyncIterator[events.AgentEvent]:
-        """Run the agent loop, yielding SSE events as they happen."""
-        system = await assemble_prompt(self.config, dataset_id)
+        """Run the agent loop, yielding SSE events in real time."""
+        t0 = time.perf_counter()
+        model = self.config.resolved_model
+
+        # ── Phase 0: Session start ──
+        yield events.session_start(session_id, dataset_id, model)
+
+        # ── Phase 1: Auto-discover tables ──
+        yield events.discovering_tables(dataset_id)
+        table_names = await self._discover_tables(dataset_id)
+        yield events.tables_found(table_names, len(table_names))
+
+        # ── Phase 2: Assemble system prompt with tables ──
+        yield events.loading_schema(dataset_id)
+        system = await assemble_prompt(self.config, dataset_id, table_names)
+
+        # ── Phase 3: Check memory ──
+        yield events.checking_memory(dataset_id)
+        # (memory check is done inside assemble_prompt)
+
+        # ── Phase 4: The loop ──
         messages: list[dict[str, Any]] = [
             {"role": "user", "content": user_message},
         ]
         turns = 0
+        tool_calls_total = 0
 
         while turns < self.config.max_turns:
+            # Call the LLM
             response = await self._call_llm(system, messages)
             assistant_msg = response["choices"][0]["message"]
 
+            # Emit thinking if the model produced text alongside tools
+            content = assistant_msg.get("content")
+            if content:
+                yield events.thinking(content[:500])
+
+            # Build message to append
             msg_to_append: dict[str, Any] = {"role": "assistant"}
-            if assistant_msg.get("content"):
-                msg_to_append["content"] = assistant_msg["content"]
-                yield events.thinking(assistant_msg["content"][:500])
+            if content:
+                msg_to_append["content"] = content
             if assistant_msg.get("tool_calls"):
                 msg_to_append["tool_calls"] = assistant_msg["tool_calls"]
             messages.append(msg_to_append)
 
             tool_calls = assistant_msg.get("tool_calls") or []
             if not tool_calls:
-                yield events.done(assistant_msg.get("content", ""), turns)
+                # Agent is done
+                elapsed = time.perf_counter() - t0
+                yield events.done(
+                    content or "",
+                    turns,
+                    tool_calls=tool_calls_total,
+                    elapsed=elapsed,
+                )
                 return
 
+            # Execute each tool call
+            tools_this_turn: list[str] = []
             for tc in tool_calls:
                 fn = tc["function"]
                 name = fn["name"]
@@ -178,9 +202,26 @@ class ManthanAgent:
                 except (json.JSONDecodeError, KeyError):
                     args = {}
 
-                yield events.tool_call(name, json.dumps(args)[:200])
+                yield events.tool_start(name, args, turns + 1)
+                tc_t0 = time.perf_counter()
+
                 result_str = await self.router.execute(name, args)
-                yield events.tool_result(name, result_str[:300])
+                tool_calls_total += 1
+                tc_ms = (time.perf_counter() - tc_t0) * 1000
+
+                # Check for errors in the result
+                is_err = False
+                try:
+                    parsed = json.loads(result_str)
+                    if isinstance(parsed, dict) and "error" in parsed:
+                        is_err = True
+                except Exception:
+                    pass
+
+                if is_err:
+                    yield events.tool_error(name, result_str[:300], will_retry=False)
+                else:
+                    yield events.tool_complete(name, result_str[:400], tc_ms)
 
                 messages.append(
                     {
@@ -189,10 +230,22 @@ class ManthanAgent:
                         "content": result_str,
                     }
                 )
+                tools_this_turn.append(name)
 
+            yield events.turn_complete(turns + 1, tools_this_turn)
             turns += 1
 
+        # Max turns exceeded
+        elapsed = time.perf_counter() - t0
         yield events.error("Max turns reached", recoverable=False)
+        yield events.done(
+            "Analysis incomplete — max turns reached.",
+            turns,
+            tool_calls=tool_calls_total,
+            elapsed=elapsed,
+        )
+
+    # ── LLM call with retry ──────────────────────────────────
 
     async def _call_llm(
         self,
@@ -217,18 +270,13 @@ class ManthanAgent:
                 r.raise_for_status()
                 data = r.json()
                 if isinstance(data, dict) and "error" in data:
-                    err = str(data["error"])[:150]
-                    print(f"  [llm] #{attempt + 1}: err={err}")
-                    last_error = RuntimeError(f"LLM error: {err}")
+                    last_error = RuntimeError(str(data["error"])[:200])
                     continue
                 choices = data.get("choices")
                 if choices and isinstance(choices, list):
                     return data
-                preview = str(data)[:150]
-                print(f"  [llm] #{attempt + 1}: no choices: {preview}")
-                last_error = RuntimeError("No choices in LLM response")
+                last_error = RuntimeError("No choices in response")
             except httpx.HTTPStatusError as exc:
-                print(f"  [llm] attempt {attempt + 1}: HTTP {exc.response.status_code}")
                 if exc.response.status_code == 429:
                     import asyncio
 
@@ -236,12 +284,10 @@ class ManthanAgent:
                     continue
                 last_error = exc
             except httpx.TimeoutException as exc:
-                print(f"  [llm] attempt {attempt + 1}: timeout")
                 last_error = exc
                 if attempt < 2:
                     continue
             except Exception as exc:
-                print(f"  [llm] attempt {attempt + 1}: {type(exc).__name__}: {exc}")
                 last_error = exc
 
-        raise RuntimeError(f"LLM call failed after 3 attempts: {last_error}")
+        raise RuntimeError(f"LLM failed after 3 attempts: {last_error}")

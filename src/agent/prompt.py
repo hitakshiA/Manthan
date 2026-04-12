@@ -24,15 +24,12 @@ who happens to use tools. The tools are your hands. The judgment is yours.
 - TRUST: Every answer shows which data, columns, filters, formula
 - SPEED: Simple questions in seconds, complex in under 2 minutes
 
-# CRITICAL: Dataset and table discovery
-The dataset_id is provided in the Active Dataset section below.
-Use EXACTLY that dataset_id for ALL tool calls — never invent one.
-Your VERY FIRST action MUST be:
-  run_sql(dataset_id=<the actual dataset_id>, sql="SHOW TABLES")
-The database has MANY tables beyond the primary. Table names:
-  raw_orders_xxx, raw_users_xxx, raw_restaurants_xxx, etc.
-Then DESCRIBE the tables relevant to the question.
-NEVER ask the user which table to use — discover it yourself.
+# IMPORTANT: Tables are pre-discovered
+All available tables are listed in the "Available Tables" section below.
+Use the dataset_id shown there for ALL tool calls — never invent one.
+The raw_* tables contain the actual data. DESCRIBE the ones relevant
+to the question before writing SQL. NEVER ask the user which table —
+the list is right there.
 
 # Decision gates
 
@@ -105,12 +102,13 @@ BAD: "Revenue breakdown"  GOOD: "South region drove 68% of the decline"
 async def assemble_prompt(
     config: AgentConfig,
     dataset_id: str,
+    table_names: list[str] | None = None,
 ) -> str:
-    """Build the full system prompt with dataset context."""
+    """Build the full system prompt with dataset context + tables."""
     parts = [BASE_PROMPT]
 
     async with httpx.AsyncClient(base_url=config.layer1_url, timeout=30.0) as client:
-        # Schema context — always inject dataset_id explicitly
+        # Schema context
         try:
             r = await client.get(f"/datasets/{dataset_id}/schema")
             if r.status_code == 200:
@@ -121,6 +119,10 @@ async def assemble_prompt(
                 parts.append(f"\n# Active Dataset\nDataset ID: {dataset_id}\n")
         except Exception:
             parts.append(f"\n# Active Dataset\nDataset ID: {dataset_id}\n")
+
+        # Inject discovered tables — this is what fixes multi-table routing
+        if table_names:
+            parts.append(_format_tables(dataset_id, table_names))
 
         # Prior memory
         try:
@@ -136,6 +138,38 @@ async def assemble_prompt(
             pass
 
     return "\n".join(parts)
+
+
+def _format_tables(dataset_id: str, tables: list[str]) -> str:
+    """Format the auto-discovered table list for the prompt."""
+    raw = [t for t in tables if t.startswith("raw_")]
+    gold = [t for t in tables if t.startswith("gold_")]
+    lines = [
+        "\n# Available Tables (auto-discovered)",
+        f"dataset_id: {dataset_id}",
+        f"Total tables: {len(tables)}",
+    ]
+    if raw:
+        lines.append(f"\n## Raw tables ({len(raw)}) — use these for queries:")
+        for t in sorted(raw):
+            # Extract clean name: raw_orders_abc123 → orders
+            name = t.split("_", 1)[1] if "_" in t else t
+            # Remove the hash suffix
+            parts_list = name.rsplit("_", 1)
+            clean = parts_list[0] if len(parts_list) > 1 else name
+            lines.append(f"  - {t} (→ {clean})")
+    if gold:
+        lines.append(f"\n## Gold tables ({len(gold)}):")
+        for t in sorted(gold)[:5]:
+            lines.append(f"  - {t}")
+        if len(gold) > 5:
+            lines.append(f"  ... +{len(gold) - 5} more")
+    lines.append(
+        "\nTo inspect a table's columns: "
+        f'run_sql(dataset_id="{dataset_id}", '
+        'sql="DESCRIBE <table_name>")'
+    )
+    return "\n".join(lines)
 
 
 def _format_schema(schema: dict[str, Any]) -> str:

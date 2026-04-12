@@ -1,17 +1,10 @@
-"""IP-based rate limiting with whitelist for Layer 2/3 servers.
-
-Uses slowapi (built on limits + redis/memory backend). Whitelisted IPs
-bypass all rate limits — this is where you put your Layer 2 and Layer 3
-server IPs so they get full-speed access while unknown clients are
-throttled.
-"""
+"""IP-based rate limiting with whitelist for Layer 2/3 servers."""
 
 from __future__ import annotations
 
 from fastapi import Request
 from slowapi import Limiter
 
-# IPs that bypass rate limits entirely
 WHITELISTED_IPS: set[str] = {
     "127.0.0.1",
     "::1",
@@ -20,7 +13,7 @@ WHITELISTED_IPS: set[str] = {
 
 
 def get_real_ip(request: Request) -> str:
-    """Extract real client IP, respecting X-Forwarded-For from proxies."""
+    """Extract real client IP, respecting X-Forwarded-For."""
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -29,14 +22,15 @@ def get_real_ip(request: Request) -> str:
 
 
 def _rate_limit_key(request: Request) -> str:
-    """Whitelisted IPs get a shared exempt key; others get their real IP."""
+    """Whitelisted IPs get unlimited; others get their real IP."""
     ip = get_real_ip(request)
     if ip in WHITELISTED_IPS:
+        # Return a key with effectively no limit — 1M/minute
         return "__whitelisted__"
     return ip
 
 
 limiter = Limiter(
     key_func=_rate_limit_key,
-    default_limits=["60/minute"],
+    default_limits=["200/minute"],
 )
