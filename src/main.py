@@ -120,16 +120,22 @@ def read_metrics() -> dict[str, object]:
 _FRONTEND_DIR = Path(__file__).resolve().parent.parent / "manthan-ui" / "dist"
 
 if _FRONTEND_DIR.is_dir():
+    # Static assets (JS/CSS bundles with hashed filenames)
     app.mount(
         "/assets",
         StaticFiles(directory=_FRONTEND_DIR / "assets"),
         name="frontend-assets",
     )
 
-    @app.get("/{path:path}", include_in_schema=False)
-    def serve_spa(path: str) -> FileResponse:
-        """Serve SPA — any non-API route returns index.html."""
-        file = _FRONTEND_DIR / path
-        if file.is_file() and ".." not in path:
-            return FileResponse(file)
+    @app.get("/", include_in_schema=False)
+    def serve_index() -> FileResponse:
+        """Serve the SPA index page."""
         return FileResponse(_FRONTEND_DIR / "index.html")
+
+    @app.get("/favicon.svg", include_in_schema=False)
+    def serve_favicon() -> FileResponse:
+        return FileResponse(_FRONTEND_DIR / "favicon.svg")
+
+    @app.get("/logo.svg", include_in_schema=False)
+    def serve_logo() -> FileResponse:
+        return FileResponse(_FRONTEND_DIR / "logo.svg")
