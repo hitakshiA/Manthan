@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# manthan-ui/ — Layer 3: React Workspace
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend that renders Manthan's agent output as interactive dashboards, paginated reports, and KPI cards. Not a chatbot — a workspace.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript** + **Vite**
+- **Tailwind CSS 4** with OKLCH color system (warm-tinted neutrals, deep indigo accent)
+- **Recharts** for SVG-based interactive charts
+- **Zustand** for state management (agent phase machine)
+- **Plus Jakarta Sans** typography
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+App.tsx
+├── ActivityBar          Icon-only sidebar nav (datasets, memory, history)
+├── Sidebar              Context-sensitive panel (dataset list, schema viewer)
+├── MainWorkspace        The main content area, routes between 5 views:
+│   ├── FirstOpen        Two-path welcome: Upload or Explore
+│   ├── ExploreView      Rich dataset cards with role bars
+│   ├── DatasetProfile   Full semantic layer visualization
+│   ├── ReadyToQuery     Hero input + suggestion chips
+│   └── ActiveWorkspace  Agent activity feed → render spec output
+└── StatusBar            Connection status, active dataset, model name
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Key components
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Component | What it renders |
+|-----------|----------------|
+| `ActivityFeed` | Real-time SSE events as they stream from the agent |
+| `ActivityEvent` | Polymorphic renderer for 22 event types (tool cards, thinking, HITL) |
+| `RenderRouter` | Dispatches render_spec by mode → Simple / Moderate / Complex view |
+| `ChartRenderer` | Recharts bar/line/scatter/pie from any agent visual format |
+| `AskUserCard` | Inline HITL with option buttons + free-text input |
+| `PlanApprovalCard` | Plan review with approve/reject/amend actions |
+| `RoleBar` | Column role distribution bar (metrics/dimensions/temporal) |
+| `DatasetProfile` | Full column table with stats, descriptions, quality bars |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## SSE event flow
+
+```
+POST /agent/query → SSE stream
+  → agent-store.pushEvent() dispatches by event.type
+  → AgentPhase transitions: idle → discovering → thinking → executing → done
+  → ActivityFeed renders each event as it arrives
+  → On "done": normalizeSpec() transforms raw agent JSON → typed RenderSpec
+  → RenderRouter picks SimpleView / ModerateView / ComplexView
+```
+
+## Development
+
+```bash
+npm install
+npm run dev          # Dev server at localhost:5173 (proxies API to :8000)
+npm run build        # Production build to dist/
+npm run typecheck    # TypeScript validation
 ```
