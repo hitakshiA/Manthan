@@ -4,7 +4,7 @@ import { KPICard } from "@/components/render/shared/KPICard";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ScatterChart, Scatter, AreaChart, Area,
+  ScatterChart, Scatter,
 } from "recharts";
 
 // Warm indigo palette for charts

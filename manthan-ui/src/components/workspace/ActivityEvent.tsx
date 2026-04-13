@@ -1,10 +1,10 @@
 import type { AgentEvent } from "@/types/events";
 import {
-  Play, Search, TableProperties, FileJson, Brain, Sparkles,
-  Wrench, CheckCircle2, XCircle, ChevronDown,
+  TableProperties, Brain, Sparkles,
+  CheckCircle2, XCircle, ChevronDown,
   GitFork, GitMerge, AlertTriangle, Loader2,
 } from "lucide-react";
-import { cn, formatMs } from "@/lib/utils";
+import { formatMs } from "@/lib/utils";
 import { AskUserCard } from "@/components/hitl/AskUserCard";
 import { PlanApprovalCard } from "@/components/hitl/PlanApprovalCard";
 

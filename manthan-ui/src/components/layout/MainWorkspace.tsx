@@ -10,15 +10,14 @@ import { useSchema, prefetchSchemas } from "@/hooks/use-schema";
 import {
   Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText,
   Upload, Database, ArrowLeft, FileSpreadsheet, ChevronRight,
-  Layers, Table2, Zap,
+  Zap,
 } from "lucide-react";
 import { ManthanLogo } from "@/components/ManthanLogo";
 import { queryStream } from "@/api/agent";
 import type { RenderSpec } from "@/types/render-spec";
-import type { DatasetSummary } from "@/types/api";
+import type { DatasetSummary, SchemaSummary } from "@/types/api";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
-import type { ColumnSchema, SchemaSummary } from "@/types/api";
 
 /** Get the dataset description — prefer backend LLM description, fallback to template */
 function describeDataset(schema: SchemaSummary): string {

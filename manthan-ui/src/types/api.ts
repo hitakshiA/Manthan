@@ -30,6 +30,7 @@ export interface ColumnSchema {
 export interface SchemaSummary {
   dataset_id: string;
   name: string;
+  description: string;
   row_count: number;
   columns: ColumnSchema[];
   summary_tables: string[];
