@@ -5,8 +5,8 @@
 <h1 align="center">Manthan</h1>
 
 <p align="center">
-  Upload a dataset. Ask a question. Get a dashboard.<br/>
-  No SQL. No notebooks. No hallucinated answers.
+  An autonomous agent harness with a semantic data layer<br/>
+  that turns any dataset into dashboards and reports — without hallucinating.
 </p>
 
 <p align="center">
@@ -22,100 +22,111 @@
 
 ---
 
-## What it does
+## The problem with every "talk to your data" tool
 
-Manthan is a 3-layer autonomous data analyst. You give it a CSV, it builds a semantic understanding of every column, then answers natural-language questions with real SQL, real Python, and structured visual output — dashboards, reports, and KPI cards.
+They all fail the same way. The LLM sees `payment_type INTEGER` and sums it. It treats `age` as a metric instead of a dimension. It guesses what "last month" means. When the model goes down, the whole system crashes. And the output is always a wall of text — never the dashboard the business user actually needs.
 
-The difference from other "talk to your data" tools: **Manthan asks before it guesses.**
-
-When the system isn't sure whether `age` is something you'd sum or group by, it stops and asks you. Your answer gets locked into the semantic layer *before* any analysis runs. Every query afterward is grounded in definitions you confirmed.
+**Manthan solves this with two things no other tool has: a semantic layer that understands data before the agent touches it, and an agent harness that thinks, plans, and asks before it acts.**
 
 ---
 
-## The semantic layer
+## Layer 1 — The Semantic Layer
 
-Upload a CSV and Manthan classifies every column — role, type, description, statistics, sample values — then shows you exactly what it understood:
+Upload a CSV and Manthan doesn't just dump it into a database. It runs an LLM classifier over every column — detecting whether each one is a metric you'd sum, a dimension you'd group by, a temporal axis for trends, or an identifier to ignore. It writes descriptions, computes statistics, and measures data quality.
+
+When the classifier isn't confident, **it stops and asks you**:
+
+```
+Manthan: "'age' has 74 different numeric values (like 35, 59, 56).
+          How do you use it?"
+
+  [I'd calculate with it (sum, average)]  [I'd group or filter by it]  [It's an ID]
+```
+
+Your answer gets locked into the **Data Context Document (DCD)** — a structured semantic layer that the agent reads before every query. The result is a rich dataset profile:
 
 <p align="center">
   <img src="docs/screenshots/dataset-profile.png" width="720" alt="Dataset profile showing column classification with roles, types, statistics, and quality indicators" />
 </p>
 
-Each column gets an LLM-written description, a role badge (metric, dimension, temporal, identifier), statistics (min/max/mean), sample values, and a data quality bar. The system builds this semantic layer *before* any analysis happens.
-
-Without it, the LLM sees raw DDL and guesses:
-
-```sql
--- LLM sees: payment_type INTEGER → SUM(payment_type) = 7,421,832 ← garbage
-```
-
-With Manthan's Data Context Document:
-
-```yaml
-payment_type:
-  role: dimension         # don't aggregate this
-  description: "1=Credit, 2=Cash, 3=No charge, 4=Dispute"
-```
-
-The agent never sums a dimension.
+Every column has an LLM-written description, a role badge, min/max/mean statistics, sample values, cardinality, and a completeness bar. Pre-built summary tables and verified queries are materialized automatically. The agent never guesses — it reads confirmed definitions.
 
 ---
 
-## Three output modes
+## Layer 2 — The Agent Harness
 
-The agent decides the right complexity for each question.
+The agent isn't a simple text-to-SQL translator. It's an autonomous reasoning loop with **8 tools**, **3 decision gates**, and **cross-session memory** — orchestrated through a single `while` loop that runs until the LLM stops emitting tool calls.
 
-### Simple — one KPI + one chart
+### Decision gates
 
-Ask "What are the top 10 companies by members?" and get a headline number, a narrative, and an interactive bar chart:
+Before executing anything, the agent reasons through three gates:
+
+1. **Clarification gate** — If the question is ambiguous ("What changed last month?"), the agent calls `ask_user` with structured options and **blocks until you answer**. No guessing.
+
+2. **Planning gate** — If the task needs 3+ tool calls, the agent creates a structured plan with steps, citations from the DCD, and expected cost — then **waits for your approval** before executing.
+
+3. **Complexity gate** — The agent decides the output mode early: **Simple** (one KPI + one chart), **Moderate** (multi-section dashboard), or **Complex** (multi-page report with executive summary and recommendations).
+
+### 8 tools
+
+| Tool | What it does |
+|------|-------------|
+| `get_schema` | Reads the semantic layer — column roles, descriptions, verified queries |
+| `get_context` | Full DCD as YAML, optionally pruned to relevant columns |
+| `run_sql` | Read-only SQL against Gold tables (supports temp tables, DESCRIBE) |
+| `run_python` | Stateful Python sandbox — variables persist across calls |
+| `ask_user` | Blocking clarification with options (30s timeout, then best guess) |
+| `create_plan` | Structured plan with approval gate (30s auto-approve) |
+| `save_memory` | Persists conclusions to cross-session SQLite store |
+| `recall_memory` | Retrieves prior analysis at the start of every new query |
+
+### Cross-session memory
+
+After a complex analysis, the agent saves key findings to a persistent SQLite-backed memory store. The next time you ask a related question — even in a new session — the agent recalls those conclusions and builds on them. Yesterday's analysis isn't lost.
+
+### 22 SSE event types
+
+Every decision, tool call, and result streams to the frontend in real-time via Server-Sent Events. The user watches the agent think — scanning tables, loading schema, running SQL, executing Python, creating plans — with each step rendered as a live activity card.
+
+---
+
+## Layer 3 — The Workspace
+
+The frontend isn't a chatbot. It's a workspace that renders the agent's structured output as interactive dashboards, paginated reports, and KPI cards — using the `render_spec.json` contract between Layer 2 and Layer 3.
+
+### Simple output — one question, one answer
 
 <p align="center">
-  <img src="docs/screenshots/simple-chart.png" width="720" alt="Simple mode output with KPI card, narrative text, and bar chart" />
+  <img src="docs/screenshots/simple-chart.png" width="720" alt="Simple mode: KPI card with narrative and interactive bar chart" />
 </p>
 
-### Complex — multi-page report with recommendations
+### Complex output — multi-page analytical report
 
-Ask for a "full portfolio analysis" and get a paginated report with executive summary, key findings, recommendations with confidence levels, and dedicated analysis pages with charts:
+For deep analysis, the agent produces a paginated report with an executive summary, key findings, recommendations with confidence levels, and dedicated analysis pages:
 
 <p align="center">
-  <img src="docs/screenshots/complex-report.png" width="720" alt="Complex mode executive summary with findings and recommendations" />
+  <img src="docs/screenshots/complex-report.png" width="720" alt="Complex mode: executive summary with findings and actionable recommendations" />
 </p>
 
-Each page has its own content — narratives, charts, callout cards — navigable via the sidebar:
+Each page has its own narrative, charts, and insight callouts — navigable via the sidebar:
 
 <p align="center">
-  <img src="docs/screenshots/complex-page.png" width="720" alt="Complex mode analysis page with line chart and insight callouts" />
+  <img src="docs/screenshots/complex-page.png" width="720" alt="Analysis page with line chart showing quarterly trends and callout cards" />
 </p>
 
 ---
 
-## How it works
+## What makes this different
 
-```
-Upload CSV ──→ Classify columns ──→ Ask user if unsure ──→ Build semantic layer
-                                                                   │
-                                    ┌──────────────────────────────┘
-                                    ▼
-              User asks question ──→ Agent reasons through decision gates:
-                                    │
-                                    ├─ Ambiguous? → Ask user to clarify
-                                    ├─ Complex? → Show plan, wait for approval
-                                    └─ Execute → SQL + Python + render output
-                                                                   │
-                                    ┌──────────────────────────────┘
-                                    ▼
-                              Structured output:
-                              • Simple — one KPI + one chart
-                              • Moderate — multi-section dashboard
-                              • Complex — multi-page report with recommendations
-```
-
-**Three layers:**
-
-| Layer | What it does | Key feature |
-|-------|-------------|-------------|
-| **Layer 1** — Data Pipeline | Ingests files, classifies columns via LLM, builds a semantic layer (DCD), materializes Gold tables | Asks the user when classifier confidence is low |
-| **Layer 2** — Agent | Autonomous reasoning loop with 8 tools (SQL, Python, plans, memory, subagents) | Shows its plan before executing; saves conclusions to cross-session memory |
-| **Layer 3** — Frontend | React workspace that renders SSE events in real-time and displays structured output | Agent activity feed, inline HITL cards, dashboard/report rendering |
+| Capability | Manthan | Typical text-to-SQL tool |
+|---|---|---|
+| **Understands data before querying** | LLM classifies every column; asks user when unsure | Sees raw DDL, guesses column meaning |
+| **Plans before executing** | Shows plan with citations, waits for approval | Executes immediately, no visibility |
+| **Remembers across sessions** | SQLite-backed memory; recalls yesterday's analysis | Stateless — starts from scratch every time |
+| **Produces structured output** | KPI cards, dashboards, multi-page reports | Text + maybe one chart |
+| **Never crashes on LLM failure** | 3-model cascade + deterministic heuristic fallback | Single model, crashes on rate limit |
+| **Streams agent activity** | 22 SSE event types, real-time tool execution cards | Returns final text, no visibility into process |
+| **Human-in-the-loop** | Blocks on ambiguity (ask_user) and complexity (plan approval) | Guesses silently |
 
 ---
 
@@ -141,7 +152,7 @@ uvicorn src.main:app --reload
 cd manthan-ui && npm install && npm run dev
 ```
 
-**Get an API key:** Sign up at [openrouter.ai](https://openrouter.ai) — free tier works out of the box.
+**Get an API key:** Sign up at [openrouter.ai](https://openrouter.ai) — free tier works out of the box. No credit card needed.
 
 ### Live demo: **https://manthan.quest**
 
@@ -149,20 +160,21 @@ cd manthan-ui && npm install && npm run dev
 
 ## Resilience
 
-Manthan doesn't crash when an LLM is unavailable. The classification pipeline uses a 3-model cascade: if the primary model fails, it tries two fallbacks. If all three are down, a deterministic heuristic classifier takes over using column name patterns, data types, and cardinality — no LLM needed. The agent layer has independent retry logic with automatic model failover.
+The system doesn't crash when things go wrong.
 
 | Failure | What happens |
 |---------|-------------|
-| Primary model rate-limited | Instant cascade to fallback model |
-| All models down | Heuristic classifier runs (deterministic, no LLM) |
+| Primary model rate-limited | Instant cascade to fallback model (3-model chain) |
+| All LLMs unavailable | Deterministic heuristic classifier runs — no LLM needed |
 | Agent tool call fails | Retries up to 3 times, then explains the issue to the user |
-| Server restarts | Datasets rehydrate from disk; memory persists via SQLite WAL |
+| Python sandbox errors | Agent reads stderr, fixes code, retries (up to 3 attempts) |
+| Server restarts | Datasets rehydrate from Parquet on disk; memory persists via SQLite WAL |
 
 ---
 
 ## Benchmark results
 
-Tested against [CORGI](https://github.com/corgibenchmark/CORGI) — synthetic business databases with 18–35 tables, 25–68 foreign keys, and queries requiring 7+ JOINs on average.
+Tested against [CORGI](https://github.com/corgibenchmark/CORGI) — the hardest public text-to-SQL benchmark for business databases. Synthetic schemas modeled after real companies with 18–35 tables, 25–68 foreign keys, and queries requiring 7+ JOINs on average.
 
 | Database | Tables | FKs | Rows | Result |
 |----------|--------|-----|------|--------|
@@ -170,79 +182,79 @@ Tested against [CORGI](https://github.com/corgibenchmark/CORGI) — synthetic bu
 | Clothing E-commerce | 35 | 40 | 140K | **6/6 passed** |
 | Car Rental | 31 | 68 | 169K | **6/6 passed** |
 
-The agent discovers 30+ tables autonomously, writes multi-table JOINs, and produces structured answers without human guidance.
+The agent discovers 30+ tables autonomously via `SHOW TABLES`, describes relevant ones, writes multi-table JOINs, and produces structured answers — all without human guidance.
 
 ---
+
+## Architecture
+
+```
+Layer 1 — Data Pipeline + Semantic Layer
+  Upload → Bronze (DuckDB) → Silver (LLM classify) → Clarify → Gold (materialize)
+  Output: Data Context Document (DCD) with column roles, stats, verified queries
+
+Layer 2 — Autonomous Agent Harness
+  While loop: LLM reasons → emits tool calls → observes results → iterates
+  8 tools, 3 decision gates, cross-session memory, subagent spawning
+  Output: render_spec.json (structured visualization contract)
+
+Layer 3 — React Workspace
+  SSE stream renders agent activity in real-time
+  render_spec.json → Simple / Moderate / Complex views
+  Interactive charts (Recharts), KPI cards, paginated reports
+```
 
 ## API surface
 
-### Data Pipeline
-| Method | Endpoint | What it does |
-|--------|----------|-------------|
-| POST | `/datasets/upload` | Upload → classify → clarify → materialize |
-| POST | `/datasets/upload-multi` | Multi-file with auto FK detection |
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/datasets/upload` | Upload → classify → clarify → materialize Gold |
 | GET | `/datasets/{id}/schema` | Column roles, stats, descriptions, quality |
-| GET | `/datasets/{id}/context` | Full semantic layer as YAML |
-| GET | `/datasets/{id}/output/{file}` | Artifacts (render_spec.json, parquet) |
-
-### Agent
-| Method | Endpoint | What it does |
-|--------|----------|-------------|
-| POST | `/agent/query` | SSE stream — real-time thinking, tool calls, results |
-| POST | `/agent/query/sync` | Synchronous — returns full result + render_spec |
-
-### Tools & Primitives
-| Method | Endpoint | What it does |
-|--------|----------|-------------|
+| POST | `/agent/query` | SSE stream — real-time agent activity |
 | POST | `/tools/sql` | Read-only SQL against Gold tables |
 | POST | `/tools/python` | Stateful Python sandbox |
 | POST | `/plans` | Structured plan with approval gate |
-| POST | `/ask_user` | Blocking human-in-the-loop question |
-| POST | `/memory` | Cross-session persistent store |
-| POST | `/subagents/spawn` | Isolated parallel analysis |
-
----
+| POST | `/ask_user` | Blocking human-in-the-loop clarification |
+| POST | `/memory` | Cross-session persistent key-value store |
+| POST | `/subagents/spawn` | Isolated parallel analysis workspaces |
 
 ## Tech stack
 
 | Component | Technology |
 |-----------|-----------|
 | API | FastAPI + uvicorn |
-| Database | DuckDB (in-memory + Parquet) |
-| LLM | OpenRouter (any model — configured via .env) |
-| Persistence | SQLite WAL (memory + plan audit) |
+| Database | DuckDB (in-memory + Parquet persistence) |
+| LLM | OpenRouter (model-agnostic — any provider via .env) |
+| Persistence | SQLite WAL (memory + plan audit trail) |
 | Sandbox | Python subprocess REPL with persistent state |
 | Frontend | React 19 + Vite + Tailwind CSS 4 + Recharts |
-| State | Zustand |
+| State | Zustand (agent phase machine + stores) |
 
-All backend dependencies are Apache 2.0, MIT, or BSD licensed.
-
----
+All dependencies are Apache 2.0, MIT, or BSD licensed.
 
 ## Project structure
 
 ```
 src/
-  agent/            # Layer 2: agent loop, tools, prompt, SSE events
-  api/              # FastAPI routers (datasets, tools, agent, plans, memory...)
+  agent/            # Layer 2: agent loop, 8 tools, prompt, SSE events
+  api/              # 13 FastAPI routers (datasets, tools, agent, plans, memory...)
   core/             # Config, LLM client, rate limiting, memory, plans
-  ingestion/        # Bronze: format loaders, FK detection, registry
-  profiling/        # Silver: LLM + heuristic classifier, clarification
+  ingestion/        # Bronze: 5 format loaders, FK detection, registry
+  profiling/        # Silver: LLM + heuristic classifier, interactive clarification
   semantic/         # DCD schema, render spec models + normalizer
-  materialization/  # Gold: optimizer, summarizer, verified queries
+  materialization/  # Gold: optimizer, summarizer, verified query generator
   tools/            # SQL tool, Python session manager
   sandbox/          # REPL worker subprocess
 
 manthan-ui/
   src/
-    api/            # HTTP client layer
-    stores/         # Zustand state (agent, datasets, session, UI)
+    stores/         # Zustand: agent phase machine, datasets, session, UI
     components/
       layout/       # App shell: ActivityBar, Sidebar, MainWorkspace
-      workspace/    # QueryInput, ActivityFeed, ActivityEvent
-      render/       # SimpleView, ModerateView, ComplexView + charts
-      hitl/         # AskUserCard, PlanApprovalCard
-      datasets/     # Uploader, ColumnClassifier, SchemaViewer
+      workspace/    # QueryInput, ActivityFeed, 22 SSE event renderers
+      render/       # SimpleView, ModerateView, ComplexView + Recharts
+      hitl/         # AskUserCard, PlanApprovalCard (inline, not modals)
+      datasets/     # Uploader, ColumnClassifier, RoleBar, SchemaViewer
 
 tests/              # 294 tests across 7 directories
 ```
@@ -252,7 +264,7 @@ tests/              # 294 tests across 7 directories
 ```bash
 pip install -e ".[dev]"
 ruff format src/ tests/ && ruff check src/ tests/
-pytest tests/ -q
+pytest tests/ -q  # 294 tests, ~14s
 ```
 
 ## License
