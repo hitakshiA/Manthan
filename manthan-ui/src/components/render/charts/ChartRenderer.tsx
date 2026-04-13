@@ -82,13 +82,13 @@ function extractData(visual: Visual): { data: Array<Record<string, unknown>>; xK
 }
 
 export function ChartRenderer({ visual }: { visual: Visual }) {
-  // KPI renders as a card
-  if (visual.type === "kpi") {
+  // KPI renders as a card — handle multiple formats
+  const raw = visual as Record<string, unknown>;
+  if (visual.type === "kpi" || (raw.value !== undefined && raw.label !== undefined)) {
     const enc = visual.encoding ?? {};
-    const raw = visual as Record<string, unknown>;
-    const d = (enc.data ?? raw.data ?? enc) as Record<string, unknown>;
+    const d = (enc.data ?? raw.data ?? raw) as Record<string, unknown>;
     return (
-      <KPICard kpi={{ value: String(d.value ?? ""), label: String(d.label ?? visual.title), sentiment: "neutral" }} />
+      <KPICard kpi={{ value: String(d.value ?? raw.value ?? ""), label: String(d.label ?? raw.label ?? visual.title ?? ""), sentiment: "neutral" }} />
     );
   }
 

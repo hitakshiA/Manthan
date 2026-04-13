@@ -119,22 +119,62 @@ export function normalizeSpec(raw: any): RenderSpec {
       executive_summary: {
         headline: String(es.headline ?? ""),
         key_findings: Array.isArray(es.key_findings) ? es.key_findings.map(String) : [],
-        recommendations: Array.isArray(es.recommendations) ? es.recommendations.map((r: any) => ({
-          id: String(r.id ?? `rec_${Math.random().toString(36).slice(2, 6)}`),
-          action: String(r.action ?? r.rec ?? ""),
-          rationale: String(r.rationale ?? r.evidence ?? ""),
-          expected_impact: String(r.expected_impact ?? r.evidence ?? ""),
-          confidence: String(r.confidence ?? "medium").toLowerCase() as "low" | "medium" | "high",
-        })) : [],
+        recommendations: Array.isArray(es.recommendations) ? es.recommendations.map((r: any, idx: number) => {
+          // Handle string recommendations: "ACTION: details..."
+          if (typeof r === "string") {
+            const colonIdx = r.indexOf(":");
+            const action = colonIdx > 0 ? r.slice(0, colonIdx).trim() : r.slice(0, 60);
+            const rationale = colonIdx > 0 ? r.slice(colonIdx + 1).trim() : r;
+            return { id: `rec_${idx}`, action, rationale, expected_impact: rationale, confidence: "medium" as const };
+          }
+          return {
+            id: String(r.id ?? `rec_${idx}`),
+            action: String(r.action ?? r.rec ?? ""),
+            rationale: String(r.rationale ?? r.evidence ?? ""),
+            expected_impact: String(r.expected_impact ?? r.evidence ?? ""),
+            confidence: String(r.confidence ?? "medium").toLowerCase() as "low" | "medium" | "high",
+          };
+        }) : [],
       },
-      pages: Array.isArray(raw.pages) ? raw.pages.map((p: any) => ({
-        id: String(p.id ?? `p_${Math.random().toString(36).slice(2, 6)}`),
-        title: String(p.title ?? ""),
-        purpose: String(p.purpose ?? p.narrative ?? ""),
-        layout: p.layout ?? "single",
-        blocks: Array.isArray(p.blocks) ? p.blocks : [],
-        cross_references: Array.isArray(p.cross_references) ? p.cross_references : [],
-      })) : [],
+      pages: Array.isArray(raw.pages) ? raw.pages.map((p: any) => {
+        // Convert sections → blocks if no blocks exist
+        let blocks = Array.isArray(p.blocks) ? p.blocks : [];
+        const sections = Array.isArray(p.sections) ? p.sections : [];
+        if (blocks.length === 0 && sections.length > 0) {
+          for (const sec of sections) {
+            if (sec.title) blocks.push({ type: "callout", text: String(sec.title), style: "insight" });
+            if (sec.narrative) blocks.push({ type: "narrative", text: String(sec.narrative) });
+            const visuals = Array.isArray(sec.visuals) ? sec.visuals : [];
+            for (const v of visuals) {
+              if (v.type === "kpi") {
+                blocks.push({ type: "kpi_row", items: [{ value: String(v.value ?? ""), label: String(v.label ?? ""), sentiment: "neutral" }] });
+              } else {
+                blocks.push({ type: "hero_chart", visual: normVisual(v) });
+              }
+            }
+          }
+        }
+        // Also handle top-level narrative/visuals on the page itself
+        if (blocks.length === 0) {
+          if (p.narrative) blocks.push({ type: "narrative", text: String(p.narrative) });
+          const pageVisuals = Array.isArray(p.visuals) ? p.visuals : [];
+          for (const v of pageVisuals) {
+            if (v.type === "kpi") {
+              blocks.push({ type: "kpi_row", items: [{ value: String(v.value ?? ""), label: String(v.label ?? ""), sentiment: "neutral" }] });
+            } else {
+              blocks.push({ type: "hero_chart", visual: normVisual(v) });
+            }
+          }
+        }
+        return {
+          id: String(p.id ?? `p_${Math.random().toString(36).slice(2, 6)}`),
+          title: String(p.title ?? ""),
+          purpose: String(p.purpose ?? p.narrative ?? ""),
+          layout: p.layout ?? "single",
+          blocks,
+          cross_references: Array.isArray(p.cross_references) ? p.cross_references : [],
+        };
+      }) : [],
       appendix: raw.appendix ?? { methodology: "SQL-based analysis", data_quality_notes: [], open_questions: [] },
       plan_ids: Array.isArray(raw.plan_ids) ? raw.plan_ids.map(String) : (raw.plan_id ? [String(raw.plan_id)] : []),
     } as ComplexRenderSpec;
