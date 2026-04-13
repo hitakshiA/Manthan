@@ -34,33 +34,48 @@ class ChartErrorBoundary extends Component<
   }
 }
 
-/** Extract chart data from the visual — handles all agent formats */
-function extractData(visual: Visual): { data: Array<Record<string, unknown>>; xKey: string; yKey: string } {
+/** Extract chart data from the visual — handles ALL agent formats */
+function extractData(visual: Visual): { data: Array<Record<string, unknown>>; xKey: string; yKey: string; yKeys?: string[] } {
   const enc = visual.encoding ?? {};
   const raw = visual as Record<string, unknown>;
+  const rawData = (raw.data ?? enc.data) as Record<string, unknown> | Array<Record<string, unknown>> | undefined;
 
-  // Format 1: encoding.data is an array of objects with encoding.x and encoding.y as field names
-  if (Array.isArray(enc.data) && enc.x && enc.y) {
-    return { data: enc.data as Array<Record<string, unknown>>, xKey: enc.x as string, yKey: enc.y as string };
+  // Format A: data.categories + data.series[{name, values}] (GLM 5.1 bar/grouped_bar)
+  // or data.x + data.series[{name, values}] (GLM 5.1 line)
+  if (rawData && typeof rawData === "object" && !Array.isArray(rawData)) {
+    const categories = (rawData.categories ?? rawData.x) as unknown[];
+    const series = rawData.series as Array<{ name: string; values: unknown[] }>;
+    if (Array.isArray(categories) && Array.isArray(series) && series.length > 0) {
+      const data = categories.map((cat, i) => {
+        const row: Record<string, unknown> = { category: cat };
+        for (const s of series) {
+          row[s.name] = s.values?.[i];
+        }
+        return row;
+      });
+      return { data, xKey: "category", yKey: series[0].name, yKeys: series.map((s) => s.name) };
+    }
   }
 
-  // Format 2: x and y are parallel arrays (raw agent format)
+  // Format B: encoding.data array + encoding.x/y field names (normalized)
+  if (Array.isArray(enc.data) && enc.x && enc.y && typeof enc.x === "string" && typeof enc.y === "string") {
+    return { data: enc.data as Array<Record<string, unknown>>, xKey: enc.x, yKey: enc.y };
+  }
+
+  // Format C: x and y as parallel arrays (gpt-oss raw format)
   const xArr = (enc.x ?? raw.x) as unknown;
   const yArr = (enc.y ?? raw.y) as unknown;
   if (Array.isArray(xArr) && Array.isArray(yArr)) {
     const xLabel = String(enc.x_label ?? raw.x_label ?? "x");
     const yLabel = String(enc.y_label ?? raw.y_label ?? "y");
-    const data = xArr.map((x: unknown, i: number) => ({
-      [xLabel]: x,
-      [yLabel]: yArr[i],
-    }));
+    const data = xArr.map((x: unknown, i: number) => ({ [xLabel]: x, [yLabel]: yArr[i] }));
     return { data, xKey: xLabel, yKey: yLabel };
   }
 
-  // Format 3: encoding.data with auto-detected keys
-  if (Array.isArray(enc.data) && enc.data.length > 0) {
-    const keys = Object.keys(enc.data[0] as Record<string, unknown>);
-    return { data: enc.data as Array<Record<string, unknown>>, xKey: keys[0] ?? "x", yKey: keys[1] ?? "y" };
+  // Format D: data as array of objects, auto-detect keys
+  if (Array.isArray(rawData) && rawData.length > 0) {
+    const keys = Object.keys(rawData[0] as Record<string, unknown>);
+    return { data: rawData as Array<Record<string, unknown>>, xKey: keys[0] ?? "x", yKey: keys[1] ?? "y" };
   }
 
   return { data: [], xKey: "x", yKey: "y" };
@@ -77,7 +92,8 @@ export function ChartRenderer({ visual }: { visual: Visual }) {
     );
   }
 
-  const { data, xKey, yKey } = extractData(visual);
+  const { data, xKey, yKey, yKeys } = extractData(visual);
+  const allYKeys = yKeys ?? [yKey];
 
   if (data.length === 0) {
     return (
@@ -102,7 +118,9 @@ export function ChartRenderer({ visual }: { visual: Visual }) {
                 <XAxis dataKey={xKey} tick={{ fontSize: 11 }} stroke="var(--color-text-faint)" />
                 <YAxis tick={{ fontSize: 11 }} stroke="var(--color-text-faint)" />
                 <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid var(--color-border)", fontSize: 12 }} />
-                <Line type="monotone" dataKey={yKey} stroke="#6E56CF" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                {allYKeys.map((k, i) => (
+                  <Line key={k} type="monotone" dataKey={k} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name={k} />
+                ))}
               </LineChart>
             ) : chartType === "scatter" ? (
               <ScatterChart margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
@@ -120,13 +138,15 @@ export function ChartRenderer({ visual }: { visual: Visual }) {
                 <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid var(--color-border)", fontSize: 12 }} />
               </PieChart>
             ) : (
-              /* Default: bar chart */
+              /* Default: bar chart (supports grouped bars via multiple yKeys) */
               <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey={xKey} tick={{ fontSize: 11 }} stroke="var(--color-text-faint)" angle={data.length > 6 ? -35 : 0} textAnchor={data.length > 6 ? "end" : "middle"} height={data.length > 6 ? 80 : 30} />
                 <YAxis tick={{ fontSize: 11 }} stroke="var(--color-text-faint)" />
                 <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid var(--color-border)", fontSize: 12 }} />
-                <Bar dataKey={yKey} fill="#6E56CF" radius={[4, 4, 0, 0]} />
+                {allYKeys.map((k, i) => (
+                  <Bar key={k} dataKey={k} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} name={k} />
+                ))}
               </BarChart>
             )}
           </ResponsiveContainer>
