@@ -32,7 +32,7 @@ export function ComplexView({ spec }: { spec: ComplexRenderSpec }) {
             <ExecSummary summary={spec.executive_summary} />
           )}
           {activePage === "__appendix" && (
-            <AppendixPage appendix={spec.appendix} />
+            <AppendixPage appendix={spec.appendix ?? { methodology: "SQL-based analysis", data_quality_notes: [], open_questions: [] }} />
           )}
           {currentPage && (
             <ReportPage page={currentPage} />
