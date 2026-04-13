@@ -30,6 +30,64 @@ The difference from other "talk to your data" tools: **Manthan asks before it gu
 
 When the system isn't sure whether `age` is something you'd sum or group by, it stops and asks you. Your answer gets locked into the semantic layer *before* any analysis runs. Every query afterward is grounded in definitions you confirmed.
 
+---
+
+## The semantic layer
+
+Upload a CSV and Manthan classifies every column — role, type, description, statistics, sample values — then shows you exactly what it understood:
+
+<p align="center">
+  <img src="docs/screenshots/dataset-profile.png" width="720" alt="Dataset profile showing column classification with roles, types, statistics, and quality indicators" />
+</p>
+
+Each column gets an LLM-written description, a role badge (metric, dimension, temporal, identifier), statistics (min/max/mean), sample values, and a data quality bar. The system builds this semantic layer *before* any analysis happens.
+
+Without it, the LLM sees raw DDL and guesses:
+
+```sql
+-- LLM sees: payment_type INTEGER → SUM(payment_type) = 7,421,832 ← garbage
+```
+
+With Manthan's Data Context Document:
+
+```yaml
+payment_type:
+  role: dimension         # don't aggregate this
+  description: "1=Credit, 2=Cash, 3=No charge, 4=Dispute"
+```
+
+The agent never sums a dimension.
+
+---
+
+## Three output modes
+
+The agent decides the right complexity for each question.
+
+### Simple — one KPI + one chart
+
+Ask "What are the top 10 companies by members?" and get a headline number, a narrative, and an interactive bar chart:
+
+<p align="center">
+  <img src="docs/screenshots/simple-chart.png" width="720" alt="Simple mode output with KPI card, narrative text, and bar chart" />
+</p>
+
+### Complex — multi-page report with recommendations
+
+Ask for a "full portfolio analysis" and get a paginated report with executive summary, key findings, recommendations with confidence levels, and dedicated analysis pages with charts:
+
+<p align="center">
+  <img src="docs/screenshots/complex-report.png" width="720" alt="Complex mode executive summary with findings and recommendations" />
+</p>
+
+Each page has its own content — narratives, charts, callout cards — navigable via the sidebar:
+
+<p align="center">
+  <img src="docs/screenshots/complex-page.png" width="720" alt="Complex mode analysis page with line chart and insight callouts" />
+</p>
+
+---
+
 ## How it works
 
 ```
@@ -59,23 +117,7 @@ Upload CSV ──→ Classify columns ──→ Ask user if unsure ──→ Bui
 | **Layer 2** — Agent | Autonomous reasoning loop with 8 tools (SQL, Python, plans, memory, subagents) | Shows its plan before executing; saves conclusions to cross-session memory |
 | **Layer 3** — Frontend | React workspace that renders SSE events in real-time and displays structured output | Agent activity feed, inline HITL cards, dashboard/report rendering |
 
-## The semantic layer
-
-Without it, the LLM sees raw DDL and guesses:
-
-```sql
--- LLM sees: payment_type INTEGER → SUM(payment_type) = 7,421,832 ← garbage
-```
-
-With Manthan's Data Context Document:
-
-```yaml
-payment_type:
-  role: dimension         # don't aggregate this
-  description: "1=Credit, 2=Cash, 3=No charge, 4=Dispute"
-```
-
-The agent never sums a dimension. Every query is grounded in confirmed column roles, aggregation rules, and verified sample queries.
+---
 
 ## Run it
 
@@ -139,7 +181,7 @@ The agent discovers 30+ tables autonomously, writes multi-table JOINs, and produ
 |--------|----------|-------------|
 | POST | `/datasets/upload` | Upload → classify → clarify → materialize |
 | POST | `/datasets/upload-multi` | Multi-file with auto FK detection |
-| GET | `/datasets/{id}/schema` | Compact JSON schema with column roles |
+| GET | `/datasets/{id}/schema` | Column roles, stats, descriptions, quality |
 | GET | `/datasets/{id}/context` | Full semantic layer as YAML |
 | GET | `/datasets/{id}/output/{file}` | Artifacts (render_spec.json, parquet) |
 
@@ -170,7 +212,7 @@ The agent discovers 30+ tables autonomously, writes multi-table JOINs, and produ
 | LLM | OpenRouter (any model — configured via .env) |
 | Persistence | SQLite WAL (memory + plan audit) |
 | Sandbox | Python subprocess REPL with persistent state |
-| Frontend | React 19 + Vite + Tailwind CSS 4 + ECharts |
+| Frontend | React 19 + Vite + Tailwind CSS 4 + Recharts |
 | State | Zustand |
 
 All backend dependencies are Apache 2.0, MIT, or BSD licensed.
