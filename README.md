@@ -24,7 +24,7 @@
 
 ## The problem with every "talk to your data" tool
 
-They all fail the same way. The LLM sees `payment_type INTEGER` and sums it. It treats `age` as a metric instead of a dimension. It guesses what "last month" means. When the model goes down, the whole system crashes. And the output is always a wall of text — never the dashboard the business user actually needs.
+They all fail the same way. The AI sees `payment_type INTEGER` and sums it. It treats `age` as a metric instead of a dimension. It guesses what "last month" means. When the model goes down, the whole system crashes. And the output is always a wall of text — never the dashboard the business user actually needs.
 
 **Manthan solves this with two things no other tool has: a semantic layer that understands data before the agent touches it, and an agent harness that thinks, plans, and asks before it acts.**
 
@@ -32,7 +32,7 @@ They all fail the same way. The LLM sees `payment_type INTEGER` and sums it. It 
 
 ## Layer 1 — The Semantic Layer
 
-Upload a CSV and Manthan doesn't just dump it into a database. It runs an LLM classifier over every column — detecting whether each one is a metric you'd sum, a dimension you'd group by, a temporal axis for trends, or an identifier to ignore. It writes descriptions, computes statistics, and measures data quality.
+Upload a CSV and Manthan doesn't just dump it into a database. It runs an AI classifier over every column — detecting whether each one is a metric you'd sum, a dimension you'd group by, a temporal axis for trends, or an identifier to ignore. It writes descriptions, computes statistics, and measures data quality.
 
 When the classifier isn't confident, **it stops and asks you**:
 
@@ -49,13 +49,13 @@ Your answer gets locked into the **Data Context Document (DCD)** — a structure
   <img src="docs/screenshots/dataset-profile.png" width="720" alt="Dataset profile showing column classification with roles, types, statistics, and quality indicators" />
 </p>
 
-Every column has an LLM-written description, a role badge, min/max/mean statistics, sample values, cardinality, and a completeness bar. Pre-built summary tables and verified queries are materialized automatically. The agent never guesses — it reads confirmed definitions.
+Every column has an AI-generated description, a role badge, min/max/mean statistics, sample values, cardinality, and a completeness bar. Pre-built summary tables and verified queries are materialized automatically. The agent never guesses — it reads confirmed definitions.
 
 ---
 
 ## Layer 2 — The Agent Harness
 
-The agent isn't a simple text-to-SQL translator. It's an autonomous reasoning loop with **8 tools**, **3 decision gates**, and **cross-session memory** — orchestrated through a single `while` loop that runs until the LLM stops emitting tool calls.
+The agent isn't a simple text-to-SQL translator. It's an autonomous reasoning loop with **8 tools**, **3 decision gates**, and **cross-session memory** — orchestrated through a single `while` loop that runs until the model stops emitting tool calls.
 
 ### Decision gates
 
@@ -120,11 +120,11 @@ Each page has its own narrative, charts, and insight callouts — navigable via 
 
 | Capability | Manthan | Typical text-to-SQL tool |
 |---|---|---|
-| **Understands data before querying** | LLM classifies every column; asks user when unsure | Sees raw DDL, guesses column meaning |
+| **Understands data before querying** | AI classifies every column; asks user when unsure | Sees raw DDL, guesses column meaning |
 | **Plans before executing** | Shows plan with citations, waits for approval | Executes immediately, no visibility |
 | **Remembers across sessions** | SQLite-backed memory; recalls yesterday's analysis | Stateless — starts from scratch every time |
 | **Produces structured output** | KPI cards, dashboards, multi-page reports | Text + maybe one chart |
-| **Never crashes on LLM failure** | 3-model cascade + deterministic heuristic fallback | Single model, crashes on rate limit |
+| **Never crashes on model failure** | 3-model cascade + deterministic heuristic fallback | Single model, crashes on rate limit |
 | **Streams agent activity** | 22 SSE event types, real-time tool execution cards | Returns final text, no visibility into process |
 | **Human-in-the-loop** | Blocks on ambiguity (ask_user) and complexity (plan approval) | Guesses silently |
 
@@ -165,7 +165,7 @@ The system doesn't crash when things go wrong.
 | Failure | What happens |
 |---------|-------------|
 | Primary model rate-limited | Instant cascade to fallback model (3-model chain) |
-| All LLMs unavailable | Deterministic heuristic classifier runs — no LLM needed |
+| All models unavailable | Deterministic heuristic classifier runs — no AI model needed |
 | Agent tool call fails | Retries up to 3 times, then explains the issue to the user |
 | Python sandbox errors | Agent reads stderr, fixes code, retries (up to 3 attempts) |
 | Server restarts | Datasets rehydrate from Parquet on disk; memory persists via SQLite WAL |
@@ -190,11 +190,11 @@ The agent discovers 30+ tables autonomously via `SHOW TABLES`, describes relevan
 
 ```
 Layer 1 — Data Pipeline + Semantic Layer
-  Upload → Bronze (DuckDB) → Silver (LLM classify) → Clarify → Gold (materialize)
+  Upload → Bronze (DuckDB) → Silver (AI classify) → Clarify → Gold (materialize)
   Output: Data Context Document (DCD) with column roles, stats, verified queries
 
 Layer 2 — Autonomous Agent Harness
-  While loop: LLM reasons → emits tool calls → observes results → iterates
+  While loop: agent reasons → emits tool calls → observes results → iterates
   8 tools, 3 decision gates, cross-session memory, subagent spawning
   Output: render_spec.json (structured visualization contract)
 
@@ -224,7 +224,7 @@ Layer 3 — React Workspace
 |-----------|-----------|
 | API | FastAPI + uvicorn |
 | Database | DuckDB (in-memory + Parquet persistence) |
-| LLM | OpenRouter (model-agnostic — any provider via .env) |
+| Agent Model | OpenRouter (model-agnostic — any provider via .env) |
 | Persistence | SQLite WAL (memory + plan audit trail) |
 | Sandbox | Python subprocess REPL with persistent state |
 | Frontend | React 19 + Vite + Tailwind CSS 4 + Recharts |
@@ -238,9 +238,9 @@ All dependencies are Apache 2.0, MIT, or BSD licensed.
 src/
   agent/            # Layer 2: agent loop, 8 tools, prompt, SSE events
   api/              # 13 FastAPI routers (datasets, tools, agent, plans, memory...)
-  core/             # Config, LLM client, rate limiting, memory, plans
+  core/             # Config, model client, rate limiting, memory, plans
   ingestion/        # Bronze: 5 format loaders, FK detection, registry
-  profiling/        # Silver: LLM + heuristic classifier, interactive clarification
+  profiling/        # Silver: AI + heuristic classifier, interactive clarification
   semantic/         # DCD schema, render spec models + normalizer
   materialization/  # Gold: optimizer, summarizer, verified query generator
   tools/            # SQL tool, Python session manager
