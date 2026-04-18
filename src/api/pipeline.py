@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from src.core import metrics
+from src.core.dcd_history import log_dcd_change
 from src.core.llm import LlmClient
 from src.core.logger import get_logger
 from src.core.state import AppState
@@ -39,6 +40,7 @@ from src.profiling.clarification import (
 from src.semantic.generator import (
     build_dcd,
     build_dcd_table_from_profile,
+    build_entity,
     dcd_table_from_primary_dcd,
     generate_dataset_description,
 )
@@ -57,8 +59,21 @@ async def ingest_and_profile(
     max_upload_size_mb: int = 500,
     original_filename: str | None = None,
     llm_client_factory: LlmClientFactory = LlmClient,
+    progress_queue_key: str | None = None,
+    skip_clarification: bool = False,
 ) -> DatasetEntry:
-    """Run the full pipeline for a file-based source."""
+    """Run the full pipeline for a file-based source.
+
+    Args:
+        progress_queue_key: If an SSE progress queue was pre-created
+            under a temporary key (async upload), pass the key here so
+            we can remap it to the real ``dataset_id`` once assigned.
+        skip_clarification: If True, the pipeline accepts the LLM's
+            initial classifications without prompting the user. Used
+            by the refresh flow where re-ingestion should be
+            autonomous — the user already clarified columns on the
+            first upload and expects the update to land silently.
+    """
     validate_file(file_path, max_size_mb=max_upload_size_mb)
 
     display_name = original_filename or file_path.name
@@ -74,6 +89,21 @@ async def ingest_and_profile(
         )
     entry = state.registry.register(load_result)
 
+    # Remap SSE queue from temp key to real dataset_id (keep both keys
+    # so the frontend SSE connection under the temp ID keeps working)
+    if progress_queue_key and progress_queue_key != entry.dataset_id:
+        q = state.dataset_progress_queues.get(progress_queue_key)
+        if q is not None:
+            state.dataset_progress_queues[entry.dataset_id] = q
+
+    _record_progress(
+        state,
+        entry.dataset_id,
+        "bronze",
+        "File validated and parsed",
+        step="upload",
+    )
+
     return await _finish_pipeline(
         state=state,
         entry=entry,
@@ -81,6 +111,7 @@ async def ingest_and_profile(
         stem=stem,
         load_result=load_result,
         llm_client_factory=llm_client_factory,
+        skip_clarification=skip_clarification,
     )
 
 
@@ -214,9 +245,16 @@ async def _finish_pipeline(
     stem: str,
     load_result: LoadResult,
     llm_client_factory: LlmClientFactory,
+    skip_clarification: bool = False,
 ) -> DatasetEntry:
     """Shared Silver + Gold tail used by both ingestion entry points."""
-    _record_progress(state, entry.dataset_id, "bronze", "raw table loaded")
+    _record_progress(
+        state,
+        entry.dataset_id,
+        "bronze",
+        f"Loaded {load_result.row_count:,} rows, {load_result.column_count} columns",
+        step="scan",
+    )
     metrics.increment("ingestion.rows_loaded", load_result.row_count)
     metrics.increment("ingestion.datasets_total")
 
@@ -224,7 +262,13 @@ async def _finish_pipeline(
     async with llm_client as llm:
         profiling_result = await profile_dataset(state.connection, raw_table_name, llm)
     state.registry.update_status(entry.dataset_id, "silver")
-    _record_progress(state, entry.dataset_id, "silver", "profiling complete")
+    _record_progress(
+        state,
+        entry.dataset_id,
+        "silver",
+        "Column statistics computed",
+        step="profile",
+    )
     metrics.increment("profiling.datasets_total")
 
     # --- Interactive clarification gate ---
@@ -232,7 +276,11 @@ async def _finish_pipeline(
     # via the ask_user primitive and block until they answer (or
     # timeout fires). This happens BEFORE Gold materialization so the
     # corrected roles feed into summary tables and verified queries.
-    clarification_questions = generate_questions(profiling_result)
+    # In refresh mode we skip the gate entirely — the user already
+    # clarified on first ingest and expects the update to be silent.
+    clarification_questions = (
+        [] if skip_clarification else generate_questions(profiling_result)
+    )
     state.clarifications[entry.dataset_id] = clarification_questions
 
     if clarification_questions:
@@ -280,6 +328,34 @@ async def _finish_pipeline(
             entry.dataset_id,
             "silver",
             f"waiting for user to answer {len(pending_ids)} question(s)",
+        )
+
+        # Push clarification event to SSE so the wizard can render cards
+        _push_sse_event(
+            state,
+            entry.dataset_id,
+            {
+                "type": "clarification",
+                "questions": [
+                    {
+                        "column_name": cq.column_name,
+                        "prompt": cq.prompt,
+                        "current_role": cq.current_role,
+                        "recommended": cq.recommended,
+                        "options": [
+                            {
+                                "label": o.label,
+                                "value": o.value,
+                                "aggregation": o.aggregation,
+                            }
+                            for o in cq.options
+                        ],
+                    }
+                    for cq in clarification_questions
+                ],
+                "ask_user_ids": [q_id for q_id, _ in pending_ids],
+                "session_id": session_id,
+            },
         )
 
         # Wait for all answers (each blocks independently).
@@ -350,6 +426,15 @@ async def _finish_pipeline(
                 f"applied {len(corrections)} user corrections",
             )
 
+    # Classify step complete (whether clarification happened or not)
+    _record_progress(
+        state,
+        entry.dataset_id,
+        "silver",
+        "Column roles assigned",
+        step="classify",
+    )
+
     dcd = build_dcd(
         dataset_id=entry.dataset_id,
         load_result=load_result,
@@ -375,11 +460,36 @@ async def _finish_pipeline(
     except Exception:
         pass  # Keep the template description
 
+    _record_progress(
+        state,
+        entry.dataset_id,
+        "silver",
+        "Semantic layer built",
+        step="enrich",
+    )
+
     gold_table_name = f"gold_{stem}_{entry.dataset_id[3:]}"
     validate_identifier(gold_table_name)
     create_gold_table(state.connection, raw_table_name, gold_table_name, dcd)
     summary_tables = create_summary_tables(state.connection, gold_table_name, dcd)
     metrics.increment("materialization.summary_tables", len(summary_tables))
+
+    # Wrap the physical storage in a stable business-facing entity.
+    # The slug survives re-ingestion; the physical pointer rotates.
+    # Agent prompts render the entity, not gold_<name>_<uuid>.
+    entity = build_entity(
+        stem=stem,
+        gold_table_name=gold_table_name,
+        summary_tables=summary_tables,
+        dataset_description=dcd.dataset.description,
+        dataset_name=dcd.dataset.name,
+        columns=list(dcd.dataset.columns),
+    )
+    dcd = dcd.model_copy(
+        update={
+            "dataset": dcd.dataset.model_copy(update={"entity": entity}),
+        }
+    )
 
     verified_queries = generate_verified_queries(
         dcd, gold_table=gold_table_name, connection=state.connection
@@ -425,16 +535,37 @@ async def _finish_pipeline(
 
     state.dcds[entry.dataset_id] = dcd
     state.gold_table_names[entry.dataset_id] = gold_table_name
+    state.rebuild_entity_index()
+    # Phase 3 — record this DCD snapshot in the history log so an
+    # auditor can walk "what did Revenue mean on 2026-03-15?"
+    log_dcd_change(
+        data_directory=state.data_directory,
+        dataset_id=entry.dataset_id,
+        new_dcd=dcd,
+        changed_by="pipeline.ingest",
+        reason="initial ingestion",
+    )
     state.registry.update_status(entry.dataset_id, "gold")
     _record_progress(
         state,
         entry.dataset_id,
         "gold",
-        f"materialized ({quality_report.success_percent:.0f}% quality)",
+        f"Gold tables ready ({quality_report.success_percent:.0f}% quality)",
+        step="materialize",
     )
     metrics.increment("materialization.datasets_total")
 
+    # Terminal SSE event
+    _push_sse_event(
+        state,
+        entry.dataset_id,
+        {"type": "complete", "dataset_id": entry.dataset_id},
+    )
+
     return state.registry.get(entry.dataset_id)
+
+
+_WIZARD_STEPS = ("upload", "scan", "profile", "classify", "enrich", "materialize")
 
 
 def _record_progress(
@@ -442,6 +573,8 @@ def _record_progress(
     dataset_id: str,
     stage: str,
     message: str,
+    *,
+    step: str | None = None,
 ) -> None:
     events = state.dataset_progress.setdefault(dataset_id, [])
     events.append(
@@ -452,6 +585,33 @@ def _record_progress(
             "timestamp": datetime.now(UTC).isoformat(),
         }
     )
+    # Push to SSE channel if one exists for this dataset
+    if step is not None:
+        _push_sse_event(
+            state,
+            dataset_id,
+            {
+                "type": "progress",
+                "step": step,
+                "message": message,
+                "step_index": _WIZARD_STEPS.index(step),
+                "total_steps": len(_WIZARD_STEPS),
+            },
+        )
+
+
+def _push_sse_event(
+    state: AppState,
+    dataset_id: str,
+    event: dict[str, object],
+) -> None:
+    """Push an SSE event to the progress channel (buffer + queue)."""
+    channel = state.dataset_progress_queues.get(dataset_id)
+    if channel is not None:
+        channel["buffer"].append(event)  # type: ignore[union-attr]
+        channel["queue"].put_nowait(event)  # type: ignore[union-attr]
+        if event.get("type") in ("complete", "error"):
+            channel["done"] = True  # type: ignore[assignment]
 
 
 def _sanitize_name(raw: str) -> str:

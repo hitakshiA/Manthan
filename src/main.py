@@ -6,6 +6,10 @@ All business logic lives in the domain modules under ``src/``.
 
 from __future__ import annotations
 
+import asyncio
+import logging
+import sys
+import traceback
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -22,7 +26,9 @@ from src.api import (
     agent,
     agent_tasks,
     ask_user,
+    audit,
     clarification,
+    connections,
     datasets,
     health,
     memory,
@@ -56,6 +62,42 @@ def _rate_limit_exceeded_handler(
     )
 
 
+def _log_exception(kind: str, exc: BaseException, *, extra: str = "") -> None:
+    """Last-resort crash logger — prints to stderr so the supervisor log captures it."""
+    print(
+        f"[manthan.crash] {kind}: {type(exc).__name__}: {exc} {extra}".strip(),
+        file=sys.stderr,
+        flush=True,
+    )
+    traceback.print_exception(type(exc), exc, exc.__traceback__)
+    sys.stderr.flush()
+
+
+def _install_global_handlers() -> None:
+    """Wire sys.excepthook + asyncio exception handler so a crash never goes silent."""
+    original_excepthook = sys.excepthook
+
+    def excepthook(exc_type, exc, tb):
+        _log_exception("uncaught", exc)
+        original_excepthook(exc_type, exc, tb)
+
+    sys.excepthook = excepthook
+
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        return
+
+    def handler(_loop: asyncio.AbstractEventLoop, context: dict) -> None:
+        exc = context.get("exception")
+        if isinstance(exc, BaseException):
+            _log_exception("asyncio", exc, extra=context.get("message", ""))
+        else:
+            print(f"[manthan.crash] asyncio-context: {context}", file=sys.stderr, flush=True)
+
+    loop.set_exception_handler(handler)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Configure logging and load settings on startup."""
@@ -67,6 +109,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if whitelist_env:
         for ip in whitelist_env:
             WHITELISTED_IPS.add(ip.strip())
+
+    _install_global_handlers()
+    logging.getLogger(__name__).info("manthan startup: global crash handlers installed")
     yield
 
 
@@ -106,6 +151,8 @@ app.include_router(plans.router)
 app.include_router(subagents.router)
 app.include_router(tool_discovery.router)
 app.include_router(agent.router)
+app.include_router(connections.router)
+app.include_router(audit.router)
 
 
 @app.get("/metrics", tags=["observability"])

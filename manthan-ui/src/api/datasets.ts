@@ -16,7 +16,31 @@ export const getContext = (id: string, query?: string) => {
 
 export const uploadDataset = (file: File) => upload<DatasetSummary>("/datasets/upload", file);
 
+export const uploadDatasetAsync = (file: File) =>
+  upload<{ dataset_id: string; status: string }>("/datasets/upload-async", file);
+
 export const uploadMultiDataset = (files: File[]) => uploadMulti<DatasetSummary>("/datasets/upload-multi", files);
+
+/** Phase 4 — re-ingest an existing dataset in place.
+ *  Preserves the entity slug, metrics, column labels/synonyms/pii. */
+export const refreshDataset = (slugOrId: string, file: File) =>
+  upload<DatasetSummary>(`/datasets/${slugOrId}/refresh`, file);
+
+/** Phase 3 — append-only DCD change log. */
+export const getDatasetHistory = (id: string, opts: { limit?: number; includeSnapshots?: boolean } = {}) => {
+  const params = new URLSearchParams();
+  if (opts.limit) params.set("limit", String(opts.limit));
+  if (opts.includeSnapshots) params.set("include_snapshots", "true");
+  const q = params.toString() ? `?${params.toString()}` : "";
+  return get<Array<{
+    timestamp: string;
+    changed_by: string;
+    reason: string;
+    dcd_version: string;
+    entity_slug: string | null;
+    metric_count: number;
+  }>>(`/datasets/${id}/history${q}`);
+};
 
 export const fetchOutputFile = async (datasetId: string, filename: string): Promise<string> => {
   const res = await fetch(`${BASE_URL}/datasets/${datasetId}/output/${filename}`);

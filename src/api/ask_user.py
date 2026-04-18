@@ -30,6 +30,11 @@ class AskRequest(BaseModel):
     options: list[str] = Field(default_factory=list)
     allow_free_text: bool = True
     context: str | None = None
+    # Propose-first structure — analyst's working interpretation and
+    # why-this-matters, rendered prominently by the UI
+    proposed_interpretation: str | None = None
+    why_this_matters: str | None = None
+    ambiguity_type: str | None = None
 
 
 class AnswerRequest(BaseModel):
@@ -48,6 +53,9 @@ class QuestionResponse(BaseModel):
     answered_at: str | None
     created_at: str
     timed_out: bool = False
+    proposed_interpretation: str | None = None
+    why_this_matters: str | None = None
+    ambiguity_type: str | None = None
 
     @classmethod
     def from_question(
@@ -67,6 +75,9 @@ class QuestionResponse(BaseModel):
             else None,
             created_at=question.created_at.isoformat(),
             timed_out=timed_out,
+            proposed_interpretation=question.proposed_interpretation,
+            why_this_matters=question.why_this_matters,
+            ambiguity_type=question.ambiguity_type,
         )
 
 
@@ -78,6 +89,9 @@ def ask(request: AskRequest, state: StateDep) -> QuestionResponse:
         options=request.options,
         allow_free_text=request.allow_free_text,
         context=request.context,
+        proposed_interpretation=request.proposed_interpretation,
+        why_this_matters=request.why_this_matters,
+        ambiguity_type=request.ambiguity_type,
     )
     return QuestionResponse.from_question(question)
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SchemaSummary } from "@/types/api";
 import { getSchema } from "@/api/datasets";
 
@@ -34,7 +34,25 @@ export function useSchema(datasetId: string | null) {
       .finally(() => setLoading(false));
   }, [datasetId]);
 
-  return { schema, loading };
+  // Invalidate + reload — used after /refresh so the entity stats, metrics,
+  // and column list reflect the new underlying parquet.
+  const refetch = useCallback(async () => {
+    if (!datasetId) return;
+    cache.delete(datasetId);
+    failed.delete(datasetId);
+    setLoading(true);
+    try {
+      const s = await getSchema(datasetId);
+      cache.set(datasetId, s);
+      setSchema(s);
+    } catch {
+      failed.add(datasetId);
+    } finally {
+      setLoading(false);
+    }
+  }, [datasetId]);
+
+  return { schema, loading, refetch };
 }
 
 export function prefetchSchemas(ids: string[]) {

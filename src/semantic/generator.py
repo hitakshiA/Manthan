@@ -27,10 +27,13 @@ from src.semantic.schema import (
     DcdColumnStats,
     DcdComputedMetric,
     DcdDataset,
+    DcdEntity,
+    DcdMetric,
     DcdQuality,
     DcdQualityCompleteness,
     DcdQualityCompletenessDetail,
     DcdQualityFreshness,
+    DcdRollup,
     DcdSource,
     DcdTable,
     DcdTemporal,
@@ -255,6 +258,207 @@ def _build_agent_instructions(columns: list[DcdColumn]) -> list[str]:
 def _humanize_name(filename: str) -> str:
     stem = Path(filename).stem
     return stem.replace("_", " ").replace("-", " ").title()
+
+
+# Grain suffixes the summarizer uses when materializing temporal rollups.
+# Parsing these back lets build_entity tag each rollup with its grain
+# without the summarizer having to emit richer metadata.
+_GRAIN_SUFFIXES: tuple[str, ...] = ("daily", "weekly", "monthly", "quarterly", "yearly")
+
+
+def _rollup_from_physical_name(gold_table: str, physical_name: str) -> DcdRollup:
+    """Decode a summary-table name back into a :class:`DcdRollup`.
+
+    Summarizer names follow two conventions:
+
+        * ``{gold_table}_{grain}`` for a time rollup (``daily``, ``monthly``)
+        * ``{gold_table}_by_{dimension}`` for a per-dimension breakdown
+
+    This helper is deterministic — it matches the naming rules in
+    ``src/materialization/summarizer.py`` so the entity's rollup index
+    stays in sync with what was actually materialized.
+    """
+    suffix = physical_name[len(gold_table) + 1 :] if physical_name.startswith(gold_table + "_") else physical_name
+    if suffix in _GRAIN_SUFFIXES:
+        return DcdRollup(
+            slug=suffix,
+            physical_table=physical_name,
+            grain=suffix,
+            dimensions=[],
+        )
+    if suffix.startswith("by_"):
+        dimension = suffix[len("by_") :]
+        return DcdRollup(
+            slug=suffix,
+            physical_table=physical_name,
+            grain=None,
+            dimensions=[dimension],
+        )
+    # Unknown pattern — surface it as an opaque rollup the agent can
+    # query but not reason about.
+    return DcdRollup(
+        slug=suffix or physical_name,
+        physical_table=physical_name,
+        grain=None,
+        dimensions=[],
+    )
+
+
+def _entity_slug_from_stem(stem: str) -> str:
+    """Derive a stable, URL-safe entity slug from a sanitized filename stem.
+
+    Collisions across datasets are acceptable at the slug level — the
+    :class:`AppState` resolver disambiguates via ``dataset_id`` — but the
+    slug should still be short, lowercase, and idiomatic because it
+    ends up in every agent prompt and user-facing artifact.
+    """
+    # ``stem`` has already been through ``_sanitize_name`` upstream
+    # (lowercase, non-alphanumerics → ``_``). Strip trailing underscores
+    # and collapse repeats so ``sample_sales_`` → ``sample_sales``.
+    cleaned = stem.strip("_")
+    while "__" in cleaned:
+        cleaned = cleaned.replace("__", "_")
+    return cleaned or "dataset"
+
+
+def build_entity(
+    *,
+    stem: str,
+    gold_table_name: str,
+    summary_tables: list[str],
+    dataset_description: str = "",
+    dataset_name: str | None = None,
+    columns: list[DcdColumn] | None = None,
+) -> DcdEntity:
+    """Wrap the physical storage in a stable business-facing entity.
+
+    Called by the ingestion pipeline AFTER ``create_gold_table`` and
+    ``create_summary_tables`` have run, so we know the physical names.
+    The entity's ``slug`` is derived deterministically from ``stem``;
+    the ``name`` is humanized for display.
+
+    ``metrics`` is auto-seeded from every column classified as a
+    metric (role == ``metric``) so the exec-facing audit trail has
+    governed definitions to cite from the moment a dataset finishes
+    profiling — without waiting for an LLM proposal pass.
+
+    Args:
+        stem: Sanitized filename stem (e.g. ``orders``, ``startup_funding``).
+        gold_table_name: The primary Gold table backing this entity.
+        summary_tables: Physical names of the materialized rollups.
+        dataset_description: Business context for the agent prompt.
+        dataset_name: Optional override for the display name; defaults
+            to the humanized stem.
+        columns: Classified columns (``DcdColumn``) used to auto-seed
+            metrics. When omitted, the entity is created without
+            metrics (the old Phase 1 behavior).
+    """
+    rollups = [
+        _rollup_from_physical_name(gold_table_name, name)
+        for name in summary_tables
+    ]
+    metrics: list[DcdMetric] = (
+        _seed_metrics_from_columns(columns) if columns else []
+    )
+    return DcdEntity(
+        slug=_entity_slug_from_stem(stem),
+        name=dataset_name or _humanize_name(stem),
+        description=dataset_description,
+        physical_table=gold_table_name,
+        rollups=rollups,
+        metrics=metrics,
+    )
+
+
+def _seed_metrics_from_columns(columns: list[DcdColumn]) -> list[DcdMetric]:
+    """Synthesize baseline :class:`DcdMetric` objects from classified columns.
+
+    Every column with ``role == "metric"`` becomes one governed metric
+    using its declared aggregation as the expression. This gives the
+    exec-audit surface something to cite — when they click a number,
+    the drawer shows the metric definition even before a human curator
+    polishes it. The seeded metrics are explicitly marked
+    ``additive`` / ``ratio_unsafe`` / ``non_additive`` based on the
+    aggregation, and get the full valid-dimensions catalog so queries
+    don't trip the validator unexpectedly.
+    """
+    metric_cols = [c for c in columns if c.role == "metric"]
+    if not metric_cols:
+        return []
+
+    # Every non-metric, non-auxiliary column is a safe slicer — whitelisting
+    # them means the validator won't reject sensible exec questions
+    # ("revenue by status") on a seeded metric.
+    valid_dims = [
+        c.name
+        for c in columns
+        if c.role in ("dimension", "temporal", "identifier")
+    ]
+
+    seen_slugs: set[str] = set()
+    seeded: list[DcdMetric] = []
+    for col in metric_cols:
+        slug = col.name
+        if slug in seen_slugs:
+            continue
+        seen_slugs.add(slug)
+        agg = (col.aggregation or "SUM").strip().upper()
+        expression, semantics, unit = _metric_expression_for_column(col, agg)
+        label = col.label or _humanize_name(col.name).title()
+        description = (
+            col.description.strip()
+            or f"{label} computed as {expression}."
+        )
+        seeded.append(
+            DcdMetric(
+                slug=slug,
+                label=label,
+                description=description,
+                expression=expression,
+                filter=None,
+                unit=unit,
+                aggregation_semantics=semantics,
+                default_grain=None,
+                valid_dimensions=valid_dims,
+                synonyms=list(col.synonyms),
+            )
+        )
+    return seeded
+
+
+def _metric_expression_for_column(
+    col: DcdColumn, agg: str
+) -> tuple[str, str, str | None]:
+    """Return (expression, aggregation_semantics, unit) for a seeded metric."""
+    name = col.name
+    quoted = f'"{name}"'
+    unit: str | None = None
+    # Unit detection — look at column name for common markers. Kept
+    # conservative: a false positive ("total_usd" on something that
+    # isn't dollars) is more painful than a missing unit.
+    lower = name.lower()
+    if any(s in lower for s in ("_usd", "_amount_usd", "revenue", "sales", "subtotal", "price")):
+        unit = "USD"
+    elif any(s in lower for s in ("_pct", "_percent", "_rate")):
+        unit = "percent"
+    elif any(s in lower for s in ("minutes", "duration", "seconds", "hours")):
+        unit = "minutes" if "minutes" in lower else None
+
+    if agg == "SUM":
+        return f"SUM({quoted})", "additive", unit
+    if agg == "AVG":
+        # Averaging an already-averaged column across slices double-averages.
+        return f"AVG({quoted})", "ratio_unsafe", unit
+    if agg == "COUNT":
+        return f"COUNT({quoted})", "additive", "count"
+    if agg == "COUNT_DISTINCT" or agg == "DISTINCT_COUNT":
+        return f"COUNT(DISTINCT {quoted})", "non_additive", "count"
+    if agg == "MIN":
+        return f"MIN({quoted})", "non_additive", unit
+    if agg == "MAX":
+        return f"MAX({quoted})", "non_additive", unit
+    # Unknown / none — default to SUM as the most common and audit-safe.
+    return f"SUM({quoted})", "additive", unit
 
 
 def _describe_dataset(load_result: LoadResult) -> str:

@@ -5,4 +5,5 @@ plotly>=5.22
 matplotlib>=3.10
 scipy>=1.14
 scikit-learn>=1.5
+statsmodels>=0.14
 pyarrow>=17.0

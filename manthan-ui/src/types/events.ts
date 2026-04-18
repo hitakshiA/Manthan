@@ -22,7 +22,13 @@ export type AgentEventType =
   | "subagent_spawned"
   | "subagent_complete"
   | "done"
-  | "error";
+  | "error"
+  | "sql_result"
+  | "narrative"
+  | "artifact_created"
+  | "artifact_updated"
+  | "inline_visual"
+  | "numeric_claim";
 
 export interface SessionStartEvent {
   type: "session_start";
@@ -96,6 +102,12 @@ export interface WaitingForUserEvent {
   question_id: string;
   prompt: string;
   options: string[];
+  /** Analyst's working interpretation — shown prominently in the UI */
+  interpretation?: string;
+  /** One-sentence "why this matters" — shown below interpretation */
+  why?: string;
+  /** MAC-taxonomy classification of the ambiguity */
+  ambiguity_type?: "intent" | "vague_goal" | "parameter" | "value" | "contextual";
 }
 
 export interface UserAnsweredEvent {
@@ -162,6 +174,89 @@ export interface ErrorEvent {
   recoverable: boolean;
 }
 
+// ── Conversation stream events (new) ──
+
+export interface SqlResultEvent {
+  type: "sql_result";
+  tool_call_id: string;
+  query: string;
+  columns: string[];
+  rows: unknown[][];
+  row_count: number;
+  truncated: boolean;
+  elapsed_ms: number;
+}
+
+export interface NarrativeEvent {
+  type: "narrative";
+  text: string;
+}
+
+export interface ArtifactCreatedEvent {
+  type: "artifact_created";
+  artifact_id: string;
+  title: string;
+  code: string;
+  filename: string;
+}
+
+export interface ArtifactUpdatedEvent {
+  type: "artifact_updated";
+  artifact_id: string;
+  title: string;
+  code: string;
+  filename: string;
+}
+
+/** Emitted by the backend when a fresh artifact failed JS syntax
+ *  validation and a single-shot LLM repair pass is in flight. Followed
+ *  by either an ``artifact_created`` with the fixed code, or — if the
+ *  repair also fails — the original broken artifact. UI shows a
+ *  subtle "Polishing dashboard…" banner until it clears. */
+export interface RepairingArtifactEvent {
+  type: "repairing_artifact";
+  artifact_id: string;
+  reason: string;
+}
+
+export interface InlineVisualEvent {
+  type: "inline_visual";
+  visual_id: string;
+  visual_type: string;
+  html: string;
+  height: number;
+}
+
+/**
+ * A lineage-carrying numeric claim. Paired with every metric value
+ * the agent commits to in the narrative, enabling a "How was this
+ * calculated?" affordance in the UI.
+ */
+export interface NumericClaimEvent {
+  type: "numeric_claim";
+  value: number;
+  formatted: string;
+  /** All plausible rendered forms of this value (``$706K``, ``$0.7M``,
+   *  ``706,532``). The narrative preprocessor matches against any of
+   *  these so the click-to-audit underline survives format drift
+   *  between the tool output and the agent's prose. */
+  formatted_variants?: string[];
+  label: string;
+  /** Plain-English one-liner of what the number represents. Sourced
+   *  from the governed metric's description (compute_metric) or
+   *  composed from the SQL (run_sql). Renders in the drawer's
+   *  "What this measures" section. */
+  description?: string | null;
+  entity: string | null;
+  metric_ref: string | null;
+  filters_applied: string[];
+  dimensions: string[];
+  grain: string | null;
+  sql: string | null;
+  row_count_scanned: number | null;
+  run_id: string | null;
+}
+
 export type AgentEvent =
   | SessionStartEvent
   | DiscoveringTablesEvent
@@ -184,4 +279,11 @@ export type AgentEvent =
   | SubagentSpawnedEvent
   | SubagentCompleteEvent
   | DoneEvent
-  | ErrorEvent;
+  | ErrorEvent
+  | SqlResultEvent
+  | NarrativeEvent
+  | ArtifactCreatedEvent
+  | ArtifactUpdatedEvent
+  | RepairingArtifactEvent
+  | InlineVisualEvent
+  | NumericClaimEvent;

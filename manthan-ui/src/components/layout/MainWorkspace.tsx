@@ -1,65 +1,106 @@
 import { useAgentStore } from "@/stores/agent-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useDatasetStore } from "@/stores/dataset-store";
+import { useProcessingStore } from "@/stores/processing-store";
+import { useUIStore } from "@/stores/ui-store";
 import { QueryInput } from "@/components/workspace/QueryInput";
-import { ActivityFeed } from "@/components/workspace/ActivityFeed";
+import { ConversationStream } from "@/components/conversation/ConversationStream";
+import { ArtifactPanel } from "@/components/artifact/ArtifactPanel";
+import { InlineVisualPanel } from "@/components/conversation/InlineVisualPanel";
 import { RenderRouter } from "@/components/render/RenderRouter";
-import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
 import { RoleBar } from "@/components/datasets/RoleBar";
+import { ProcessingWizard } from "@/components/datasets/ProcessingWizard";
+import { MetricCard } from "@/components/datasets/MetricCard";
+import { RollupChip } from "@/components/datasets/RollupChip";
+import { SemanticGraph } from "@/components/datasets/SemanticGraph";
+import { EntityCard } from "@/components/datasets/EntityCard";
+import { useAllSchemas } from "@/hooks/use-all-schemas";
+import { buildNodes, deriveEdges } from "@/lib/semantic-graph";
+import { HistoryDrawer } from "@/components/audit/HistoryDrawer";
 import { useSchema, prefetchSchemas } from "@/hooks/use-schema";
 import {
-  Clock, Wrench, RotateCcw, BarChart3, TrendingUp, FileText,
-  Upload, Database, ArrowLeft, FileSpreadsheet, ChevronRight,
-  Zap,
+  BarChart3,
+  Database, ArrowLeft, ArrowRight, ChevronRight,
+  Columns3, Layers, ShieldCheck,
+  RefreshCw, History, ShieldAlert, Zap, Link2,
 } from "lucide-react";
-import { ManthanLogo } from "@/components/ManthanLogo";
+import { TegakiRenderer } from "tegaki/react";
+import italianno from "tegaki/fonts/italianno";
 import { queryStream } from "@/api/agent";
+import { uploadDatasetAsync, uploadMultiDataset, refreshDataset } from "@/api/datasets";
 import type { RenderSpec } from "@/types/render-spec";
 import type { DatasetSummary, SchemaSummary } from "@/types/api";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
+import { deriveExecChips } from "@/lib/exec-chips";
+import type { ComponentType } from "react";
 
-/** Get the dataset description — prefer backend LLM description, fallback to template */
 function describeDataset(schema: SchemaSummary): string {
-  // If the backend generated an LLM description, use it
   const desc = schema.description;
-  if (desc && !desc.includes("dataset loaded from") && desc.length > 20) {
-    return desc;
-  }
-
-  // Fallback: template from column roles
+  if (desc && !desc.includes("dataset loaded from") && desc.length > 20) return desc;
   const metrics = schema.columns.filter((c) => c.role === "metric");
   const dims = schema.columns.filter((c) => c.role === "dimension");
   const parts: string[] = [];
-  if (metrics.length > 0) {
-    parts.push(`tracks ${metrics.slice(0, 2).map((c) => c.name.replace(/_/g, " ")).join(" and ")}`);
-  }
-  if (dims.length > 0) {
-    parts.push(`segmented by ${dims.slice(0, 3).map((c) => c.name.replace(/_/g, " ")).join(", ")}`);
-  }
+  if (metrics.length > 0) parts.push(`tracks ${metrics.slice(0, 2).map((c) => c.name.replace(/_/g, " ")).join(" and ")}`);
+  if (dims.length > 0) parts.push(`segmented by ${dims.slice(0, 3).map((c) => c.name.replace(/_/g, " ")).join(", ")}`);
   if (parts.length === 0) return `${schema.columns.length} columns across ${schema.row_count.toLocaleString()} records.`;
   return `${parts.join(", ")}. ${schema.row_count.toLocaleString()} records.`;
 }
 
 /* ═══════════════════════════════════════════════════════
-   VIEW 1: First Open — Upload or Explore
+   VIEW 1: Landing — Tableau AI–inspired hero
    ═══════════════════════════════════════════════════════ */
 
 function FirstOpen() {
-  const [view, setView] = useState<"home" | "explore">("home");
+  // View lifted into the ui-store so the sidebar's Datasets button
+  // can route here from anywhere. Home / Datasets rail buttons both
+  // clear activeDataset but route to different sub-views of this
+  // component via ``landingView``.
+  const view = useUIStore((s) => s.landingView);
+  const setView = useUIStore((s) => s.setLandingView);
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const { uploadDataset, datasets, fetchDatasets, uploading } = useDatasetStore();
-  const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
+  const setShowPicker = useUIStore((s) => s.setSourcePickerOpen);
+  const { datasets, fetchDatasets } = useDatasetStore();
+  const startProcessing = useProcessingStore((s) => s.startProcessing);
+  const [localUploading, setLocalUploading] = useState(false);
+
+  // Hero choreography: handwriting lays down the wordmark, then the
+  // subtitle + trust line fade in, then the CTA row joins. Driven by
+  // Tegaki's onComplete (real timing, not a guessed delay) plus a short
+  // lead-in so the subtitle doesn't feel stapled to the last stroke.
+  const [step, setStep] = useState<"writing" | "subtitle" | "ready">("writing");
+  useEffect(() => {
+    if (step === "subtitle") {
+      const t = setTimeout(() => setStep("ready"), 520);
+      return () => clearTimeout(t);
+    }
+  }, [step]);
 
   const showExplore = () => { fetchDatasets(); setView("explore"); };
 
-  const handleFile = useCallback(async (file: File) => {
-    const ds = await uploadDataset(file);
-    setActiveDataset(ds.dataset_id);
-  }, [uploadDataset, setActiveDataset]);
+  const handleFiles = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    setLocalUploading(true);
+    try {
+      if (files.length === 1) {
+        const { dataset_id } = await uploadDatasetAsync(files[0]);
+        startProcessing(dataset_id);
+      } else {
+        // Multi-file bundle — FK relationships auto-detected.
+        const ds = await uploadMultiDataset(files);
+        startProcessing(ds.dataset_id);
+      }
+    } catch { /* */ } finally { setLocalUploading(false); }
+  }, [startProcessing]);
 
-  // Pre-fetch schemas for explore cards (deduped)
+  // Entering explore-mode from the sidebar doesn't come with a
+  // fetchDatasets() call — the store action just flips the view.
+  // Pull the list here so the rail button lands on fresh data.
+  useEffect(() => {
+    if (view === "explore") fetchDatasets();
+  }, [view, fetchDatasets]);
+
   useEffect(() => {
     if (view === "explore" && datasets.length > 0) {
       const seen = new Set<string>();
@@ -71,310 +112,1069 @@ function FirstOpen() {
   if (view === "explore") return <ExploreView datasets={datasets} onBack={() => setView("home")} />;
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6">
-      <div className="text-center mb-10 stagger-item" style={{ "--i": 0 } as React.CSSProperties}>
-        <ManthanLogo size={36} className="text-accent mx-auto mb-3" />
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Manthan</h1>
-        <p className="text-sm text-text-secondary mt-1">Your autonomous data analyst</p>
+    <div className="flex-1 flex flex-col relative overflow-hidden">
+      {/* Background video — full bleed */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4" />
+        </video>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl stagger-item" style={{ "--i": 1 } as React.CSSProperties}>
-        <input ref={fileRef} type="file" className="hidden" accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-        <button
-          onClick={() => fileRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-          disabled={uploading}
-          className={cn(
-            "flex flex-col items-start p-5 rounded-xl bg-surface-raised border shadow-xs text-left transition-all duration-200",
-            "hover:shadow-md hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-accent",
-            dragOver ? "border-accent bg-accent-soft shadow-md -translate-y-0.5" : "border-border hover:border-border-strong",
-            uploading && "opacity-60 pointer-events-none",
-          )}
-        >
-          <div className="w-10 h-10 rounded-lg bg-accent-soft flex items-center justify-center mb-4">
-            {uploading ? <FileSpreadsheet size={20} className="text-accent animate-pulse" /> : <Upload size={20} className="text-accent" />}
-          </div>
-          <h3 className="text-[15px] font-semibold text-text-primary">{uploading ? "Processing…" : "Upload a dataset"}</h3>
-          <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
-            Drop a CSV, Parquet, Excel, or JSON file. Manthan classifies every column and asks about ambiguous ones before analysis.
-          </p>
-          <span className="text-[10px] text-text-faint mt-3">Drag & drop or click to browse</span>
-        </button>
+      {/* Hero — nudged above center so it sits comfortably above the fold */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center -mt-[24vh]">
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length > 0) handleFiles(files);
+          }}
+        />
 
-        <button
-          onClick={showExplore}
-          className="flex flex-col items-start p-5 rounded-xl bg-surface-raised border border-border shadow-xs text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <div className="w-10 h-10 rounded-lg bg-success-soft flex items-center justify-center mb-4">
-            <Database size={20} className="text-success" />
-          </div>
-          <h3 className="text-[15px] font-semibold text-text-primary">Explore existing data</h3>
-          <p className="text-xs text-text-secondary mt-1.5 leading-relaxed">
-            Pick from datasets already on the server. Each has a semantic layer built — column roles confirmed, summary tables ready.
+        <div className="flex flex-col items-center text-center">
+          {/* Wordmark — handwritten live via Tegaki. The Italianno bundle
+              is tiny (cursive subset) and plays once on mount; we gate
+              the rest of the hero on its onComplete so the subtitle feels
+              earned, not stapled. TegakiRenderer renders a block div by
+              default, so we wrap it in an inline-flex container and
+              force text-align center on the renderer itself — otherwise
+              the word sits left-aligned in a full-width block. */}
+          <TegakiRenderer
+            font={italianno}
+            time={{ mode: "uncontrolled", duration: 1.9 }}
+            onComplete={() =>
+              setStep((s) => (s === "writing" ? "subtitle" : s))
+            }
+            className="text-white select-none"
+            style={{
+              fontSize: "clamp(5rem, 13vw, 9.5rem)",
+              lineHeight: 0.95,
+              textAlign: "center",
+              display: "inline-block",
+              filter: "drop-shadow(0 4px 28px rgba(0,0,0,0.35))",
+            }}
+          >
+            Manthan
+          </TegakiRenderer>
+
+          <p
+            className={cn(
+              "font-body text-white/70 text-base sm:text-lg max-w-2xl mt-4 leading-relaxed font-medium transition-all duration-700 ease-out",
+              step === "writing"
+                ? "opacity-0 translate-y-2"
+                : "opacity-100 translate-y-0",
+            )}
+          >
+            The analyst team you wish you had. Drop any dataset — ask what&apos;s
+            going on in plain English, get back a brief with the rigor of a
+            senior analyst, fast enough for the meeting before the meeting.
           </p>
-          <span className="text-[10px] text-text-faint mt-3">{datasets.length} dataset{datasets.length !== 1 ? "s" : ""} available</span>
-        </button>
+
+          {/* Trust signals — governed metrics + auditable lineage are the
+              load-bearing Layer 1 primitives, and multi-source ingestion
+              is what the exec actually plugs in. Stated briefly so the
+              hero doesn't turn into a brochure. */}
+          <div
+            className={cn(
+              "font-body text-white/55 text-xs mt-3 flex items-center gap-2.5 flex-wrap justify-center transition-all duration-700 ease-out delay-150",
+              step === "writing"
+                ? "opacity-0 translate-y-2"
+                : "opacity-100 translate-y-0",
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-white/40" />
+              Governed metrics
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-white/40" />
+              Auditable lineage
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-white/40" />
+              Postgres · Snowflake · S3 · Sheets
+            </span>
+          </div>
+
+          <div
+            className={cn(
+              "mt-10 flex items-center gap-4 transition-all duration-700 ease-out",
+              step === "ready"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-3 pointer-events-none",
+            )}
+          >
+            <button
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                // Folder drops arrive as a flat file list via
+                // dataTransfer.files — any .csv/.parquet/etc. inside the
+                // dropped folder is picked up; the backend's FK
+                // detection stitches them into one bundle.
+                const all = Array.from(e.dataTransfer.files ?? []);
+                const allowed = /\.(csv|tsv|parquet|json|xlsx|xls)$/i;
+                const files = all.filter((f) => allowed.test(f.name));
+                if (files.length > 0) handleFiles(files);
+              }}
+              disabled={localUploading}
+              className={cn(
+                "liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium",
+                "hover:scale-[1.03] transition-transform cursor-pointer",
+                dragOver && "scale-[1.03] ring-2 ring-white/40",
+                localUploading && "opacity-60 pointer-events-none",
+              )}
+              title="Single file, multiple files, or a whole folder — FK relationships auto-detected"
+            >
+              {localUploading ? "Uploading…" : "Drop a file or folder"}
+            </button>
+
+            <button
+              onClick={showExplore}
+              className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+            >
+              Explore existing
+            </button>
+
+            <button
+              onClick={() => setShowPicker(true)}
+              className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+            >
+              Connect a warehouse
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════
-   VIEW 2: Explore — Rich dataset cards
+   VIEW 2: Explore — Card grid
    ═══════════════════════════════════════════════════════ */
 
-function ExploreCard({ dataset }: { dataset: DatasetSummary }) {
-  const { schema } = useSchema(dataset.dataset_id);
-  const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
-
-  return (
-    <button
-      onClick={() => setActiveDataset(dataset.dataset_id)}
-      className="w-full flex items-center gap-3 p-4 rounded-xl bg-surface-raised border border-border shadow-xs hover:shadow-md hover:-translate-y-0.5 hover:border-border-strong transition-all duration-200 text-left group"
-    >
-      <div className="w-9 h-9 rounded-lg bg-accent-soft flex items-center justify-center shrink-0 group-hover:bg-accent transition-colors">
-        <span className="text-sm font-bold text-accent group-hover:text-accent-text transition-colors">
-          {dataset.name.charAt(0).toUpperCase()}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-text-primary truncate">{dataset.name}</p>
-        {schema ? (
-          <p className="text-[11px] text-text-faint mt-0.5 truncate capitalize">{describeDataset(schema)}</p>
-        ) : (
-          <p className="text-[11px] text-text-faint mt-0.5">{formatNumber(dataset.row_count)} rows · {dataset.column_count} cols</p>
-        )}
-        {schema && <RoleBar columns={schema.columns} className="mt-2" />}
-      </div>
-      <ChevronRight size={14} className="text-text-faint group-hover:text-text-secondary transition-colors shrink-0" />
-    </button>
-  );
+/** Group raw source_type values into exec-friendly buckets for filter chips. */
+function bucketSource(sourceType: string): "file" | "database" | "cloud" | "saas" | "other" {
+  const s = sourceType.toLowerCase();
+  if (/(csv|tsv|parquet|json|xlsx|xls|file|upload)/.test(s)) return "file";
+  if (/(postgres|mysql|sqlite|snowflake|bigquery|duckdb|db|database)/.test(s)) return "database";
+  if (/(s3|gs|gcs|azure|http|https|url|cloud)/.test(s)) return "cloud";
+  if (/(stripe|hubspot|salesforce|shopify|notion|airtable|github|slack|saas|dlt)/.test(s)) return "saas";
+  return "other";
 }
 
+const BUCKET_LABEL: Record<ReturnType<typeof bucketSource>, string> = {
+  file: "Files",
+  database: "Databases",
+  cloud: "Cloud",
+  saas: "Apps",
+  other: "Other",
+};
+
+type Sort = "recent" | "rows" | "metrics" | "connections";
+
 function ExploreView({ datasets, onBack }: { datasets: DatasetSummary[]; onBack: () => void }) {
-  // Deduplicate by name — keep the first occurrence of each unique name
-  const seen = new Set<string>();
-  const unique = datasets.filter((ds) => {
-    if (seen.has(ds.name)) return false;
-    seen.add(ds.name);
-    return true;
-  });
+  const [search, setSearch] = useState("");
+  const [bucket, setBucket] = useState<"all" | ReturnType<typeof bucketSource>>("all");
+  const [sort, setSort] = useState<Sort>("recent");
+  const setShowPicker = useUIStore((s) => s.setSourcePickerOpen);
+  const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
+
+  // Dedupe by name — most recently created wins.
+  const unique = useMemo(() => {
+    const seen = new Set<string>();
+    const sorted = [...datasets].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return sorted.filter((ds) => {
+      if (seen.has(ds.name)) return false;
+      seen.add(ds.name);
+      return true;
+    });
+  }, [datasets]);
+
+  // Bucket counts drive the filter chips.
+  const bucketCounts: Record<string, number> = {};
+  for (const ds of unique) {
+    const b = bucketSource(ds.source_type);
+    bucketCounts[b] = (bucketCounts[b] ?? 0) + 1;
+  }
+
+  // Load schemas so cards show metric/rollup/PII and the edge-count badge works.
+  const ids = useMemo(() => unique.map((d) => d.dataset_id), [unique]);
+  const { schemas } = useAllSchemas(ids);
+
+  // Build nodes + edges to compute per-entity relationship count.
+  const nodes = useMemo(() => buildNodes(unique, schemas), [unique, schemas]);
+  const edges = useMemo(() => deriveEdges(nodes), [nodes]);
+  const relatedCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of edges) {
+      m.set(e.fromId, (m.get(e.fromId) ?? 0) + 1);
+      m.set(e.toId, (m.get(e.toId) ?? 0) + 1);
+    }
+    return m;
+  }, [edges]);
+
+  // Portfolio aggregate stats.
+  const totalMetrics = useMemo(
+    () =>
+      unique.reduce((sum, d) => {
+        const e = schemas.get(d.dataset_id)?.entity;
+        return sum + (e?.metrics.length ?? 0);
+      }, 0),
+    [unique, schemas],
+  );
+  const totalRollups = useMemo(
+    () =>
+      unique.reduce((sum, d) => {
+        const e = schemas.get(d.dataset_id)?.entity;
+        return sum + (e?.rollups.length ?? 0);
+      }, 0),
+    [unique, schemas],
+  );
+  const totalRows = useMemo(
+    () => unique.reduce((sum, d) => sum + d.row_count, 0),
+    [unique],
+  );
+
+  // Search + bucket filter + sort
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = unique.filter((ds) => {
+      if (bucket !== "all" && bucketSource(ds.source_type) !== bucket) return false;
+      if (q) {
+        const schema = schemas.get(ds.dataset_id);
+        const slug = schema?.entity?.slug ?? ds.name;
+        if (
+          !ds.name.toLowerCase().includes(q) &&
+          !slug.toLowerCase().includes(q) &&
+          !(schema?.entity?.description ?? "").toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    });
+    const scored = list.slice();
+    scored.sort((a, b) => {
+      switch (sort) {
+        case "rows":
+          return b.row_count - a.row_count;
+        case "metrics": {
+          const am = schemas.get(a.dataset_id)?.entity?.metrics.length ?? 0;
+          const bm = schemas.get(b.dataset_id)?.entity?.metrics.length ?? 0;
+          if (bm !== am) return bm - am;
+          return b.row_count - a.row_count;
+        }
+        case "connections":
+          return (relatedCount.get(b.dataset_id) ?? 0) - (relatedCount.get(a.dataset_id) ?? 0);
+        case "recent":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return scored;
+  }, [unique, search, bucket, sort, schemas, relatedCount]);
+
+  const BUCKETS: Array<{ key: "all" | ReturnType<typeof bucketSource>; label: string; count: number }> = [
+    { key: "all", label: "All", count: unique.length },
+    ...(["file", "database", "cloud", "saas", "other"] as const)
+      .filter((k) => (bucketCounts[k] ?? 0) > 0)
+      .map((k) => ({ key: k, label: BUCKET_LABEL[k], count: bucketCounts[k] ?? 0 })),
+  ];
+
+  const SORTS: Array<{ key: Sort; label: string }> = [
+    { key: "recent", label: "Recent" },
+    { key: "rows", label: "Rows" },
+    { key: "metrics", label: "Metrics" },
+    { key: "connections", label: "Connections" },
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-xl mx-auto px-6 py-8 animate-fade-up">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
-          <ArrowLeft size={13} /> Back
+      <div className="max-w-6xl mx-auto px-8 py-10 animate-fade-up">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-text-faint hover:text-text-secondary mb-6 transition-colors">
+          <ArrowLeft size={14} /> Back
         </button>
-        <h2 className="text-lg font-semibold text-text-primary mb-1">Choose a dataset</h2>
-        <p className="text-sm text-text-secondary mb-6">Each has a semantic layer — column roles classified, summary tables materialized.</p>
 
-        <div className="space-y-2">
-          {unique.map((ds, i) => (
-            <div key={ds.dataset_id} className="stagger-item" style={{ "--i": i } as React.CSSProperties}>
-              <ExploreCard dataset={ds} />
+        {/* Header band */}
+        <div className="flex items-start justify-between gap-6 mb-6">
+          <div>
+            <h2 className="font-display text-4xl text-text-primary tracking-tight">
+              Datasets
+            </h2>
+            <p className="text-sm text-text-tertiary mt-2 font-body max-w-2xl">
+              Every entity the agent can reason over. Pick one to open its contract.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowPicker(true)}
+              className="px-4 py-2.5 rounded-full bg-accent text-accent-text text-sm font-semibold hover:bg-accent-hover transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+            >
+              + Add data
+            </button>
+            <div className="relative">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="w-52 pl-9 pr-4 py-2.5 text-sm font-body rounded-full bg-surface-raised border border-border text-text-primary placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-text-faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
             </div>
-          ))}
+          </div>
         </div>
-        {unique.length === 0 && (
-          <p className="text-sm text-text-faint py-12 text-center">No datasets loaded yet. Upload one first.</p>
+
+        {/* Portfolio stat strip — read the whole semantic layer in one glance */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <PortfolioStat
+            icon={Database}
+            label="Entities"
+            value={unique.length}
+            tone="text-text-primary"
+          />
+          <PortfolioStat
+            icon={BarChart3}
+            label="Governed metrics"
+            value={totalMetrics}
+            tone="text-accent"
+          />
+          <PortfolioStat
+            icon={Layers}
+            label="Rollups"
+            value={totalRollups}
+            tone="text-success"
+          />
+          <PortfolioStat
+            icon={Link2}
+            label="Relationships"
+            value={edges.length}
+            tone="text-success"
+            hint={totalRows.toLocaleString() + " rows total"}
+          />
+        </div>
+
+        {/* Filters + sort controls */}
+        <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {BUCKETS.map((b) => (
+              <button
+                key={b.key}
+                onClick={() => setBucket(b.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body transition-all",
+                  bucket === b.key
+                    ? "bg-accent text-accent-text shadow-sm"
+                    : "bg-surface-raised border border-border text-text-secondary hover:border-border-strong hover:text-text-primary",
+                )}
+              >
+                {b.label}
+                <span className={cn(
+                  "text-[10px] tabular-nums",
+                  bucket === b.key ? "text-accent-text/80" : "text-text-faint",
+                )}>
+                  {b.count}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10.5px] text-text-faint font-body uppercase tracking-wider">
+              sort
+            </span>
+            {SORTS.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setSort(s.key)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-[11px] font-body transition-all",
+                  sort === s.key
+                    ? "text-text-primary bg-surface-raised border border-border-strong"
+                    : "text-text-tertiary hover:text-text-primary",
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Card grid */}
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filtered.map((ds, i) => (
+              <EntityCard
+                key={ds.dataset_id}
+                dataset={ds}
+                schema={schemas.get(ds.dataset_id) ?? null}
+                relatedCount={relatedCount.get(ds.dataset_id) ?? 0}
+                onOpen={() => setActiveDataset(ds.dataset_id)}
+                index={i}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center rounded-3xl border border-border bg-surface-raised">
+            <Database size={28} className="mx-auto text-text-faint mb-3" />
+            <p className="text-sm text-text-faint font-body">
+              {search || bucket !== "all"
+                ? "Nothing matches your filter."
+                : "No datasets loaded yet."}
+            </p>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
+function PortfolioStat({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  icon: ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  value: number | string;
+  tone: string;
+  hint?: string;
+}) {
+  return (
+    <div className="p-4 rounded-2xl bg-surface-raised border border-border">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Icon size={12} className="text-text-faint" />
+        <p className="text-[10px] text-text-faint font-body uppercase tracking-wider">
+          {label}
+        </p>
+      </div>
+      <p className={cn("text-2xl font-display tabular-nums", tone)}>{value}</p>
+      {hint && (
+        <p className="text-[10.5px] text-text-faint font-body mt-1 tabular-nums">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════
-   VIEW 3: Dataset Profile — the semantic layer showcase
+   VIEW 3: Dataset Profile — polished semantic layer view
    ═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   VIEW 3 helpers — role groupings + column card
+   ═══════════════════════════════════════════════════════ */
+
+const ROLE_ORDER: Array<{
+  key: "metric" | "temporal" | "dimension" | "identifier" | "auxiliary";
+  label: string;
+  blurb: string;
+  tone: string;
+}> = [
+  { key: "metric", label: "Numbers", blurb: "Quantities the agent can aggregate.", tone: "text-accent" },
+  { key: "temporal", label: "Time", blurb: "Date/time axes the agent rolls up by.", tone: "text-success" },
+  { key: "dimension", label: "Categories", blurb: "Ways the agent can slice.", tone: "text-text-secondary" },
+  { key: "identifier", label: "Keys", blurb: "Row-level identifiers and FK targets.", tone: "text-text-tertiary" },
+  { key: "auxiliary", label: "Auxiliary", blurb: "Extra fields the agent can quote but rarely groups by.", tone: "text-text-faint" },
+];
+
+const EXEC_ROLE: Record<string, string> = {
+  metric: "number",
+  dimension: "category",
+  temporal: "date/time",
+  identifier: "label",
+  auxiliary: "extra",
+};
+
+function ColumnCard({ col }: { col: SchemaSummary["columns"][number] }) {
+  const execRole = EXEC_ROLE[col.role] ?? col.role;
+  const label = col.label || col.name.replace(/[_-]+/g, " ");
+  const hasSynonyms = (col.synonyms?.length ?? 0) > 0;
+  return (
+    <div className="p-4 rounded-xl bg-surface-raised border border-border hover:border-border-strong transition-colors">
+      <div className="flex items-center justify-between mb-1.5 gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[14px] font-semibold text-text-primary capitalize truncate">
+            {label}
+          </span>
+          <span
+            className={cn(
+              "text-[9px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0",
+              col.role === "metric" ? "bg-accent-soft text-accent" :
+              col.role === "temporal" ? "bg-success-soft text-success" :
+              col.role === "dimension" ? "bg-surface-sunken text-text-secondary" :
+              "bg-surface-sunken text-text-faint",
+            )}
+          >
+            {execRole}
+          </span>
+          {col.pii && (
+            <span
+              title="Personally identifiable — aggregate-only"
+              className="flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded bg-warning-soft text-warning uppercase tracking-wider shrink-0"
+            >
+              <ShieldAlert size={8} /> PII
+            </span>
+          )}
+          {col.label && col.label !== col.name && (
+            <span className="text-[10px] font-mono text-text-faint truncate">
+              {col.name}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-text-tertiary font-body shrink-0">
+          {col.cardinality != null && <span>{formatNumber(col.cardinality)} unique</span>}
+          {col.completeness != null && (
+            <span className={col.completeness >= 0.95 ? "text-success" : col.completeness >= 0.8 ? "text-warning" : "text-error"}>
+              {Math.round(col.completeness * 100)}% clean
+            </span>
+          )}
+        </div>
+      </div>
+      {col.description && (
+        <p className="text-[12.5px] text-text-faint font-body">{col.description}</p>
+      )}
+
+      {col.stats && (col.stats.min != null || col.stats.max != null || col.stats.mean != null) && (
+        <p className="text-[10.5px] text-text-faint mt-1.5 font-mono">
+          {col.stats.min != null && <>min {String(col.stats.min)}</>}
+          {col.stats.max != null && <> · max {String(col.stats.max)}</>}
+          {col.stats.mean != null && <> · avg {String(col.stats.mean)}</>}
+        </p>
+      )}
+      {(col.sample_values?.length ?? 0) > 0 && (
+        <div className="flex gap-1 mt-2 flex-wrap">
+          {col.sample_values.slice(0, 4).map((v, j) => (
+            <span key={j} className="text-[10.5px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded-md font-mono">
+              {String(v)}
+            </span>
+          ))}
+        </div>
+      )}
+      {hasSynonyms && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          <span className="text-[9px] text-text-faint uppercase tracking-wider font-body mr-0.5">
+            a.k.a.
+          </span>
+          {col.synonyms!.slice(0, 5).map((s) => (
+            <span
+              key={s}
+              className="text-[10px] text-text-secondary bg-surface-sunken px-1.5 py-0.5 rounded"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoleGroup({
+  role,
+  label,
+  blurb,
+  tone,
+  cols,
+}: {
+  role: string;
+  label: string;
+  blurb: string;
+  tone: string;
+  cols: SchemaSummary["columns"];
+}) {
+  const [expanded, setExpanded] = useState(role === "metric" || role === "temporal");
+  if (cols.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-border bg-surface-1/40">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <ChevronRight
+            size={14}
+            className={cn(
+              "text-text-tertiary transition-transform",
+              expanded && "rotate-90",
+            )}
+          />
+          <span className={cn("text-sm font-semibold font-body", tone)}>{label}</span>
+          <span className="text-[11px] text-text-faint tabular-nums">
+            {cols.length}
+          </span>
+          <span className="text-[11px] text-text-tertiary font-body hidden sm:inline">
+            — {blurb}
+          </span>
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {cols.map((c) => (
+            <ColumnCard key={c.name} col={c} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type AskChip = ReturnType<typeof deriveExecChips>[number];
+
+function StarterChipsPanel({
+  chips,
+  onRun,
+}: {
+  chips: AskChip[];
+  onRun: (text: string) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-gradient-to-br from-accent-soft/40 to-surface-raised p-5 relative overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/10 blur-2xl pointer-events-none"
+      />
+      <div className="relative">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap size={13} className="text-accent" />
+          <h2 className="text-sm font-semibold text-text-primary font-body">
+            Ask this entity
+          </h2>
+        </div>
+        <p className="text-[12px] text-text-tertiary font-body mb-3">
+          Starter questions derived from the governed contract. Click to fire off a run.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {chips.map((c) => {
+            const Icon = c.icon as ComponentType<{ size?: number; className?: string }>;
+            return (
+              <button
+                key={c.label}
+                onClick={() => onRun(c.text)}
+                className="group flex items-center gap-2 px-3.5 py-2 rounded-full bg-surface-0 border border-border hover:border-accent hover:bg-accent-soft hover:text-accent text-[12.5px] text-text-secondary font-body transition-all hover:-translate-y-0.5 shadow-xs hover:shadow-sm"
+                title={c.text}
+              >
+                <Icon size={12} className="text-accent" />
+                <span>{c.label}</span>
+                <ArrowRight
+                  size={11}
+                  className="text-text-faint group-hover:text-accent transition-all opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0"
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DatasetProfile() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
   const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
+  const sessionId = useSessionStore((s) => s.sessionId);
+  const addQuery = useSessionStore((s) => s.addQuery);
   const datasets = useDatasetStore((s) => s.datasets);
+  const fetchDatasets = useDatasetStore((s) => s.fetchDatasets);
   const activeDs = datasets.find((d) => d.dataset_id === activeDatasetId);
-  const { schema, loading } = useSchema(activeDatasetId);
-  const [showQuery, setShowQuery] = useState(false);
+  const { schema, loading, refetch } = useSchema(activeDatasetId);
+  const analyzeMode = useUIStore((s) => s.analyzeMode);
+  const setAnalyzeMode = useUIStore((s) => s.setAnalyzeMode);
+  const pushEvent = useAgentStore((s) => s.pushEvent);
+  const resetAgent = useAgentStore((s) => s.reset);
+  const addUserMessage = useAgentStore((s) => s.addUserMessage);
+
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const refreshInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRefresh = useCallback(async (file: File) => {
+    if (!activeDs) return;
+    setRefreshing(true);
+    setRefreshError(null);
+    try {
+      const slugOrId = schema?.entity?.slug ?? activeDs.dataset_id;
+      await refreshDataset(slugOrId, file);
+      await fetchDatasets();
+      if (refetch) await refetch();
+    } catch (e) {
+      setRefreshError(e instanceof Error ? e.message : "Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [activeDs, schema?.entity?.slug, fetchDatasets, refetch]);
+
+  const runStarter = useCallback(async (q: string) => {
+    if (!activeDatasetId) return;
+    resetAgent();
+    addQuery(q, activeDatasetId);
+    addUserMessage(q);
+    try {
+      await queryStream(sessionId, activeDatasetId, q, pushEvent);
+    } catch (e) {
+      pushEvent({
+        type: "error",
+        message: e instanceof Error ? e.message : "Failed to start run",
+        recoverable: false,
+      });
+    }
+  }, [activeDatasetId, sessionId, resetAgent, addQuery, addUserMessage, pushEvent]);
+
+  const chips = useMemo(
+    () => (activeDs ? deriveExecChips(schema ?? null, activeDs.name) : []),
+    [schema, activeDs],
+  );
 
   if (!activeDs) return null;
-  if (showQuery) return <ReadyToQuery />;
+  if (analyzeMode) return <ReadyToQuery />;
 
-  const metrics = schema?.columns.filter((c) => c.role === "metric") ?? [];
-  const dimensions = schema?.columns.filter((c) => c.role === "dimension") ?? [];
-  const temporal = schema?.columns.filter((c) => c.role === "temporal") ?? [];
-  const other = schema?.columns.filter((c) => !["metric", "dimension", "temporal"].includes(c.role)) ?? [];
-  const avgCompleteness = schema ? Math.round(schema.columns.reduce((s, c) => s + (c.completeness ?? 1), 0) / schema.columns.length * 100) : null;
+  const entity = schema?.entity ?? null;
+  const metrics = entity?.metrics ?? [];
+  const rollups = entity?.rollups ?? [];
+  const cols = schema?.columns ?? [];
+
+  const metricColCount = cols.filter((c) => c.role === "metric").length;
+  const dimensionColCount = cols.filter((c) => c.role === "dimension").length;
+  const temporalColCount = cols.filter((c) => c.role === "temporal").length;
+  const piiCount = cols.filter((c) => c.pii).length;
+  const avgCompleteness = schema && cols.length
+    ? Math.round(cols.reduce((s, c) => s + (c.completeness ?? 1), 0) / cols.length * 100)
+    : null;
+
+  // Exec-voice stat tiles.
+  const STAT_CARDS = schema ? [
+    {
+      icon: BarChart3,
+      label: metrics.length > 0 ? "Governed metrics" : "Numbers to track",
+      value: metrics.length > 0 ? metrics.length : metricColCount,
+      color: "text-accent",
+    },
+    {
+      icon: Layers,
+      label: "Ways to slice",
+      value: dimensionColCount + temporalColCount,
+      color: "text-success",
+    },
+    {
+      icon: Columns3,
+      label: "Fields",
+      value: cols.length,
+      color: "text-text-primary",
+    },
+    {
+      icon: ShieldCheck,
+      label: "Clean",
+      value: avgCompleteness != null ? `${avgCompleteness}%` : "—",
+      color: avgCompleteness != null && avgCompleteness >= 90 ? "text-success" : "text-warning",
+    },
+  ] : [];
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-6 py-8 animate-fade-up">
-        <button onClick={() => setActiveDataset(null)} className="flex items-center gap-1.5 text-xs text-text-faint hover:text-text-secondary mb-6 transition-colors">
-          <ArrowLeft size={13} /> All datasets
+      <div className="max-w-5xl mx-auto px-8 py-10 animate-fade-up">
+        {/* Hidden input for Refresh flow */}
+        <input
+          ref={refreshInputRef}
+          type="file"
+          className="hidden"
+          accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleRefresh(f);
+            e.target.value = "";
+          }}
+        />
+
+        <button
+          onClick={() => { setAnalyzeMode(false); setActiveDataset(null); }}
+          className="flex items-center gap-1.5 text-sm text-text-faint hover:text-text-secondary mb-8 transition-colors"
+        >
+          <ArrowLeft size={14} /> All datasets
         </button>
 
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0">
-            <span className="text-lg font-bold text-accent-text">{activeDs.name.charAt(0).toUpperCase()}</span>
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
-            <p className="text-sm text-text-secondary mt-0.5">{activeDs.source_type.toUpperCase()} · {activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns</p>
-            {schema && (
-              <p className="text-sm text-text-secondary mt-1 capitalize leading-relaxed">{describeDataset(schema)}</p>
+        {/* ═══ Entity header — slug badge + business name + action bar ═══ */}
+        <div className="flex items-start justify-between gap-6 mb-6">
+          <div className="min-w-0">
+            {entity && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-accent bg-accent-soft px-2 py-0.5 rounded">
+                  entity
+                </span>
+                <span className="text-[11px] font-mono text-text-tertiary">
+                  {entity.slug}
+                </span>
+                <span className="text-[11px] text-text-faint">·</span>
+                <span className="text-[11px] font-body text-text-tertiary capitalize">
+                  {activeDs.source_type.replace(/-/g, " ")}
+                </span>
+              </div>
             )}
+            <h1 className="font-display text-4xl text-text-primary tracking-tight">
+              {entity?.name ?? activeDs.name}
+            </h1>
+            <p className="text-sm text-text-tertiary mt-1.5 font-body">
+              {activeDs.row_count.toLocaleString()} records · {activeDs.column_count} fields
+              {entity && rollups.length > 0 && (
+                <>
+                  {" · "}
+                  <span className="text-accent">
+                    {rollups.length} rollup{rollups.length === 1 ? "" : "s"} pre-materialized
+                  </span>
+                </>
+              )}
+            </p>
           </div>
-          <button
-            onClick={() => setShowQuery(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-accent-text text-sm font-medium shadow-xs hover:bg-accent-hover hover:shadow-sm transition-all duration-200 shrink-0"
-          >
-            Start analyzing <ChevronRight size={14} />
-          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => refreshInputRef.current?.click()}
+              disabled={refreshing}
+              title="Re-ingest with a new file — slug, metrics, and labels are preserved"
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-full border border-border bg-surface-raised text-xs font-body text-text-secondary hover:border-border-strong hover:text-text-primary transition-all",
+                refreshing && "opacity-60 cursor-wait",
+              )}
+            >
+              <RefreshCw size={12} className={cn(refreshing && "animate-spin")} />
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </button>
+            <button
+              onClick={() => setHistoryOpen(true)}
+              title="Change history"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-border bg-surface-raised text-xs font-body text-text-secondary hover:border-border-strong hover:text-text-primary transition-all"
+            >
+              <History size={12} /> History
+            </button>
+            <button
+              onClick={() => setAnalyzeMode(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-accent-text text-sm font-semibold shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+            >
+              Start analyzing <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
-        {/* Quick stats row */}
-        {schema && (
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            <div className="p-3 rounded-xl bg-surface-raised border border-border">
-              <p className="text-lg font-bold text-text-primary tabular-nums">{schema.columns.length}</p>
-              <p className="text-[11px] text-text-faint">Columns</p>
-            </div>
-            <div className="p-3 rounded-xl bg-surface-raised border border-border">
-              <p className="text-lg font-bold text-text-primary tabular-nums">{metrics.length}</p>
-              <p className="text-[11px] text-text-faint">Metrics</p>
-            </div>
-            <div className="p-3 rounded-xl bg-surface-raised border border-border">
-              <p className="text-lg font-bold text-text-primary tabular-nums">{dimensions.length + temporal.length}</p>
-              <p className="text-[11px] text-text-faint">Dimensions</p>
-            </div>
-            <div className="p-3 rounded-xl bg-surface-raised border border-border">
-              <p className="text-lg font-bold text-accent tabular-nums">{avgCompleteness}%</p>
-              <p className="text-[11px] text-text-faint">Complete</p>
+        {refreshError && (
+          <div className="mb-6 flex items-start gap-2 p-3 rounded-xl bg-error-soft/40 border border-error/30 text-sm text-error font-body">
+            <ShieldAlert size={14} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">Refresh failed</p>
+              <p className="text-text-secondary text-xs mt-0.5">{refreshError}</p>
             </div>
           </div>
         )}
 
-        {/* Role bar */}
-        {schema && <RoleBar columns={schema.columns} showLabels className="mb-8" />}
-
-        {loading && (
-          <div className="space-y-3">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-xl animate-shimmer" />)}
-          </div>
+        {/* Description */}
+        {schema && (entity?.description || schema.description) && (
+          <p className="text-[15px] text-text-secondary leading-relaxed mb-8 font-body">
+            {entity?.description || describeDataset(schema)}
+          </p>
         )}
 
-        {/* Column table */}
-        {schema && (
-          <div className="rounded-xl border border-border bg-surface-raised shadow-xs overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-[1fr_80px_80px_100px] gap-3 px-4 py-2.5 border-b border-border bg-surface-sunken text-[10px] font-semibold text-text-faint uppercase tracking-wider">
-              <span>Column</span>
-              <span>Type</span>
-              <span>Distinct</span>
-              <span>Quality</span>
+        {/* ═══ Relationships constellation — THIS entity inside the semantic layer ═══ */}
+        {datasets.length > 1 && (
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-sm font-semibold text-text-primary font-body">
+                  Where this sits
+                </h2>
+                <p className="text-[12px] text-text-tertiary font-body mt-0.5">
+                  How this entity links to the rest of the semantic layer. Click a neighbor to jump.
+                </p>
+              </div>
+              <span className="text-[10px] font-mono text-text-faint uppercase tracking-wider">
+                focused view
+              </span>
             </div>
+            <SemanticGraph
+              datasets={datasets}
+              focusId={activeDatasetId}
+              onSelect={(id) => {
+                if (id !== activeDatasetId) {
+                  setAnalyzeMode(false);
+                  setActiveDataset(id);
+                }
+              }}
+            />
+          </section>
+        )}
 
-            {/* Column rows */}
-            {schema.columns.map((col, i) => (
+        {/* ═══ Stat row ═══ */}
+        {schema && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+            {STAT_CARDS.map(({ label, value, color, icon: Icon }) => (
               <div
-                key={col.name}
-                className={cn(
-                  "grid grid-cols-[1fr_80px_80px_100px] gap-3 px-4 py-3 items-start transition-colors hover:bg-surface-0",
-                  i < schema.columns.length - 1 && "border-b border-border",
-                )}
+                key={label}
+                className="p-4 rounded-2xl bg-surface-raised border border-border"
               >
-                {/* Name + description + samples */}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium text-text-primary font-mono">{col.name}</span>
-                    <span className={cn(
-                      "text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider",
-                      col.role === "metric" ? "bg-accent-soft text-accent" :
-                      col.role === "temporal" ? "bg-success-soft text-success" :
-                      col.role === "dimension" ? "bg-surface-sunken text-text-secondary" :
-                      "bg-surface-sunken text-text-faint",
-                    )}>
-                      {col.role}
-                      {col.aggregation && ` · ${col.aggregation}`}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-text-faint mt-0.5 leading-relaxed">{col.description}</p>
-                  {col.stats && (
-                    <p className="text-[10px] text-text-faint mt-1 font-mono">
-                      {col.stats.min != null && <>min {String(col.stats.min)}</>}
-                      {col.stats.max != null && <> · max {String(col.stats.max)}</>}
-                      {col.stats.mean != null && <> · avg {String(col.stats.mean)}</>}
-                    </p>
-                  )}
-                  {(col.sample_values?.length ?? 0) > 0 && (
-                    <div className="flex gap-1 mt-1.5 flex-wrap">
-                      {col.sample_values.slice(0, 3).map((v, j) => (
-                        <span key={j} className="text-[9px] text-text-faint bg-surface-sunken px-1.5 py-0.5 rounded font-mono">{String(v)}</span>
-                      ))}
-                    </div>
-                  )}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Icon size={12} className="text-text-faint" />
+                  <p className="text-[10px] text-text-faint font-body uppercase tracking-wider">
+                    {label}
+                  </p>
                 </div>
-
-                {/* Type */}
-                <span className="text-[11px] text-text-secondary font-mono mt-0.5">{col.dtype}</span>
-
-                {/* Cardinality */}
-                <span className="text-[11px] text-text-secondary tabular-nums mt-0.5">
-                  {col.cardinality != null ? formatNumber(col.cardinality) : "—"}
-                </span>
-
-                {/* Completeness bar */}
-                <div className="mt-1">
-                  {col.completeness != null ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded-full bg-surface-2 overflow-hidden">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all duration-500",
-                            col.completeness >= 0.95 ? "bg-success" : col.completeness >= 0.8 ? "bg-warning" : "bg-error",
-                          )}
-                          style={{ width: `${col.completeness * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-text-faint tabular-nums w-8 text-right">
-                        {Math.round(col.completeness * 100)}%
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-text-faint">—</span>
-                  )}
-                </div>
+                <p className={cn("text-2xl font-display tabular-nums", color)}>
+                  {value}
+                </p>
               </div>
             ))}
           </div>
         )}
 
-        {/* Summary tables */}
-        {schema && schema.summary_tables.length > 0 && (
-          <div className="mt-6 p-4 rounded-xl bg-surface-raised border border-border shadow-xs">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap size={14} className="text-warning" />
-              <h3 className="text-sm font-semibold text-text-primary">{schema.summary_tables.length} pre-built tables</h3>
+        {/* ═══ Governed metrics — only renders when entity declares them ═══ */}
+        {metrics.length > 0 && (
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-text-primary font-body">
+                  Governed metrics
+                </h2>
+                <p className="text-[12px] text-text-tertiary font-body mt-0.5">
+                  Business definitions the agent uses — every answer cites one of these.
+                </p>
+              </div>
+              <span className="text-[10px] font-mono text-text-faint uppercase tracking-wider">
+                {metrics.length} declared
+              </span>
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {schema.summary_tables.map((t) => (
-                <span key={t} className="text-[10px] font-mono text-text-faint bg-surface-sunken px-2 py-1 rounded">{t.replace(/^gold_/, "").replace(/_[a-f0-9]+$/, "")}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {metrics.map((m) => (
+                <MetricCard key={m.slug} metric={m} />
               ))}
             </div>
+          </section>
+        )}
+
+        {/* ═══ Pre-materialized rollups rail ═══ */}
+        {rollups.length > 0 && (
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary font-body">
+                Pre-materialized slices
+              </h2>
+              <span className="text-[11px] text-text-tertiary font-body">
+                Agent pulls from these when the slice matches — no full-table scan.
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {rollups.map((r) => (
+                <RollupChip key={r.slug} rollup={r} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ═══ Starter questions — click fires a run, auto-routes to ActiveWorkspace ═══ */}
+        {chips.length > 0 && (
+          <section className="mb-10">
+            <StarterChipsPanel chips={chips} onRun={runStarter} />
+          </section>
+        )}
+
+        {/* Role bar + PII callout */}
+        {schema && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary font-body">
+                Role composition
+              </h2>
+              {piiCount > 0 && (
+                <span className="flex items-center gap-1.5 text-[11px] text-warning font-body">
+                  <ShieldAlert size={11} />
+                  {piiCount} PII field{piiCount === 1 ? "" : "s"} — aggregate-only
+                </span>
+              )}
+            </div>
+            <RoleBar columns={schema.columns} showLabels />
+          </section>
+        )}
+
+        {loading && (
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-2xl animate-shimmer" />)}
+          </div>
+        )}
+
+        {/* ═══ Columns grouped by role — collapsible ═══ */}
+        {schema && (
+          <section className="mb-10">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-text-primary font-body">
+                Schema
+              </h2>
+              <span className="text-[11px] text-text-faint font-body">
+                {cols.length} fields · click a role to expand
+              </span>
+            </div>
+            <div className="space-y-2">
+              {ROLE_ORDER.map((r) => {
+                const grouped = cols.filter((c) => c.role === r.key);
+                return (
+                  <RoleGroup
+                    key={r.key}
+                    role={r.key}
+                    label={r.label}
+                    blurb={r.blurb}
+                    tone={r.tone}
+                    cols={grouped}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Provenance footer — entity is the identity, physical rotates beneath */}
+        {entity && (
+          <div className="mt-8 pt-4 border-t border-border flex items-center justify-between text-[10.5px] font-mono text-text-faint">
+            <div className="flex items-center gap-3">
+              <span>entity: <span className="text-text-secondary">{entity.slug}</span></span>
+              <span>·</span>
+              <span>physical: <span className="text-text-secondary">{entity.physical_table}</span></span>
+            </div>
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1 hover:text-text-secondary transition-colors font-body"
+            >
+              <History size={10} /> change history
+            </button>
           </div>
         )}
 
         {/* Bottom CTA */}
-        <div className="mt-8 mb-4">
-          <button onClick={() => setShowQuery(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-accent-text font-medium text-sm shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]">
-            Start analyzing <ChevronRight size={15} />
+        <div className="mt-10 mb-8">
+          <button onClick={() => setAnalyzeMode(true)}
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-full bg-accent text-accent-text font-semibold text-base shadow-sm hover:bg-accent-hover hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]">
+            Start analyzing <ChevronRight size={16} />
           </button>
         </div>
       </div>
+
+      {historyOpen && activeDatasetId && (
+        <HistoryDrawer
+          datasetId={activeDatasetId}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -383,6 +1183,46 @@ function DatasetProfile() {
    VIEW 4: Ready to Query — input + suggestions
    ═══════════════════════════════════════════════════════ */
 
+function getGreeting(datasetName: string): string {
+  const h = new Date().getHours();
+  const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+  const morning = [
+    "Fresh data, fresh insights.",
+    "What story is hiding in here?",
+    `Morning. ${datasetName} is ready.`,
+    "Let's find something interesting.",
+    "Coffee and queries. Let's go.",
+  ];
+
+  const afternoon = [
+    "What are we looking for?",
+    `${datasetName}, meet curiosity.`,
+    "Ask anything. Seriously.",
+    "Your data has been waiting.",
+    "Let's dig in.",
+  ];
+
+  const evening = [
+    "Late-night data session.",
+    `${datasetName} is ready when you are.`,
+    "The best insights come after hours.",
+    "Quiet hours, loud data.",
+    "Let's see what the data says.",
+  ];
+
+  const anytime = [
+    "What do you want to know?",
+    "Your data. Your questions.",
+    `${datasetName} is loaded and listening.`,
+    "Ask a question, get a dashboard.",
+    "No SQL required.",
+  ];
+
+  const pool = h < 12 ? morning : h < 17 ? afternoon : evening;
+  return Math.random() < 0.3 ? pick(anytime) : pick(pool);
+}
+
 function ReadyToQuery() {
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
   const sessionId = useSessionStore((s) => s.sessionId);
@@ -390,44 +1230,52 @@ function ReadyToQuery() {
   const setActiveDataset = useSessionStore((s) => s.setActiveDataset);
   const pushEvent = useAgentStore((s) => s.pushEvent);
   const reset = useAgentStore((s) => s.reset);
+  const setAnalyzeMode = useUIStore((s) => s.setAnalyzeMode);
   const datasets = useDatasetStore((s) => s.datasets);
   const activeDs = datasets.find((d) => d.dataset_id === activeDatasetId);
+  const { schema } = useSchema(activeDatasetId);
+
+  const addUserMessage = useAgentStore((s) => s.addUserMessage);
 
   const runSuggestion = useCallback(async (q: string) => {
     if (!activeDatasetId) return;
-    reset(); addQuery(q, activeDatasetId);
+    reset(); addQuery(q, activeDatasetId); addUserMessage(q);
     try { await queryStream(sessionId, activeDatasetId, q, pushEvent); }
     catch (e) { pushEvent({ type: "error", message: e instanceof Error ? e.message : "Failed", recoverable: false }); }
-  }, [activeDatasetId, sessionId, addQuery, pushEvent, reset]);
+  }, [activeDatasetId, sessionId, addQuery, addUserMessage, pushEvent, reset]);
 
   if (!activeDs) return null;
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fade-up">
-      <div className="text-center mb-8">
-        <ManthanLogo size={28} className="text-accent mx-auto mb-2" />
-        <h1 className="text-xl font-bold text-text-primary tracking-tight">{activeDs.name}</h1>
-        <p className="text-sm text-text-secondary mt-1">{activeDs.row_count.toLocaleString()} rows · {activeDs.column_count} columns</p>
-        <button onClick={() => setActiveDataset(null)} className="text-[11px] text-text-faint hover:text-accent mt-1.5 transition-colors">Change dataset</button>
-      </div>
+    <div className="flex-1 flex flex-col items-center justify-center px-6">
+      {/* Greeting */}
+      <h1 className="animate-fade-rise font-display text-4xl sm:text-5xl text-text-primary tracking-tight text-center mb-10">
+        {getGreeting(activeDs.name)}
+      </h1>
 
-      <div className="w-full max-w-2xl mb-6">
+      {/* Input */}
+      <div className="animate-fade-rise-delay w-full max-w-2xl mb-6">
         <QueryInput variant="hero" />
       </div>
 
-      <div className="flex gap-2">
-        {[
-          { icon: BarChart3, label: "Overview", text: `What are the key metrics in ${activeDs.name}?` },
-          { icon: TrendingUp, label: "Compare", text: "Compare the top categories by volume" },
-          { icon: FileText, label: "Report", text: "Full analytical report with recommendations" },
-        ].map(({ icon: Icon, label, text }) => (
+      {/* Suggestion chips — exec-voice, derived from this dataset's schema */}
+      <div className="animate-fade-rise-delay-2 flex flex-wrap justify-center gap-2">
+        {deriveExecChips(schema ?? null, activeDs.name).map(({ icon: Icon, label, text }) => (
           <button key={label} onClick={() => runSuggestion(text)}
-            className="flex items-center gap-2 text-[13px] text-text-secondary hover:text-text-primary bg-surface-raised hover:bg-surface-1 border border-border hover:border-border-strong px-4 py-2.5 rounded-xl shadow-xs hover:shadow-sm transition-all duration-200">
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary bg-surface-raised hover:bg-surface-1 border border-border hover:border-border-strong px-4 py-2.5 rounded-full shadow-xs hover:shadow-sm transition-all duration-200 font-body">
             <Icon size={14} className="text-text-tertiary" />
             {label}
           </button>
         ))}
       </div>
+
+      {/* Dataset context */}
+      <button
+        onClick={() => { setAnalyzeMode(false); setActiveDataset(null); }}
+        className="animate-fade-rise-delay-3 mt-8 text-xs text-text-faint hover:text-text-secondary transition-colors font-body"
+      >
+        Analyzing {activeDs.name} · {activeDs.row_count.toLocaleString()} rows · Change
+      </button>
     </div>
   );
 }
@@ -437,49 +1285,91 @@ function ReadyToQuery() {
    ═══════════════════════════════════════════════════════ */
 
 function ActiveWorkspace() {
-  const events = useAgentStore((s) => s.events);
-  const phase = useAgentStore((s) => s.phase);
+  const artifact = useAgentStore((s) => s.artifact);
   const renderSpec = useAgentStore((s) => s.renderSpec);
-  const agentText = useAgentStore((s) => s.agentText);
-  const elapsed = useAgentStore((s) => s.elapsedSeconds);
-  const toolCalls = useAgentStore((s) => s.totalToolCalls);
-  const reset = useAgentStore((s) => s.reset);
+  const phase = useAgentStore((s) => s.phase);
   const isDone = phase === "done";
 
+  const artifactOpen = useUIStore((s) => s.artifactOpen);
+  const artifactFullscreen = useUIStore((s) => s.artifactFullscreen);
+  const setArtifactOpen = useUIStore((s) => s.setArtifactOpen);
+  const setArtifactFullscreen = useUIStore((s) => s.setArtifactFullscreen);
+  const expandedVisual = useUIStore((s) => s.expandedVisual);
+  const expandedVisualFullscreen = useUIStore((s) => s.expandedVisualFullscreen);
+  const setExpandedVisual = useUIStore((s) => s.setExpandedVisual);
+  const setExpandedVisualFullscreen = useUIStore((s) => s.setExpandedVisualFullscreen);
+
+  // Auto-open the panel when a new artifact arrives
+  useEffect(() => {
+    if (artifact) setArtifactOpen(true);
+  }, [artifact?.id, setArtifactOpen]);
+
+  const showArtifact = !!artifact && artifactOpen;
+  const showVisual = !!expandedVisual;
+  const hasLegacySpec = isDone && renderSpec && !artifact;
+
+  // Fullscreen: visual takes precedence if it's in fullscreen, else artifact
+  if (showVisual && expandedVisualFullscreen) {
+    return (
+      <div className="flex flex-1 min-h-0 w-full">
+        <div className="flex-1 min-w-0">
+          <InlineVisualPanel
+            fullscreen
+            onToggleFullscreen={() => setExpandedVisualFullscreen(false)}
+            onClose={() => setExpandedVisual(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+  if (showArtifact && artifactFullscreen) {
+    return (
+      <div className="flex flex-1 min-h-0 w-full">
+        <div className="flex-1 min-w-0">
+          <ArtifactPanel
+            fullscreen
+            onToggleFullscreen={() => setArtifactFullscreen(false)}
+            onClose={() => setArtifactOpen(false)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Only one side panel at a time — the most recently opened slot wins.
+  const showRightPanel = showVisual || showArtifact;
+
   return (
-    <>
-      <div className="flex-1 overflow-y-auto">
-        {!isDone && <ActivityFeed />}
-        {isDone && (
-          <div className="animate-fade-up">
-            <div className="px-8 pt-6 pb-4 flex items-center gap-4">
-              <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
-                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md"><Clock size={11} />{elapsed.toFixed(1)}s</span>
-                <span className="flex items-center gap-1.5 bg-surface-sunken px-2 py-1 rounded-md"><Wrench size={11} />{toolCalls} tools</span>
-              </div>
-              <div className="flex-1" />
-              <details className="text-[11px] relative">
-                <summary className="text-text-faint cursor-pointer hover:text-text-secondary transition-colors select-none">{events.length} events</summary>
-                <div className="absolute right-0 mt-1 w-96 max-h-80 overflow-y-auto bg-surface-raised border border-border rounded-xl shadow-lg p-3 z-50">
-                  <ActivityFeed />
-                </div>
-              </details>
-              <button onClick={reset} className="flex items-center gap-1.5 text-[11px] text-text-faint hover:text-accent bg-surface-sunken hover:bg-accent-soft px-2.5 py-1 rounded-md transition-all">
-                <RotateCcw size={11} /> New
-              </button>
-            </div>
-            <div className="px-8 pb-8">
-              {renderSpec ? <RenderRouter spec={renderSpec as RenderSpec} /> : agentText ? (
-                <div className="bg-surface-raised border border-border rounded-xl shadow-sm p-6"><NarrativeBlock text={agentText} /></div>
-              ) : null}
-            </div>
+    <div className="flex flex-1 min-h-0">
+      <div className={cn("flex flex-col min-w-0 min-h-0", showRightPanel ? "w-1/2" : "flex-1")}>
+        {hasLegacySpec ? (
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+            <RenderRouter spec={renderSpec as RenderSpec} />
           </div>
+        ) : (
+          <ConversationStream />
         )}
+        <div className="px-6 pt-4 pb-6 border-t border-border shrink-0 bg-surface-0">
+          <QueryInput variant="compact" />
+        </div>
       </div>
-      <div className="px-6 py-3 border-t border-border bg-surface-1">
-        <QueryInput variant="compact" />
-      </div>
-    </>
+
+      {showVisual ? (
+        <div className="w-1/2">
+          <InlineVisualPanel
+            onToggleFullscreen={() => setExpandedVisualFullscreen(true)}
+            onClose={() => setExpandedVisual(null)}
+          />
+        </div>
+      ) : showArtifact ? (
+        <div className="w-1/2">
+          <ArtifactPanel
+            onToggleFullscreen={() => setArtifactFullscreen(true)}
+            onClose={() => setArtifactOpen(false)}
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -490,11 +1380,18 @@ function ActiveWorkspace() {
 export function MainWorkspace() {
   const events = useAgentStore((s) => s.events);
   const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
+  const processingActive = useProcessingStore((s) => s.active);
   const hasContent = events.length > 0;
 
   return (
     <main className="flex-1 flex flex-col min-w-0 bg-surface-0 relative" role="main">
-      {hasContent ? <ActiveWorkspace /> : activeDatasetId ? <DatasetProfile /> : <FirstOpen />}
+      {processingActive
+        ? <ProcessingWizard />
+        : hasContent
+          ? <ActiveWorkspace />
+          : activeDatasetId
+            ? <DatasetProfile />
+            : <FirstOpen />}
     </main>
   );
 }

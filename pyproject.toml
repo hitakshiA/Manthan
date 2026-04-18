@@ -47,6 +47,9 @@ dependencies = [
     "openpyxl>=3.1",               # MIT — Excel xlsx read/write for tests + loader
     "slowapi>=0.1.9",              # MIT — IP-based rate limiting
     "websockets>=13.0",            # BSD-3 — FastAPI websocket dependency
+    "sqlglot>=23",                 # MIT — SQL parser for semantic validator (Phase 2)
+    "cryptography>=42",            # Apache-2.0 / BSD — Fernet for credential vault (Phase 5)
+    "dlt[duckdb]>=1.8",            # Apache-2.0 — SaaS ingestion long tail (Phase 6)
 ]
 
 [project.optional-dependencies]

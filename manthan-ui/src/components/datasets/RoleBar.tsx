@@ -7,12 +7,12 @@ interface Props {
   className?: string;
 }
 
-const ROLE_CONFIG: Record<string, { color: string; label: string }> = {
-  metric:     { color: "bg-accent",       label: "metrics" },
-  dimension:  { color: "bg-border-strong", label: "dimensions" },
-  temporal:   { color: "bg-success",       label: "temporal" },
-  identifier: { color: "bg-surface-3",     label: "identifiers" },
-  auxiliary:  { color: "bg-surface-3",     label: "auxiliary" },
+const ROLE_CONFIG: Record<string, { color: string; label: (n: number) => string }> = {
+  metric:     { color: "bg-accent",        label: (n) => `${n === 1 ? "number" : "numbers"} to track` },
+  dimension:  { color: "bg-border-strong", label: (n) => `${n === 1 ? "category" : "categories"} to slice by` },
+  temporal:   { color: "bg-success",       label: () => "date/time" },
+  identifier: { color: "bg-surface-3",     label: (n) => `${n === 1 ? "label" : "labels"}` },
+  auxiliary:  { color: "bg-surface-3",     label: () => "extra" },
 };
 
 export function RoleBar({ columns, showLabels = false, className }: Props) {
@@ -47,7 +47,7 @@ export function RoleBar({ columns, showLabels = false, className }: Props) {
           {segments.map(([role, count]) => (
             <span key={role} className="flex items-center gap-1 text-[10px] text-text-faint">
               <span className={cn("w-1.5 h-1.5 rounded-full", ROLE_CONFIG[role]?.color ?? "bg-surface-3")} />
-              {count} {ROLE_CONFIG[role]?.label ?? role}
+              {count} {ROLE_CONFIG[role]?.label(count) ?? role}
             </span>
           ))}
         </div>

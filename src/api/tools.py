@@ -19,7 +19,13 @@ from pydantic import BaseModel, Field
 from src.core.exceptions import SandboxError, SqlValidationError, ToolError
 from src.core.rate_limit import limiter
 from src.core.state import AppState, get_state
+from src.semantic.validator import EntityCatalog, validate_sql
 from src.tools.context_tool import get_context
+from src.tools.metric_tool import (
+    ComputeMetricError,
+    MetricRequest,
+    compute_metric,
+)
 from src.tools.schema_tool import SchemaSummary, get_schema
 from src.tools.sql_tool import SqlResult, run_sql
 
@@ -45,12 +51,63 @@ def execute_sql(
         raise HTTPException(
             status_code=404, detail=f"Unknown dataset: {sql_request.dataset_id}"
         )
+    # Phase 2 semantic validator — runs before DuckDB to catch
+    # hallucinated tables/columns and silent metric-filter drops.
+    # Failures raise HTTP 400 with an agent-readable repair hint;
+    # the agent retries up to its internal limit. Unknown-column
+    # and other soft issues are warnings — they don't block exec.
+    dcd = state.dcds[sql_request.dataset_id]
+    catalog = EntityCatalog.from_dcd(dcd)
+    extras = set(state.gold_table_names.values()) | {
+        tname for tname in _list_raw_tables(state)
+    }
+    result = validate_sql(
+        sql_request.sql,
+        entity=catalog,
+        extra_known_tables=extras,
+    )
+    if not result.ok:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "sql_validation_failed",
+                "message": result.error_message(),
+                "issues": [
+                    {
+                        "severity": i.severity,
+                        "code": i.code,
+                        "message": i.message,
+                        "suggestion": i.suggestion,
+                    }
+                    for i in result.issues
+                ],
+            },
+        )
     try:
-        return run_sql(state.connection, sql_request.sql, max_rows=sql_request.max_rows)
+        # Serialize DuckDB access — the native connection is not
+        # thread-safe and the agent fires many parallel SQL calls.
+        with state.connection_lock:
+            return run_sql(
+                state.connection,
+                sql_request.sql,
+                max_rows=sql_request.max_rows,
+            )
     except SqlValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ToolError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+def _list_raw_tables(state: AppState) -> list[str]:
+    """Quick pass over the registry to collect every raw_* table name
+    so the validator allow-lists them for multi-dataset join support."""
+    names: list[str] = []
+    for dcd in state.dcds.values():
+        for tbl in dcd.dataset.tables:
+            names.append(tbl.name)
+        # Also include each dataset's load_result primary table name
+        # from the registry, if accessible.
+    return names
 
 
 @router.get("/context/{dataset_id}")
@@ -71,6 +128,69 @@ def schema(dataset_id: str, state: StateDep) -> SchemaSummary:
     if dcd is None:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
     return get_schema(dcd)
+
+
+class MetricResponse(BaseModel):
+    """Exec-friendly shape returned by ``POST /tools/metric``.
+
+    Carries both the tabular result and the full auditable context —
+    the exact SQL that ran, the metric's declared filter, and the
+    dimensions/grain that produced the slice. The ``numeric_claim``
+    event emitted by the agent loop in Phase 3 copies directly from
+    this object.
+    """
+
+    columns: list[str]
+    rows: list[list[Any]]
+    row_count: int
+    truncated: bool
+    sql_used: str
+    metric_slug: str
+    metric_label: str
+    metric_description: str | None
+    metric_expression: str
+    metric_filter: str | None
+    metric_unit: str | None
+    dimensions: list[str]
+    extra_filters: dict[str, Any]
+    grain: str | None
+    elapsed_ms: float
+
+
+@router.post("/metric", response_model=MetricResponse)
+@limiter.limit("120/minute")
+def execute_metric(
+    request: Request, metric_request: MetricRequest, state: StateDep
+) -> MetricResponse:
+    """Governed-metric query path.
+
+    The agent sends a structured request (entity + metric + optional
+    dimensions/filters/grain); Manthan composes SQL from the declared
+    metric definition and executes it. This bypasses the validator
+    because we trust our own composer — the semantic contract is the
+    definition.
+    """
+    try:
+        result = compute_metric(state, metric_request)
+    except ComputeMetricError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return MetricResponse(
+        columns=result.columns,
+        rows=result.rows,
+        row_count=result.row_count,
+        truncated=result.truncated,
+        sql_used=result.sql_used,
+        metric_slug=result.metric_slug,
+        metric_label=result.metric_label,
+        metric_description=result.metric_description,
+        metric_expression=result.metric_expression,
+        metric_filter=result.metric_filter,
+        metric_unit=result.metric_unit,
+        dimensions=result.dimensions,
+        extra_filters=result.extra_filters,
+        grain=result.grain,
+        elapsed_ms=round(result.elapsed_ms, 1),
+    )
 
 
 class PythonRequest(BaseModel):

@@ -25,4 +25,6 @@ def test_dcd_preserves_column_roles(sample_dcd: DataContextDocument) -> None:
 
 
 def test_version_is_fixed(sample_dcd: DataContextDocument) -> None:
-    assert sample_dcd.version == "1.0"
+    # DCD v1.1 adds the ``entity`` block wrapping physical storage
+    # behind a stable business-facing slug + governed metrics.
+    assert sample_dcd.version == "1.1"

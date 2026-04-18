@@ -66,7 +66,12 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "prior calls. Verify names via get_schema first. Include "
                 "LIMIT 100 on exploratory queries. Supports SELECT, WITH, "
                 "DESCRIBE, SHOW TABLES, CREATE TEMP TABLE, DROP TEMP. "
-                "NOTE: temp tables here are NOT visible in run_python."
+                "NOTE: temp tables here are NOT visible in run_python. "
+                "If a NAMED business metric covers your question "
+                "(revenue, AOV, margin, churn, retention — anything "
+                "listed in the Entity's 'Governed metrics' section), "
+                "PREFER compute_metric so the declared filter and "
+                "aggregation semantics are applied deterministically."
             ),
             "parameters": {
                 "type": "object",
@@ -76,6 +81,61 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "max_rows": {"type": "integer", "default": 1000},
                 },
                 "required": ["dataset_id", "sql"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "compute_metric",
+            "description": (
+                "Governed happy-path for named business metrics. Use this "
+                "whenever the question names a metric declared in the "
+                "Entity's 'Governed metrics' block (revenue, AOV, margin, "
+                "etc.). Manthan composes SQL from the metric's declared "
+                "expression + baked-in filter, so the answer respects the "
+                "business definition without you having to remember it. "
+                "Specify 'entity' as the entity slug, 'metric' as the "
+                "metric slug, optional 'dimensions' to GROUP BY, 'filters' "
+                "as additional predicates (scalar, list, or {gte,lte,eq} "
+                "range), and 'grain' for time rollup. The response carries "
+                "the composed SQL for audit."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity slug, e.g. 'orders'.",
+                    },
+                    "metric": {
+                        "type": "string",
+                        "description": "Metric slug, e.g. 'revenue'.",
+                    },
+                    "dimensions": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Columns to GROUP BY (optional).",
+                    },
+                    "filters": {
+                        "type": "object",
+                        "description": (
+                            "Extra filters ANDed with the metric's declared "
+                            "filter. Values may be scalar, list (IN), or "
+                            "{gte, lte, gt, lt, eq} for ranges."
+                        ),
+                    },
+                    "grain": {
+                        "type": "string",
+                        "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                        "description": (
+                            "Time grain for a time-series slice. Requires "
+                            "the entity to have a temporal column."
+                        ),
+                    },
+                    "limit": {"type": "integer", "default": 500},
+                },
+                "required": ["entity", "metric"],
             },
         },
     },
@@ -112,12 +172,15 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "ask_user",
             "description": (
-                "Ask a clarifying question and block until answered. Use "
-                "when 2+ plausible interpretations would produce materially "
-                "different answers. Questions with adjectives (busy, "
-                "successful, undervalued) almost always need clarification. "
-                "Specific column references almost never do. Provide clear "
-                "human-friendly options the user can click."
+                "Check with the exec in propose-first style. Only call when "
+                "two credible interpretation paths would materially diverge "
+                "in what you investigate (EVPI stop rule). Questions with "
+                "adjectives of judgment ('best', 'struggling', 'good') "
+                "usually need this; specific column references usually "
+                "don't. ALWAYS populate proposed_interpretation (your "
+                "working read, one sentence, exec language) and "
+                "why_this_matters (what flips downstream). The UI renders "
+                "these prominently as an analyst's note, not a form."
             ),
             "parameters": {
                 "type": "object",
@@ -125,12 +188,25 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "session_id": {"type": "string"},
                     "prompt": {
                         "type": "string",
-                        "description": "Plain-English question",
+                        "description": "Plain-English question (short — the UI shows interpretation/why separately)",
                     },
                     "options": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Clickable option labels",
+                        "description": "2-3 alternative interpretations in exec language",
+                    },
+                    "proposed_interpretation": {
+                        "type": "string",
+                        "description": "Your working interpretation in one sentence, exec language. Shown prominently in the UI.",
+                    },
+                    "why_this_matters": {
+                        "type": "string",
+                        "description": "One sentence: why the clarification matters — what flips downstream.",
+                    },
+                    "ambiguity_type": {
+                        "type": "string",
+                        "enum": ["intent", "vague_goal", "parameter", "value", "contextual"],
+                        "description": "MAC-taxonomy classification of the ambiguity (see prompt for definitions).",
                     },
                 },
                 "required": ["session_id", "prompt", "options"],
@@ -246,6 +322,99 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "emit_visual",
+            "description": (
+                "Show an inline visual in the conversation — a small HTML "
+                "snippet (NOT a full document) rendered directly in the chat. "
+                "Use for quick visuals during exploration. Types:\n"
+                "- stat_card: Single KPI (value + label + delta)\n"
+                "- stat_strip: Row of 3-5 KPI cards\n"
+                "- mini_chart: Small Chart.js chart (~200px tall)\n"
+                "- chart_insight: Chart + narrative callout above\n"
+                "- comparison: Side-by-side before/after cards\n"
+                "- heatmap: Color-coded grid (cohort, correlation)\n"
+                "- callout: Highlighted insight/warning/tip card\n"
+                "- progress: Horizontal progress/funnel steps\n\n"
+                "The HTML is a FRAGMENT (no <html>/<head>/<body>). "
+                "It will be wrapped in a container with these fonts/colors "
+                "pre-loaded: Inter for body, Instrument Serif for values, "
+                "palette: #6e56cf (accent), #3b8263 (success), #bd9e14 "
+                "(warning), #c92f31 (error). Background: transparent. "
+                "Cards: white (#fff) with 1px solid #e8e8e7 border, "
+                "border-radius:12px. Use inline styles only.\n\n"
+                "For Chart.js: include a <canvas> + <script> that creates "
+                "the chart. Chart.js 4.5 is pre-loaded in the container.\n\n"
+                "Keep HTML under 3000 chars. For complex outputs, use "
+                "create_artifact instead."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "visual_type": {
+                        "type": "string",
+                        "enum": [
+                            "stat_card", "stat_strip", "mini_chart",
+                            "chart_insight", "comparison", "heatmap",
+                            "callout", "progress",
+                        ],
+                        "description": "Type of inline visual",
+                    },
+                    "html": {
+                        "type": "string",
+                        "description": "HTML fragment with inline styles",
+                    },
+                    "height": {
+                        "type": "integer",
+                        "description": "Height in px (default 200)",
+                    },
+                },
+                "required": ["visual_type", "html"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_artifact",
+            "description": (
+                "Create a self-contained HTML dashboard/report/tool rendered "
+                "live in the artifact panel. Use the Manthan Artifact Design "
+                "System from the system prompt (fonts, colors, card styles, "
+                "Chart.js palette). Must be a single complete HTML file with "
+                "Chart.js 4.5 CDN, inline CSS matching the design system, "
+                "embedded pre-aggregated data, and a Dashboard class with "
+                "applyFilters() that updates all charts + KPIs + tables. "
+                "Background: #f6f6f5 (warm gray). Cards: white with 1px "
+                "border. Headings: Instrument Serif. Body: Inter. "
+                "NEVER use dark backgrounds for the dashboard body."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Artifact title shown in panel header",
+                    },
+                    "html": {
+                        "type": "string",
+                        "description": (
+                            "Complete self-contained HTML document with "
+                            "inline styles, Chart.js CDN, embedded data, "
+                            "and dashboard logic"
+                        ),
+                    },
+                    "filename": {
+                        "type": "string",
+                        "description": "Filename like 'revenue_dashboard.html'",
+                    },
+                },
+                "required": ["title", "html"],
+            },
+        },
+    },
 ]
 
 
@@ -302,6 +471,19 @@ class ToolRouter:
             )
             r.raise_for_status()
             return r.text
+        if name == "compute_metric":
+            body = {
+                "entity": args["entity"],
+                "metric": args["metric"],
+                "dimensions": args.get("dimensions", []),
+                "filters": args.get("filters", {}),
+                "limit": args.get("limit", 500),
+            }
+            if args.get("grain"):
+                body["grain"] = args["grain"]
+            r = await self.client.post("/tools/metric", json=body)
+            r.raise_for_status()
+            return r.text
         if name == "run_python":
             body: dict[str, Any] = {
                 "dataset_id": args["dataset_id"],
@@ -314,15 +496,20 @@ class ToolRouter:
             r.raise_for_status()
             return r.text
         if name == "ask_user":
-            r = await self.client.post(
-                "/ask_user",
-                json={
-                    "session_id": args["session_id"],
-                    "prompt": args["prompt"],
-                    "options": args.get("options", []),
-                    "allow_free_text": True,
-                },
-            )
+            body: dict[str, Any] = {
+                "session_id": args["session_id"],
+                "prompt": args["prompt"],
+                "options": args.get("options", []),
+                "allow_free_text": True,
+            }
+            # Propose-first extensions (all optional, backward compatible)
+            if args.get("proposed_interpretation"):
+                body["proposed_interpretation"] = args["proposed_interpretation"]
+            if args.get("why_this_matters"):
+                body["why_this_matters"] = args["why_this_matters"]
+            if args.get("ambiguity_type"):
+                body["ambiguity_type"] = args["ambiguity_type"]
+            r = await self.client.post("/ask_user", json=body)
             r.raise_for_status()
             q = r.json()
             # Wait up to 30s — if no answer, return timeout so the

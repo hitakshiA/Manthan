@@ -15,6 +15,12 @@ export interface ColumnSchema {
   dtype: string;
   role: "metric" | "dimension" | "temporal" | "identifier" | "auxiliary";
   description: string;
+  /** DCD v1.1 — exec-facing label; falls back to name when null. */
+  label?: string | null;
+  /** DCD v1.1 — aggregate-only handling downstream. */
+  pii?: boolean;
+  /** DCD v1.1 — alternate phrasings the exec might use for this column. */
+  synonyms?: string[];
   aggregation: string | null;
   cardinality: number | null;
   completeness: number | null;
@@ -27,14 +33,53 @@ export interface ColumnSchema {
   } | null;
 }
 
+/** DCD v1.1 — governed metric declaration. */
+export interface SchemaSummaryMetric {
+  slug: string;
+  label: string;
+  description: string;
+  expression: string;
+  filter: string | null;
+  unit: string | null;
+  aggregation_semantics: "additive" | "ratio_unsafe" | "non_additive";
+  default_grain: string | null;
+  valid_dimensions: string[];
+  synonyms: string[];
+}
+
+/** DCD v1.1 — pre-materialized rollup exposed by slug. */
+export interface SchemaSummaryRollup {
+  slug: string;
+  physical_table: string;
+  grain: string | null;
+  dimensions: string[];
+}
+
+/** DCD v1.1 — stable wrapper over physical storage. */
+export interface SchemaSummaryEntity {
+  slug: string;
+  name: string;
+  description: string;
+  physical_table: string;
+  rollups: SchemaSummaryRollup[];
+  metrics: SchemaSummaryMetric[];
+}
+
+export interface SchemaSummaryVerifiedQuery {
+  question: string;
+  sql: string;
+  intent: string;
+}
+
 export interface SchemaSummary {
   dataset_id: string;
   name: string;
   description: string;
   row_count: number;
+  entity?: SchemaSummaryEntity | null;
   columns: ColumnSchema[];
   summary_tables: string[];
-  verified_queries: string[];
+  verified_queries: SchemaSummaryVerifiedQuery[];
 }
 
 export interface ClarificationOption {

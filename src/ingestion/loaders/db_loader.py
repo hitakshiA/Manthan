@@ -74,7 +74,15 @@ def load_from_database(
         # DuckDB's ATTACH does not accept parameter binding for the path;
         # we validate the string contains no control characters then embed
         # it directly with escaped single quotes.
-        escaped_conn = _escape_sql_string(request.connection_string.get_secret_value())
+        raw_conn = request.connection_string.get_secret_value()
+        # Normalize libpq-style parameter names to the style DuckDB's
+        # mysql_scanner expects. Users frequently paste
+        # ``password=…`` / ``dbname=…`` (Postgres convention) into the
+        # MySQL form, which used to die deep inside ATTACH with a
+        # cryptic "Unrecognized configuration parameter" error.
+        if request.source_type == "mysql":
+            raw_conn = _normalize_mysql_conn_string(raw_conn)
+        escaped_conn = _escape_sql_string(raw_conn)
         connection.execute(
             f"ATTACH '{escaped_conn}' AS {alias} (TYPE {extension.upper()}, READ_ONLY)"
         )
@@ -138,3 +146,45 @@ def _escape_sql_string(text: str) -> str:
             "Connection string contains disallowed control characters"
         )
     return text.replace("'", "''")
+
+
+# DuckDB's mysql_scanner extension accepts a very specific set of
+# parameter names. Users often paste libpq-style names because the
+# Postgres form is what they see elsewhere — we translate so either
+# flavor works.
+_MYSQL_PARAM_ALIASES = {
+    "password": "passwd",
+    "pwd": "passwd",
+    "database": "db",
+    "dbname": "db",
+}
+
+
+def _normalize_mysql_conn_string(conn: str) -> str:
+    """Rewrite libpq-style param names (``password=``, ``dbname=``) to
+    the mysql_scanner equivalents (``passwd=``, ``db=``). Leaves
+    unknown keys alone so a user-supplied ``socket=`` / ``ssl_mode=``
+    passes through untouched. Whitespace-separated ``key=value``
+    tokens, like the rest of DuckDB's scanner syntax.
+
+    Also drops empty-value parameters — DuckDB's mysql extension
+    rejects ``passwd=`` (empty), which is a common gotcha when the
+    MySQL role has no password (like the Rfam public reader).
+    """
+    parts = conn.split()
+    out: list[str] = []
+    for part in parts:
+        if "=" not in part:
+            out.append(part)
+            continue
+        key, _, value = part.partition("=")
+        key_low = key.strip().lower()
+        # Empty value → skip entirely. DuckDB's parser treats
+        # ``passwd=`` as a malformed token rather than "no password".
+        if value.strip() == "":
+            continue
+        if key_low in _MYSQL_PARAM_ALIASES:
+            out.append(f"{_MYSQL_PARAM_ALIASES[key_low]}={value}")
+        else:
+            out.append(part)
+    return " ".join(out)

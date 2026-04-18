@@ -46,6 +46,10 @@ class AskUserQuestion:
     answer: str | None = None
     answered_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    # Propose-first structure (all optional, backward compatible)
+    proposed_interpretation: str | None = None
+    why_this_matters: str | None = None
+    ambiguity_type: str | None = None
     _event: threading.Event = field(default_factory=threading.Event)
 
 
@@ -64,6 +68,9 @@ class AskUserRegistry:
         options: list[str] | None = None,
         allow_free_text: bool = True,
         context: str | None = None,
+        proposed_interpretation: str | None = None,
+        why_this_matters: str | None = None,
+        ambiguity_type: str | None = None,
     ) -> AskUserQuestion:
         question = AskUserQuestion(
             id=f"q_{uuid4().hex[:10]}",
@@ -72,6 +79,9 @@ class AskUserRegistry:
             options=list(options or []),
             allow_free_text=allow_free_text,
             context=context,
+            proposed_interpretation=proposed_interpretation,
+            why_this_matters=why_this_matters,
+            ambiguity_type=ambiguity_type,
         )
         with self._lock:
             self._questions[question.id] = question
