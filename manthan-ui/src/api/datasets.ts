@@ -19,7 +19,8 @@ export const uploadDataset = (file: File) => upload<DatasetSummary>("/datasets/u
 export const uploadDatasetAsync = (file: File) =>
   upload<{ dataset_id: string; status: string }>("/datasets/upload-async", file);
 
-export const uploadMultiDataset = (files: File[]) => uploadMulti<DatasetSummary>("/datasets/upload-multi", files);
+export const uploadMultiDataset = (files: File[], opts: { primary?: string } = {}) =>
+  uploadMulti<DatasetSummary>("/datasets/upload-multi", files, opts);
 
 /** Phase 4 — re-ingest an existing dataset in place.
  *  Preserves the entity slug, metrics, column labels/synonyms/pii. */

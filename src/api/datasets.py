@@ -136,15 +136,24 @@ async def upload_multi_file_dataset(
     state: StateDep,
     llm_client_factory: LlmFactoryDep,
     files: Annotated[list[UploadFile], File(...)],
+    primary: str | None = None,
 ) -> DatasetSummary:
     """Upload multiple related files as one dataset.
 
-    The first file is treated as the primary table (Gold-materialized,
-    summary tables, verified queries). Additional files are profiled
-    and attached to the DCD under ``tables`` so the agent can query
-    them via ``run_sql`` against the raw tables. Foreign keys are
-    detected automatically by column-name + value-containment analysis
-    and populated into ``DcdDataset.relationships``.
+    The primary file is Gold-materialized (summary tables, verified
+    queries, governed metrics). Additional files are profiled and
+    attached to the DCD under ``tables`` so the agent can query them
+    via ``run_sql`` against the raw tables. Foreign keys are detected
+    automatically by column-name + value-containment analysis and
+    populated into ``DcdDataset.relationships``.
+
+    Args:
+        primary: Filename of the file that should be the Gold-materialized
+            primary entity. Defaults to the first file in upload order,
+            which (for alphabetically-ordered folder drops) can land on
+            a marginal table like ``corporate_client.csv`` when the real
+            fact table is ``Orders.csv``. Pass ``primary`` to pick the
+            entity the semantic layer should centre on.
     """
     if not files:
         raise HTTPException(status_code=400, detail="Upload requires at least one file")
@@ -153,6 +162,21 @@ async def upload_multi_file_dataset(
             raise HTTPException(
                 status_code=400, detail="Every uploaded file must have a filename"
             )
+
+    # Re-order so the caller-chosen primary is first. Match on basename
+    # so callers don't have to know the server-side temp path.
+    if primary:
+        idx = next(
+            (i for i, f in enumerate(files) if (f.filename or "") == primary),
+            None,
+        )
+        if idx is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"primary={primary!r} is not among the uploaded filenames",
+            )
+        if idx != 0:
+            files = [files[idx], *files[:idx], *files[idx + 1 :]]
 
     staged: list[tuple[Path, str]] = []
     try:

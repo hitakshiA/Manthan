@@ -42,10 +42,15 @@ export async function upload<T>(path: string, file: File): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function uploadMulti<T>(path: string, files: File[]): Promise<T> {
+export async function uploadMulti<T>(
+  path: string,
+  files: File[],
+  opts: { primary?: string } = {},
+): Promise<T> {
   const form = new FormData();
   for (const f of files) form.append("files", f);
-  const res = await fetch(`${BASE_URL}${path}`, { method: "POST", body: form });
+  const qs = opts.primary ? `?primary=${encodeURIComponent(opts.primary)}` : "";
+  const res = await fetch(`${BASE_URL}${path}${qs}`, { method: "POST", body: form });
   if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
   return res.json() as Promise<T>;
 }
