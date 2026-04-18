@@ -27,7 +27,7 @@ import {
 import { TegakiRenderer } from "tegaki/react";
 import italianno from "tegaki/fonts/italianno";
 import { queryStream } from "@/api/agent";
-import { refreshDataset } from "@/api/datasets";
+import { uploadDatasetAsync, uploadMultiDataset, refreshDataset } from "@/api/datasets";
 import type { RenderSpec } from "@/types/render-spec";
 import type { DatasetSummary, SchemaSummary } from "@/types/api";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
@@ -54,7 +54,12 @@ function describeDataset(schema: SchemaSummary): string {
 function FirstOpen() {
   const view = useUIStore((s) => s.landingView);
   const setView = useUIStore((s) => s.setLandingView);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const setShowPicker = useUIStore((s) => s.setSourcePickerOpen);
   const { datasets, fetchDatasets } = useDatasetStore();
+  const startProcessing = useProcessingStore((s) => s.startProcessing);
+  const [localUploading, setLocalUploading] = useState(false);
 
   // Hero choreography: handwriting lays down the wordmark, then the
   // subtitle + trust line fade in, then the CTA row joins.
@@ -65,6 +70,22 @@ function FirstOpen() {
       return () => clearTimeout(t);
     }
   }, [step]);
+
+  const showExplore = () => { fetchDatasets(); setView("explore"); };
+
+  const handleFiles = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    setLocalUploading(true);
+    try {
+      if (files.length === 1) {
+        const { dataset_id } = await uploadDatasetAsync(files[0]);
+        startProcessing(dataset_id);
+      } else {
+        const ds = await uploadMultiDataset(files);
+        startProcessing(ds.dataset_id);
+      }
+    } catch { /* */ } finally { setLocalUploading(false); }
+  }, [startProcessing]);
 
   useEffect(() => {
     if (view === "explore") fetchDatasets();
@@ -96,6 +117,18 @@ function FirstOpen() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 -mt-[14vh] sm:-mt-[24vh]">
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length > 0) handleFiles(files);
+          }}
+        />
+
         <div className="flex flex-col items-center text-center w-full max-w-2xl">
           <TegakiRenderer
             font={italianno}
@@ -158,17 +191,59 @@ function FirstOpen() {
                 : "opacity-0 translate-y-3 pointer-events-none",
             )}
           >
+            {/* Mobile (< md): GitHub-only — phone isn't for running the app */}
             <a
               href="https://github.com/hitakshiA/Manthan"
               target="_blank"
               rel="noopener noreferrer"
-              className="liquid-glass rounded-full px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer inline-flex items-center gap-2.5"
+              className="md:hidden liquid-glass rounded-full px-8 py-3.5 text-sm text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer inline-flex items-center gap-2.5"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.77 1.05.77 2.12 0 1.53-.01 2.77-.01 3.15 0 .31.21.67.8.56C20.21 21.37 23.5 17.08 23.5 12 23.5 5.73 18.27.5 12 .5Z" />
               </svg>
               View on GitHub
             </a>
+
+            {/* Desktop (≥ md): full three-CTA row — Drop / Explore / Connect */}
+            <div className="hidden md:flex items-center gap-4">
+              <button
+                onClick={() => fileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  const all = Array.from(e.dataTransfer.files ?? []);
+                  const allowed = /\.(csv|tsv|parquet|json|xlsx|xls)$/i;
+                  const files = all.filter((f) => allowed.test(f.name));
+                  if (files.length > 0) handleFiles(files);
+                }}
+                disabled={localUploading}
+                className={cn(
+                  "liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium",
+                  "hover:scale-[1.03] transition-transform cursor-pointer",
+                  dragOver && "scale-[1.03] ring-2 ring-white/40",
+                  localUploading && "opacity-60 pointer-events-none",
+                )}
+                title="Single file, multiple files, or a whole folder — FK relationships auto-detected"
+              >
+                {localUploading ? "Uploading…" : "Drop a file or folder"}
+              </button>
+
+              <button
+                onClick={showExplore}
+                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+              >
+                Explore existing
+              </button>
+
+              <button
+                onClick={() => setShowPicker(true)}
+                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+              >
+                Connect a warehouse
+              </button>
+            </div>
           </div>
         </div>
       </div>
