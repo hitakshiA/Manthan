@@ -93,7 +93,11 @@ def _install_global_handlers() -> None:
         if isinstance(exc, BaseException):
             _log_exception("asyncio", exc, extra=context.get("message", ""))
         else:
-            print(f"[manthan.crash] asyncio-context: {context}", file=sys.stderr, flush=True)
+            print(
+                f"[manthan.crash] asyncio-context: {context}",
+                file=sys.stderr,
+                flush=True,
+            )
 
     loop.set_exception_handler(handler)
 

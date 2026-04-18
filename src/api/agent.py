@@ -50,7 +50,7 @@ async def agent_query(request: QueryRequest, config: AgentConfigDep):
                     user_message=request.message,
                 ):
                     yield event.to_sse()
-        except Exception as exc:  # noqa: BLE001 — last-line defense
+        except Exception as exc:
             tb = traceback.format_exc()
             _log.exception(
                 "agent stream crashed session=%s dataset=%s",

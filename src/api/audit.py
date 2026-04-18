@@ -25,9 +25,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, AsyncIterator
-
-from typing import Annotated
+from collections.abc import AsyncIterator
+from typing import Annotated, Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -36,7 +35,7 @@ from pydantic import BaseModel, Field
 
 from src.agent.aliasing import build_catalog_from_dcds
 from src.agent.config import AgentConfig
-from src.agent.events import set_alias_catalog, reset_alias_catalog
+from src.agent.events import reset_alias_catalog, set_alias_catalog
 from src.core.state import AppState, get_state
 from src.semantic.schema import DataContextDocument, DcdMetric
 
@@ -96,9 +95,7 @@ def _find_metric(dcd: DataContextDocument, metric_ref: str | None) -> DcdMetric 
     return None
 
 
-def _referenced_columns(
-    sql: str | None, dcd: DataContextDocument | None
-) -> list[Any]:
+def _referenced_columns(sql: str | None, dcd: DataContextDocument | None) -> list[Any]:
     """Best-effort match of DCD columns appearing in the SQL.
 
     We don't need to parse SQL properly — we just need the columns
@@ -280,9 +277,7 @@ def _build_user_prompt(
     if req.grain:
         lines.append(f"Time grain: {req.grain}")
     if req.row_count_scanned is not None:
-        total = (
-            dcd.dataset.source.row_count if dcd else None
-        )
+        total = dcd.dataset.source.row_count if dcd else None
         if total and total > 0 and total >= req.row_count_scanned:
             pct = req.row_count_scanned / total * 100
             lines.append(
@@ -439,9 +434,7 @@ def _looks_like_draft_leak(text: str) -> bool:
         return True
     if "draft:" in low:
         return True
-    if text.count("    *   *") >= 2:
-        return True
-    return False
+    return text.count("    *   *") >= 2
 
 
 def _extract_polished_paragraph(text: str) -> str:
@@ -481,7 +474,7 @@ def _extract_polished_paragraph(text: str) -> str:
 
 def _sse(event: dict[str, Any]) -> bytes:
     """Serialize an event to an SSE frame."""
-    return f"data: {json.dumps(event, ensure_ascii=False)}\n\n".encode("utf-8")
+    return f"data: {json.dumps(event, ensure_ascii=False)}\n\n".encode()
 
 
 async def _stream_description(
@@ -533,79 +526,68 @@ async def _stream_description(
         reasoning_accum = ""
 
         try:
-            async with httpx.AsyncClient(
-                base_url=config.openrouter_base_url,
-                headers=headers,
-                timeout=60.0,
-            ) as client:
-                async with client.stream(
-                    "POST", "/chat/completions", json=payload
-                ) as r:
-                    if r.status_code >= 400:
-                        err_body = (await r.aread()).decode(
-                            "utf-8", errors="replace"
-                        )
-                        yield _sse(
-                            {
-                                "error": f"upstream {r.status_code}: "
-                                f"{err_body[:200]}"
-                            }
-                        )
-                        return
+            async with (
+                httpx.AsyncClient(
+                    base_url=config.openrouter_base_url,
+                    headers=headers,
+                    timeout=60.0,
+                ) as client,
+                client.stream("POST", "/chat/completions", json=payload) as r,
+            ):
+                if r.status_code >= 400:
+                    err_body = (await r.aread()).decode("utf-8", errors="replace")
+                    yield _sse({"error": f"upstream {r.status_code}: {err_body[:200]}"})
+                    return
 
-                    # OpenRouter forwards the OpenAI-style SSE stream:
-                    # lines of ``data: {json}`` separated by blank lines,
-                    # terminated by ``data: [DONE]``. Each delta carries
-                    # ``choices[0].delta.content`` (primary tokens) or
-                    # ``.reasoning`` (used by GLM :exacto to stream the
-                    # internal trace before the real answer). We forward
-                    # only content tokens to the client but retain the
-                    # reasoning buffer for the empty-content salvage.
-                    async for line in r.aiter_lines():
-                        if not line or not line.startswith("data: "):
-                            continue
-                        data_str = line[6:].strip()
-                        if data_str == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(data_str)
-                        except json.JSONDecodeError:
-                            continue
-                        if isinstance(chunk, dict) and "error" in chunk:
-                            yield _sse(
-                                {"error": str(chunk["error"])[:200]}
-                            )
+                # OpenRouter forwards the OpenAI-style SSE stream:
+                # lines of ``data: {json}`` separated by blank lines,
+                # terminated by ``data: [DONE]``. Each delta carries
+                # ``choices[0].delta.content`` (primary tokens) or
+                # ``.reasoning`` (used by GLM :exacto to stream the
+                # internal trace before the real answer). We forward
+                # only content tokens to the client but retain the
+                # reasoning buffer for the empty-content salvage.
+                async for line in r.aiter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    data_str = line[6:].strip()
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data_str)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(chunk, dict) and "error" in chunk:
+                        yield _sse({"error": str(chunk["error"])[:200]})
+                        return
+                    choices = chunk.get("choices") or []
+                    if not choices:
+                        continue
+                    delta = choices[0].get("delta") or {}
+                    piece = delta.get("content")
+                    if piece:
+                        # Mask physical names on the fly — catches
+                        # anything the model inlined before we can
+                        # do a whole-text pass.
+                        masked_piece = catalog.mask(piece) if catalog else piece
+                        content_accum += piece
+                        yield _sse({"token": masked_piece})
+                        # Early leak guard: if the model is emitting
+                        # its own drafting dialogue instead of the
+                        # audit sentence, detect it as soon as we
+                        # have enough text to tell (≥120 chars) and
+                        # bail out before the mess dominates the
+                        # drawer. The client reacts by clearing
+                        # what it showed and falling back to the
+                        # regex summary.
+                        if 120 <= len(content_accum) <= 500 and (
+                            _looks_like_draft_leak(content_accum)
+                        ):
+                            yield _sse({"error": "draft_leak"})
                             return
-                        choices = chunk.get("choices") or []
-                        if not choices:
-                            continue
-                        delta = choices[0].get("delta") or {}
-                        piece = delta.get("content")
-                        if piece:
-                            # Mask physical names on the fly — catches
-                            # anything the model inlined before we can
-                            # do a whole-text pass.
-                            masked_piece = (
-                                catalog.mask(piece) if catalog else piece
-                            )
-                            content_accum += piece
-                            yield _sse({"token": masked_piece})
-                            # Early leak guard: if the model is emitting
-                            # its own drafting dialogue instead of the
-                            # audit sentence, detect it as soon as we
-                            # have enough text to tell (≥120 chars) and
-                            # bail out before the mess dominates the
-                            # drawer. The client reacts by clearing
-                            # what it showed and falling back to the
-                            # regex summary.
-                            if 120 <= len(content_accum) <= 500 and (
-                                _looks_like_draft_leak(content_accum)
-                            ):
-                                yield _sse({"error": "draft_leak"})
-                                return
-                        reasoning_piece = delta.get("reasoning")
-                        if reasoning_piece:
-                            reasoning_accum += reasoning_piece
+                    reasoning_piece = delta.get("reasoning")
+                    if reasoning_piece:
+                        reasoning_accum += reasoning_piece
         except httpx.HTTPError as e:
             yield _sse({"error": f"upstream network error: {e!s}"[:200]})
             return
@@ -621,9 +603,7 @@ async def _stream_description(
         if not description and reasoning_accum.strip():
             salvaged = _salvage_reasoning(reasoning_accum)
             if salvaged:
-                masked_salvage = (
-                    catalog.mask(salvaged) if catalog else salvaged
-                )
+                masked_salvage = catalog.mask(salvaged) if catalog else salvaged
                 description = salvaged
                 # Stream it in one frame so the client sees tokens.
                 yield _sse({"token": masked_salvage})
@@ -640,9 +620,7 @@ async def _stream_description(
         if _looks_like_draft_leak(description):
             polished = _extract_polished_paragraph(description)
             if polished:
-                masked_polished = (
-                    catalog.mask(polished) if catalog else polished
-                )
+                masked_polished = catalog.mask(polished) if catalog else polished
                 # Tell the client to discard the leaked tokens it
                 # already rendered, then stream the clean paragraph
                 # as the replacement content.

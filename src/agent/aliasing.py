@@ -66,7 +66,9 @@ class AliasCatalog:
         pattern = self._compile()
         if pattern is None:
             return text
-        return pattern.sub(lambda m: self.physical_to_display.get(m.group(0), m.group(0)), text)
+        return pattern.sub(
+            lambda m: self.physical_to_display.get(m.group(0), m.group(0)), text
+        )
 
     def _compile(self) -> re.Pattern[str] | None:
         if self._pattern is not None:

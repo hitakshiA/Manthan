@@ -38,7 +38,6 @@ from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 
-
 DEFAULT_TENANT = "default"
 
 
@@ -104,8 +103,8 @@ class VaultRecord:
 
     connection_id: str
     label: str
-    source_type: str         # postgres | mysql | snowflake | bigquery | s3 | gcs | gsheet | saas-stripe | ...
-    secret: dict[str, Any]   # arbitrary JSON-serializable blob
+    source_type: str  # postgres | mysql | snowflake | bigquery | s3 | gcs | gsheet | saas-stripe | ...
+    secret: dict[str, Any]  # arbitrary JSON-serializable blob
     created_at: datetime
     updated_at: datetime
 
@@ -227,7 +226,9 @@ class CredentialVault:
         try:
             secret = json.loads(dk.decrypt(blob).decode())
         except InvalidToken as exc:
-            raise VaultError("Credential decryption failed — master key rotated?") from exc
+            raise VaultError(
+                "Credential decryption failed — master key rotated?"
+            ) from exc
         return VaultRecord(
             connection_id=connection_id,
             label=label,

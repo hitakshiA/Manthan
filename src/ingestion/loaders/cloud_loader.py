@@ -27,7 +27,6 @@ import duckdb
 
 from src.ingestion.base import LoadResult, quote_identifier, validate_identifier
 
-
 _CSV_EXT = re.compile(r"\.(csv|tsv)(\.gz)?$", re.IGNORECASE)
 _PARQUET_EXT = re.compile(r"\.parquet$", re.IGNORECASE)
 _JSON_EXT = re.compile(r"\.(json|jsonl|ndjson)(\.gz)?$", re.IGNORECASE)
@@ -72,12 +71,14 @@ def _ensure_extensions(connection: duckdb.DuckDBPyConnection, url: str) -> None:
     first install, so re-calling ``INSTALL`` is cheap.
     """
     connection.execute("INSTALL httpfs; LOAD httpfs;")
-    if url.startswith("az://") or url.startswith("azure://"):
-        try:
+    if url.startswith(("az://", "azure://")):
+        # The azure extension isn't bundled in all DuckDB builds — if
+        # install fails, fall through and let the read surface a clearer
+        # error than "unknown extension". Using contextlib.suppress would
+        # work too but loses the inline explanation here.
+        try:  # noqa: SIM105
             connection.execute("INSTALL azure; LOAD azure;")
         except duckdb.Error:
-            # The azure extension isn't bundled in all builds — fall
-            # through and let the read fail with a clearer error.
             pass
 
 

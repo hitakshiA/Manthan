@@ -725,8 +725,7 @@ def _format_tables(
     entity_physical_tables = entity_physical_tables or set()
     raw = [t for t in tables if t.startswith("raw_")]
     gold = [
-        t for t in tables
-        if t.startswith("gold_") and t not in entity_physical_tables
+        t for t in tables if t.startswith("gold_") and t not in entity_physical_tables
     ]
     lines = [
         "\n# Available Tables (auto-discovered)",
@@ -853,12 +852,18 @@ def _format_schema_entity(
     # contract.
     lines.append("\n## Internal identifiers (do NOT repeat to the user)")
     lines.append(f"- Primary: `{entity.get('physical_table', '?')}`")
-    rollup_physicals = [r.get("physical_table") for r in rollups if r.get("physical_table")]
+    rollup_physicals = [
+        r.get("physical_table") for r in rollups if r.get("physical_table")
+    ]
     if rollup_physicals:
         lines.append(
             "- Rollups: "
             + ", ".join(f"`{t}`" for t in rollup_physicals[:8])
-            + ("" if len(rollup_physicals) <= 8 else f" (+{len(rollup_physicals) - 8} more)")
+            + (
+                ""
+                if len(rollup_physicals) <= 8
+                else f" (+{len(rollup_physicals) - 8} more)"
+            )
         )
 
     return "\n".join(lines)

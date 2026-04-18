@@ -43,8 +43,7 @@ from dataclasses import dataclass, field
 import sqlglot
 from sqlglot import exp
 
-from src.semantic.schema import DataContextDocument, DcdEntity, DcdMetric
-
+from src.semantic.schema import DataContextDocument, DcdMetric
 
 _SYSTEM_TABLES = frozenset(
     {
@@ -62,7 +61,7 @@ class ValidationIssue:
     """One problem the validator found."""
 
     severity: str  # "error" | "warning"
-    code: str      # "unknown_table" | "unknown_column" | "metric_filter_missing"
+    code: str  # "unknown_table" | "unknown_column" | "metric_filter_missing"
     message: str
     suggestion: str | None = None
 
@@ -96,7 +95,7 @@ class EntityCatalog:
     """
 
     slug: str
-    physical_tables: set[str]          # primary + all rollup tables
+    physical_tables: set[str]  # primary + all rollup tables
     columns_by_table: dict[str, set[str]]  # physical_table → {col_name, …}
     metrics: list[DcdMetric]
 

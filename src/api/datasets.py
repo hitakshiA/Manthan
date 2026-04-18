@@ -7,6 +7,7 @@ lightweight schema summary, and delete.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import tempfile
 from collections.abc import AsyncIterator
@@ -49,6 +50,12 @@ from src.tools.context_tool import get_context
 from src.tools.schema_tool import SchemaSummary, get_schema
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
+
+# Module-level anchor for fire-and-forget background tasks. asyncio's
+# scheduler holds only a weak reference to tasks it hasn't awaited, so
+# without this anchor long-running ingestion jobs can be garbage-
+# collected mid-pipeline. Callers add(), and discard() on completion.
+_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 
 def get_llm_client_factory() -> LlmClientFactory:
@@ -250,7 +257,9 @@ async def connect_url(
                 ),
             )
         except Exception as exc:
-            raise HTTPException(status_code=400, detail=f"URL load failed: {exc}") from exc
+            raise HTTPException(
+                status_code=400, detail=f"URL load failed: {exc}"
+            ) from exc
 
     # Register dataset + run the shared Silver/Gold tail.
     entry = state.registry.register(load_result)
@@ -264,7 +273,9 @@ async def connect_url(
             skip_clarification=True,
         )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"URL ingest failed: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"URL ingest failed: {exc}"
+        ) from exc
 
     return _summarize(state, final_entry.dataset_id)
 
@@ -333,7 +344,6 @@ async def upload_dataset_async(
     #
     # Simplest correct approach: run gateway.load() synchronously (fast,
     # <1s) to get the dataset_id, then background the rest.
-    from src.ingestion.gateway import create_default_gateway
     from src.ingestion.validators import validate_file
 
     settings = get_settings()
@@ -374,7 +384,12 @@ async def upload_dataset_async(
         finally:
             temp_path.unlink(missing_ok=True)
 
-    asyncio.create_task(_run_pipeline())
+    # Hold a module-level reference to the background task so it isn't
+    # GC'd mid-flight (see RUF006). The pipeline records its own state
+    # in AppState; completion just drops the reference.
+    task = asyncio.create_task(_run_pipeline())
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
 
     return AsyncUploadResponse(dataset_id=dataset_id, status="processing")
 
@@ -400,6 +415,7 @@ async def stream_pipeline_progress(
         # Check if already completed — replay from progress list
         progress = state.dataset_progress.get(dataset_id)
         if progress:
+
             async def _replay() -> AsyncIterator[str]:
                 yield f"data: {json.dumps({'type': 'complete', 'dataset_id': dataset_id})}\n\n"
 
@@ -438,7 +454,7 @@ async def stream_pipeline_progress(
             while True:
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=300.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keepalive\n\n"
                     continue
 
@@ -570,7 +586,9 @@ async def refresh_dataset(
     # ── 1. Resolve target ─────────────────────────────────
     target_dcd = state.resolve_entity(slug_or_id)
     if target_dcd is None:
-        raise HTTPException(status_code=404, detail=f"Unknown dataset/entity: {slug_or_id}")
+        raise HTTPException(
+            status_code=404, detail=f"Unknown dataset/entity: {slug_or_id}"
+        )
     target_id = target_dcd.dataset.id
 
     # ── 2. Capture customizations from current DCD ────────
@@ -605,7 +623,12 @@ async def refresh_dataset(
             llm_client_factory=LlmClient,
             skip_clarification=True,  # refresh is autonomous
         )
-    except (IngestionError, ProfilingError, SqlValidationError, DcdValidationError) as exc:
+    except (
+        IngestionError,
+        ProfilingError,
+        SqlValidationError,
+        DcdValidationError,
+    ) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     new_id = new_entry.dataset_id
@@ -661,10 +684,8 @@ async def refresh_dataset(
     # ── 6. Tear down the temporary dataset_id entry ───────
     state.dcds.pop(new_id, None)
     state.gold_table_names.pop(new_id, None)
-    try:
+    with contextlib.suppress(Exception):
         state.registry.delete(new_id)
-    except Exception:
-        pass
 
     # Drop the old physical table + parquet cache (best effort).
     try:
@@ -718,9 +739,27 @@ def _extract_column_refs(expression: str) -> list[str]:
         refs.add(match.group(1))
     # Ignore standard SQL keywords + common aggregation functions.
     stopwords = {
-        "sum", "count", "avg", "min", "max", "distinct",
-        "case", "when", "then", "else", "end", "null", "is", "not",
-        "and", "or", "true", "false", "from", "where", "as",
+        "sum",
+        "count",
+        "avg",
+        "min",
+        "max",
+        "distinct",
+        "case",
+        "when",
+        "then",
+        "else",
+        "end",
+        "null",
+        "is",
+        "not",
+        "and",
+        "or",
+        "true",
+        "false",
+        "from",
+        "where",
+        "as",
     }
     for match in re.finditer(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b", expression):
         token = match.group(1)

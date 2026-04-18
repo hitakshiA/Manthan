@@ -16,7 +16,6 @@ continue querying today without re-ingesting.
 
 from __future__ import annotations
 
-import asyncio
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -68,9 +67,7 @@ class AppState:
         default_factory=dict
     )
     dataset_progress: dict[str, list[dict[str, object]]] = field(default_factory=dict)
-    dataset_progress_queues: dict[str, dict[str, object]] = field(
-        default_factory=dict
-    )
+    dataset_progress_queues: dict[str, dict[str, object]] = field(default_factory=dict)
     python_sessions: PythonSessionManager = field(default_factory=PythonSessionManager)
     agent_tasks: AgentTaskStore = field(default_factory=AgentTaskStore)
     ask_user: AskUserRegistry = field(default_factory=AskUserRegistry)
@@ -107,7 +104,11 @@ class AppState:
         :meth:`connection_fetchone` for the common case.
         """
         with self.connection_lock:
-            return self.connection.execute(sql, params) if params is not None else self.connection.execute(sql)
+            return (
+                self.connection.execute(sql, params)
+                if params is not None
+                else self.connection.execute(sql)
+            )
 
     def connection_fetchall(
         self,
@@ -334,7 +335,8 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
                     update={
                         "slug": dcd.dataset.entity.slug,
                         "name": dcd.dataset.entity.name,
-                        "description": dcd.dataset.entity.description or entity.description,
+                        "description": dcd.dataset.entity.description
+                        or entity.description,
                     }
                 )
             dcd = dcd.model_copy(

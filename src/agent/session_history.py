@@ -18,6 +18,7 @@ Scope:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 from pathlib import Path
@@ -50,7 +51,9 @@ def _store_dir() -> Path:
 
 
 def _session_file(session_id: str) -> Path:
-    safe = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in session_id)[:128]
+    safe = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in session_id)[
+        :128
+    ]
     return _store_dir() / f"{safe}.json"
 
 
@@ -108,10 +111,8 @@ def clear(session_id: str) -> None:
         _histories.pop(session_id, None)
     path = _session_file(session_id)
     if path.exists():
-        try:
+        with contextlib.suppress(Exception):
             path.unlink()
-        except Exception:
-            pass
 
 
 def _trim(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:

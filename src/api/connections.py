@@ -29,7 +29,6 @@ from pydantic import BaseModel, Field
 from src.core.credentials import VaultError
 from src.core.state import AppState, get_state
 
-
 router = APIRouter(prefix="/connections", tags=["connections"])
 
 StateDep = Annotated[AppState, Depends(get_state)]
@@ -47,8 +46,12 @@ class ConnectionInfo(BaseModel):
 
 class CreateConnectionRequest(BaseModel):
     label: str = Field(..., description="Exec-facing name, e.g. 'Production Postgres'.")
-    source_type: str = Field(..., description="postgres|mysql|snowflake|bigquery|s3|gcs|azure|gsheet|...")
-    secret: dict[str, Any] = Field(..., description="Credentials payload; shape depends on source_type.")
+    source_type: str = Field(
+        ..., description="postgres|mysql|snowflake|bigquery|s3|gcs|azure|gsheet|..."
+    )
+    secret: dict[str, Any] = Field(
+        ..., description="Credentials payload; shape depends on source_type."
+    )
 
 
 class UpdateConnectionRequest(BaseModel):
@@ -61,10 +64,7 @@ class UpdateConnectionRequest(BaseModel):
 def list_connections(state: StateDep) -> list[ConnectionInfo]:
     if state.credentials is None:
         return []
-    return [
-        ConnectionInfo(**row)
-        for row in state.credentials.list()
-    ]
+    return [ConnectionInfo(**row) for row in state.credentials.list()]
 
 
 @router.post("", response_model=ConnectionInfo)

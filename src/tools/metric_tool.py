@@ -82,13 +82,13 @@ class ComputeMetricError(Exception):
     """Raised when a metric call can't be honored."""
 
 
-def _resolve_entity(state: AppState, slug: str) -> tuple[DataContextDocument, DcdEntity]:
+def _resolve_entity(
+    state: AppState, slug: str
+) -> tuple[DataContextDocument, DcdEntity]:
     dcd = state.resolve_entity(slug)
     if dcd is None:
         known = sorted(state.entity_to_dataset.keys())
-        raise ComputeMetricError(
-            f"Unknown entity '{slug}'. Known entities: {known}"
-        )
+        raise ComputeMetricError(f"Unknown entity '{slug}'. Known entities: {known}")
     entity = dcd.dataset.entity
     if entity is None:
         raise ComputeMetricError(

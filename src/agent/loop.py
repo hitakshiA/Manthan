@@ -348,13 +348,21 @@ class ManthanAgent:
                         height=args.get("height", 200),
                     )
 
-                    result_str = json.dumps({"status": "rendered", "visual_id": visual_id})
+                    result_str = json.dumps(
+                        {"status": "rendered", "visual_id": visual_id}
+                    )
                     tool_calls_total += 1
                     tc_ms = (time.perf_counter() - tc_t0) * 1000
-                    yield events.tool_complete(name, f"Rendered: {args.get('visual_type', 'visual')}", tc_ms)
+                    yield events.tool_complete(
+                        name, f"Rendered: {args.get('visual_type', 'visual')}", tc_ms
+                    )
 
                     messages.append(
-                        {"role": "tool", "tool_call_id": tc["id"], "content": result_str}
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc["id"],
+                            "content": result_str,
+                        }
                     )
                     tools_this_turn.append(name)
                     continue
@@ -370,7 +378,9 @@ class ManthanAgent:
                         "allow_free_text": True,
                     }
                     if args.get("proposed_interpretation"):
-                        body["proposed_interpretation"] = args["proposed_interpretation"]
+                        body["proposed_interpretation"] = args[
+                            "proposed_interpretation"
+                        ]
                     if args.get("why_this_matters"):
                         body["why_this_matters"] = args["why_this_matters"]
                     if args.get("ambiguity_type"):
@@ -398,13 +408,15 @@ class ManthanAgent:
                         result_json = r_wait.json()
 
                         if result_json.get("timed_out"):
-                            result_str = json.dumps({
-                                "status": "timed_out",
-                                "note": (
-                                    "Exec did not respond within 30s. "
-                                    "Proceed with your proposed_interpretation."
-                                ),
-                            })
+                            result_str = json.dumps(
+                                {
+                                    "status": "timed_out",
+                                    "note": (
+                                        "Exec did not respond within 30s. "
+                                        "Proceed with your proposed_interpretation."
+                                    ),
+                                }
+                            )
                         else:
                             result_str = r_wait.text
                             answer = result_json.get("answer", "")
@@ -418,7 +430,11 @@ class ManthanAgent:
                     yield events.tool_complete(name, result_str[:400], tc_ms)
 
                     messages.append(
-                        {"role": "tool", "tool_call_id": tc["id"], "content": result_str}
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc["id"],
+                            "content": result_str,
+                        }
                     )
                     tools_this_turn.append(name)
                     continue
@@ -449,9 +465,7 @@ class ManthanAgent:
                     # original and let the client best-effort-render.
                     validation = await validate_artifact_html_async(html)
                     if not validation.ok and not validation.skipped:
-                        yield events.repairing_artifact(
-                            artifact_id, validation.error
-                        )
+                        yield events.repairing_artifact(artifact_id, validation.error)
                         try:
                             repaired = await self._repair_artifact_html(
                                 html, validation.error
@@ -475,9 +489,7 @@ class ManthanAgent:
                         from src.core.config import get_settings
 
                         artifact_dir = (
-                            Path(get_settings().data_directory)
-                            / dataset_id
-                            / "output"
+                            Path(get_settings().data_directory) / dataset_id / "output"
                         )
                         artifact_dir.mkdir(parents=True, exist_ok=True)
                         (artifact_dir / filename).write_text(html)
@@ -563,7 +575,7 @@ class ManthanAgent:
                         if columns and rows and total_cells <= 200:
                             sql_text = args.get("sql", "")
                             for row in rows:
-                                for cell, col in zip(row, columns):
+                                for cell, col in zip(row, columns, strict=False):
                                     if not isinstance(cell, (int, float)):
                                         continue
                                     if isinstance(cell, bool):
@@ -577,9 +589,7 @@ class ManthanAgent:
                                             cell, unit_guess
                                         ),
                                         label=_humanize_column_name(col),
-                                        description=_describe_sql_cell(
-                                            col, sql_text
-                                        ),
+                                        description=_describe_sql_cell(col, sql_text),
                                         entity=None,
                                         metric_ref=None,
                                         filters_applied=[],
@@ -615,9 +625,11 @@ class ManthanAgent:
                         except Exception:
                             cm_cells = 0
                         metric_unit = parsed.get("metric_unit")
-                        metric_label = parsed.get(
-                            "metric_label"
-                        ) or parsed.get("metric_slug") or name
+                        metric_label = (
+                            parsed.get("metric_label")
+                            or parsed.get("metric_slug")
+                            or name
+                        )
                         metric_desc = parsed.get("metric_description")
                         metric_filters = (
                             [parsed["metric_filter"]]
@@ -627,7 +639,7 @@ class ManthanAgent:
                         metric_dimensions = parsed.get("dimensions") or []
                         if cm_cols and cm_rows and cm_cells <= 200:
                             for row in cm_rows:
-                                for cell, col in zip(row, cm_cols):
+                                for cell, col in zip(row, cm_cols, strict=False):
                                     if not isinstance(cell, (int, float)):
                                         continue
                                     if isinstance(cell, bool):
@@ -653,9 +665,7 @@ class ManthanAgent:
                                         dimensions=list(metric_dimensions),
                                         grain=parsed.get("grain"),
                                         sql=parsed.get("sql_used"),
-                                        row_count_scanned=parsed.get(
-                                            "row_count"
-                                        ),
+                                        row_count_scanned=parsed.get("row_count"),
                                         run_id=session_id,
                                         unit=metric_unit,
                                     )
@@ -756,8 +766,7 @@ class ManthanAgent:
                     "role": "user",
                     "content": (
                         "Here is the broken artifact HTML. Return the "
-                        "complete fixed HTML document, nothing else.\n\n"
-                        + broken_html
+                        "complete fixed HTML document, nothing else.\n\n" + broken_html
                     ),
                 },
             ],
@@ -810,9 +819,7 @@ def _content_cites_numbers(text: str) -> bool:
     if re.search(r"\b\d+(?:\.\d+)?\s*%", text):
         return True
     # Big integers (4+ digits, likely counts): "313,000" or "313000 flights"
-    if re.search(r"\b\d{1,3}(?:,\d{3})+\b", text):
-        return True
-    return False
+    return bool(re.search(r"\b\d{1,3}(?:,\d{3})+\b", text))
 
 
 def _describe_sql_cell(
@@ -912,11 +919,33 @@ def _humanize_column_name(name: str) -> str:
 
 
 _MONEY_COL_HINTS = (
-    "revenue", "expenditure", "spending", "spend", "cost", "price",
-    "amount", "total", "debt", "funding", "budget", "tax", "wage",
-    "income", "profit", "loss", "salary", "pay", "capital",
-    "value", "assets", "liabilities", "subtotal", "grand_total",
-    "usd", "dollars", "dollar",
+    "revenue",
+    "expenditure",
+    "spending",
+    "spend",
+    "cost",
+    "price",
+    "amount",
+    "total",
+    "debt",
+    "funding",
+    "budget",
+    "tax",
+    "wage",
+    "income",
+    "profit",
+    "loss",
+    "salary",
+    "pay",
+    "capital",
+    "value",
+    "assets",
+    "liabilities",
+    "subtotal",
+    "grand_total",
+    "usd",
+    "dollars",
+    "dollar",
 )
 _PCT_COL_HINTS = ("pct", "percent", "_rate", "ratio", "share")
 # Columns whose values are labels/dimensions even when stored as
@@ -924,9 +953,23 @@ _PCT_COL_HINTS = ("pct", "percent", "_rate", "ratio", "share")
 # sense as "Cited numbers" with audit drawers ("how was the year 2019
 # calculated?" is nonsense).
 _DIMENSION_COL_PATTERNS = (
-    "year", "month", "day", "quarter", "week", "fiscal_year", "fy",
-    "_id", "_code", "_key", "_sku", "zip", "zipcode", "postal",
-    "fips", "pin", "phone",
+    "year",
+    "month",
+    "day",
+    "quarter",
+    "week",
+    "fiscal_year",
+    "fy",
+    "_id",
+    "_code",
+    "_key",
+    "_sku",
+    "zip",
+    "zipcode",
+    "postal",
+    "fips",
+    "pin",
+    "phone",
 )
 
 
@@ -940,8 +983,7 @@ def _is_dimension_column(name: str) -> bool:
     for hint in _DIMENSION_COL_PATTERNS:
         bare = hint.lstrip("_")
         if (
-            low == hint
-            or low == bare
+            low in (hint, bare)
             or low.endswith("_" + bare)
             or low.startswith(bare + "_")
         ):

@@ -560,7 +560,7 @@ def numeric_claim(
     variants = _format_variants(value, unit)
     # Ensure the primary formatted string is always in the list first
     if formatted and formatted not in variants:
-        variants = [formatted] + variants
+        variants = [formatted, *variants]
     elif formatted:
         variants = [formatted] + [v for v in variants if v != formatted]
     return AgentEvent(

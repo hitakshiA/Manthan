@@ -205,7 +205,13 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     },
                     "ambiguity_type": {
                         "type": "string",
-                        "enum": ["intent", "vague_goal", "parameter", "value", "contextual"],
+                        "enum": [
+                            "intent",
+                            "vague_goal",
+                            "parameter",
+                            "value",
+                            "contextual",
+                        ],
                         "description": "MAC-taxonomy classification of the ambiguity (see prompt for definitions).",
                     },
                 },
@@ -356,9 +362,14 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "visual_type": {
                         "type": "string",
                         "enum": [
-                            "stat_card", "stat_strip", "mini_chart",
-                            "chart_insight", "comparison", "heatmap",
-                            "callout", "progress",
+                            "stat_card",
+                            "stat_strip",
+                            "mini_chart",
+                            "chart_insight",
+                            "comparison",
+                            "heatmap",
+                            "callout",
+                            "progress",
                         ],
                         "description": "Type of inline visual",
                     },

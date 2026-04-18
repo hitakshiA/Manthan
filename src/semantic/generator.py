@@ -278,7 +278,11 @@ def _rollup_from_physical_name(gold_table: str, physical_name: str) -> DcdRollup
     ``src/materialization/summarizer.py`` so the entity's rollup index
     stays in sync with what was actually materialized.
     """
-    suffix = physical_name[len(gold_table) + 1 :] if physical_name.startswith(gold_table + "_") else physical_name
+    suffix = (
+        physical_name[len(gold_table) + 1 :]
+        if physical_name.startswith(gold_table + "_")
+        else physical_name
+    )
     if suffix in _GRAIN_SUFFIXES:
         return DcdRollup(
             slug=suffix,
@@ -354,12 +358,9 @@ def build_entity(
             metrics (the old Phase 1 behavior).
     """
     rollups = [
-        _rollup_from_physical_name(gold_table_name, name)
-        for name in summary_tables
+        _rollup_from_physical_name(gold_table_name, name) for name in summary_tables
     ]
-    metrics: list[DcdMetric] = (
-        _seed_metrics_from_columns(columns) if columns else []
-    )
+    metrics: list[DcdMetric] = _seed_metrics_from_columns(columns) if columns else []
     return DcdEntity(
         slug=_entity_slug_from_stem(stem),
         name=dataset_name or _humanize_name(stem),
@@ -390,9 +391,7 @@ def _seed_metrics_from_columns(columns: list[DcdColumn]) -> list[DcdMetric]:
     # them means the validator won't reject sensible exec questions
     # ("revenue by status") on a seeded metric.
     valid_dims = [
-        c.name
-        for c in columns
-        if c.role in ("dimension", "temporal", "identifier")
+        c.name for c in columns if c.role in ("dimension", "temporal", "identifier")
     ]
 
     seen_slugs: set[str] = set()
@@ -405,10 +404,7 @@ def _seed_metrics_from_columns(columns: list[DcdColumn]) -> list[DcdMetric]:
         agg = (col.aggregation or "SUM").strip().upper()
         expression, semantics, unit = _metric_expression_for_column(col, agg)
         label = col.label or _humanize_name(col.name).title()
-        description = (
-            col.description.strip()
-            or f"{label} computed as {expression}."
-        )
+        description = col.description.strip() or f"{label} computed as {expression}."
         seeded.append(
             DcdMetric(
                 slug=slug,
@@ -437,7 +433,10 @@ def _metric_expression_for_column(
     # conservative: a false positive ("total_usd" on something that
     # isn't dollars) is more painful than a missing unit.
     lower = name.lower()
-    if any(s in lower for s in ("_usd", "_amount_usd", "revenue", "sales", "subtotal", "price")):
+    if any(
+        s in lower
+        for s in ("_usd", "_amount_usd", "revenue", "sales", "subtotal", "price")
+    ):
         unit = "USD"
     elif any(s in lower for s in ("_pct", "_percent", "_rate")):
         unit = "percent"

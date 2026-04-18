@@ -42,8 +42,8 @@ from src.ingestion.base import LoadResult, validate_identifier
 class DltRunRequest:
     """One SaaS-ingest request from the API layer."""
 
-    source: str                # "stripe" | "github" | "notion" | "filesystem" | ...
-    resource: str | None       # top-level resource to pull (e.g. "charges" for Stripe)
+    source: str  # "stripe" | "github" | "notion" | "filesystem" | ...
+    resource: str | None  # top-level resource to pull (e.g. "charges" for Stripe)
     credentials: dict[str, Any]
     destination_table: str
 
@@ -124,9 +124,7 @@ def run_dlt_pipeline(
             ).fetchone()[0]
         )
         col_count = len(
-            connection.execute(
-                f'DESCRIBE "{request.destination_table}"'
-            ).fetchall()
+            connection.execute(f'DESCRIBE "{request.destination_table}"').fetchall()
         )
 
     return LoadResult(
@@ -149,16 +147,20 @@ def _build_source(request: DltRunRequest) -> Any:
     """
     creds = request.credentials
     if request.source == "filesystem":
-        from dlt.sources.filesystem import filesystem, read_csv, read_parquet  # type: ignore
+        from dlt.sources.filesystem import (  # type: ignore
+            filesystem,
+            read_csv,
+            read_parquet,
+        )
 
         bucket_url = creds.get("bucket_url")
         file_glob = creds.get("file_glob", "*.csv")
         if not bucket_url:
             raise ValueError("filesystem source requires credentials['bucket_url']")
         reader = read_parquet if file_glob.endswith("parquet") else read_csv
-        return (filesystem(bucket_url=bucket_url, file_glob=file_glob) | reader()).with_name(
-            request.resource or "imported"
-        )
+        return (
+            filesystem(bucket_url=bucket_url, file_glob=file_glob) | reader()
+        ).with_name(request.resource or "imported")
     if request.source == "github":
         from dlt.sources.github import github_reactions  # type: ignore
 
@@ -194,10 +196,16 @@ def list_available_sources() -> list[dict[str, Any]]:
             "label": "Cloud filesystem (S3/GCS/Azure)",
             "ready": True,
             "credential_schema": {
-                "bucket_url": {"type": "string", "required": True,
-                               "description": "s3://bucket/prefix or gs://…"},
-                "file_glob":  {"type": "string", "required": False,
-                               "description": "*.csv / *.parquet / *.json"},
+                "bucket_url": {
+                    "type": "string",
+                    "required": True,
+                    "description": "s3://bucket/prefix or gs://…",
+                },
+                "file_glob": {
+                    "type": "string",
+                    "required": False,
+                    "description": "*.csv / *.parquet / *.json",
+                },
             },
         },
         {
@@ -205,8 +213,8 @@ def list_available_sources() -> list[dict[str, Any]]:
             "label": "GitHub (issues, reactions, pulls)",
             "ready": True,
             "credential_schema": {
-                "owner":        {"type": "string", "required": True},
-                "repo":         {"type": "string", "required": True},
+                "owner": {"type": "string", "required": True},
+                "repo": {"type": "string", "required": True},
                 "access_token": {"type": "string", "required": True, "secret": True},
             },
         },

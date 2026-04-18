@@ -58,9 +58,7 @@ def execute_sql(
     # and other soft issues are warnings — they don't block exec.
     dcd = state.dcds[sql_request.dataset_id]
     catalog = EntityCatalog.from_dcd(dcd)
-    extras = set(state.gold_table_names.values()) | {
-        tname for tname in _list_raw_tables(state)
-    }
+    extras = set(state.gold_table_names.values()) | set(_list_raw_tables(state))
     result = validate_sql(
         sql_request.sql,
         entity=catalog,

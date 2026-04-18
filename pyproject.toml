@@ -101,19 +101,19 @@ ignore = []
 [tool.ruff.lint.per-file-ignores]
 # Tests may use asserts and skip some strictness.
 "tests/**" = ["S101"]
-# Stress test scripts use 1A/1B/1C/1D cell function names that intentionally
-# mirror the tier matrix from the plan and can use pragmatic error handling.
-# Agent prompt strings use × (multiplication sign) for data shape notation
-"src/agent/prompt.py" = ["RUF001"]
-"scripts/stress_test/**" = [
-    "N802",   # cell_1A_taxi etc. deliberately match the plan's tier matrix
-    "SIM105", # pragmatic try/except/pass is fine in ad-hoc harness scripts
-    "E501",   # f-string Python code blocks can legitimately exceed 88 cols
-    "RUF001", # narrative strings use × (multiplication sign) — intentional
-    "RUF002", # same — in docstrings
-    "RUF003", # same — in inline comments
-    "RUF100", # unused noqa comments in ad-hoc scripts aren't worth chasing
-]
+# Files with embedded prompt / SQL / CSS strings and intentional en-dash /
+# multiplication-sign unicode that shouldn't be line-wrapped or ASCII-folded.
+# Keeping the long strings intact is more readable than shoving continuation
+# backslashes into every prompt.
+"src/agent/prompt.py" = ["RUF001", "RUF002", "RUF003", "E501"]
+"src/agent/tools.py" = ["E501"]
+"src/agent/artifact_style.py" = ["E501"]
+"src/agent/session_history.py" = ["RUF002", "RUF003"]
+"src/agent/artifact_repair.py" = ["RUF002", "RUF003"]
+"src/agent/loop.py" = ["RUF002", "RUF003"]
+"src/api/audit.py" = ["E501", "RUF002", "RUF003"]
+"src/core/credentials.py" = ["E501"]
+"src/api/datasets.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"
