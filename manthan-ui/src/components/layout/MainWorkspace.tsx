@@ -129,7 +129,7 @@ function FirstOpen() {
           }}
         />
 
-        <div className="flex flex-col items-center text-center w-full max-w-2xl">
+        <div className="flex flex-col items-center text-center">
           <TegakiRenderer
             font={italianno}
             time={{ mode: "uncontrolled", duration: 1.9 }}
@@ -150,7 +150,7 @@ function FirstOpen() {
 
           <p
             className={cn(
-              "font-body text-white/70 text-sm sm:text-lg mt-4 leading-relaxed font-medium transition-all duration-700 ease-out",
+              "font-body text-white/70 text-sm sm:text-lg max-w-2xl mt-4 leading-relaxed font-medium transition-all duration-700 ease-out",
               step === "writing"
                 ? "opacity-0 translate-y-2"
                 : "opacity-100 translate-y-0",
@@ -220,7 +220,7 @@ function FirstOpen() {
                 }}
                 disabled={localUploading}
                 className={cn(
-                  "liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium",
+                  "liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium whitespace-nowrap",
                   "hover:scale-[1.03] transition-transform cursor-pointer",
                   dragOver && "scale-[1.03] ring-2 ring-white/40",
                   localUploading && "opacity-60 pointer-events-none",
@@ -232,14 +232,14 @@ function FirstOpen() {
 
               <button
                 onClick={showExplore}
-                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium whitespace-nowrap hover:scale-[1.03] transition-transform cursor-pointer"
               >
                 Explore existing
               </button>
 
               <button
                 onClick={() => setShowPicker(true)}
-                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
+                className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium whitespace-nowrap hover:scale-[1.03] transition-transform cursor-pointer"
               >
                 Connect a warehouse
               </button>
