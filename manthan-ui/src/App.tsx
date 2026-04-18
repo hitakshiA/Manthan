@@ -6,7 +6,6 @@ import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { CalculationDrawer } from "@/components/audit/CalculationDrawer";
 import { SourcePicker } from "@/components/datasets/SourcePicker";
 import { useAgentStore } from "@/stores/agent-store";
-import { useSessionStore } from "@/stores/session-store";
 import { useUIStore } from "@/stores/ui-store";
 
 export default function App() {
@@ -15,13 +14,12 @@ export default function App() {
   const analyzeMode = useUIStore((s) => s.analyzeMode);
   const sourcePickerOpen = useUIStore((s) => s.sourcePickerOpen);
   const setSourcePickerOpen = useUIStore((s) => s.setSourcePickerOpen);
-  // Once any dataset is selected (or the user hit Start Analyzing, or
-  // a conversation has started) we pin the sidebar open. The only
-  // state that leaves the sidebar hidden is the first-run landing
-  // page where there's nothing to navigate back to yet.
-  const activeDatasetId = useSessionStore((s) => s.activeDatasetId);
+  // Sidebar is a chat-space affordance — it appears once the user has
+  // committed to a conversation (Start Analyzing pressed, or events
+  // streaming). Dataset lister + dataset profile stay unframed so the
+  // semantic contract reads cleanly, and the landing page stays clean.
   const showSidebar =
-    (hasContent || analyzeMode || !!activeDatasetId) && !artifactFullscreen;
+    (hasContent || analyzeMode) && !artifactFullscreen;
 
   return (
     <ErrorBoundary>
