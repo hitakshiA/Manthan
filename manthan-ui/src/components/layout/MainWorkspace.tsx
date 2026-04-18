@@ -27,7 +27,7 @@ import {
 import { TegakiRenderer } from "tegaki/react";
 import italianno from "tegaki/fonts/italianno";
 import { queryStream } from "@/api/agent";
-import { uploadDatasetAsync, uploadMultiDataset, refreshDataset } from "@/api/datasets";
+import { refreshDataset } from "@/api/datasets";
 import type { RenderSpec } from "@/types/render-spec";
 import type { DatasetSummary, SchemaSummary } from "@/types/api";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
@@ -52,23 +52,12 @@ function describeDataset(schema: SchemaSummary): string {
    ═══════════════════════════════════════════════════════ */
 
 function FirstOpen() {
-  // View lifted into the ui-store so the sidebar's Datasets button
-  // can route here from anywhere. Home / Datasets rail buttons both
-  // clear activeDataset but route to different sub-views of this
-  // component via ``landingView``.
   const view = useUIStore((s) => s.landingView);
   const setView = useUIStore((s) => s.setLandingView);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const setShowPicker = useUIStore((s) => s.setSourcePickerOpen);
   const { datasets, fetchDatasets } = useDatasetStore();
-  const startProcessing = useProcessingStore((s) => s.startProcessing);
-  const [localUploading, setLocalUploading] = useState(false);
 
   // Hero choreography: handwriting lays down the wordmark, then the
-  // subtitle + trust line fade in, then the CTA row joins. Driven by
-  // Tegaki's onComplete (real timing, not a guessed delay) plus a short
-  // lead-in so the subtitle doesn't feel stapled to the last stroke.
+  // subtitle + trust line fade in, then the CTA row joins.
   const [step, setStep] = useState<"writing" | "subtitle" | "ready">("writing");
   useEffect(() => {
     if (step === "subtitle") {
@@ -77,26 +66,6 @@ function FirstOpen() {
     }
   }, [step]);
 
-  const showExplore = () => { fetchDatasets(); setView("explore"); };
-
-  const handleFiles = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
-    setLocalUploading(true);
-    try {
-      if (files.length === 1) {
-        const { dataset_id } = await uploadDatasetAsync(files[0]);
-        startProcessing(dataset_id);
-      } else {
-        // Multi-file bundle — FK relationships auto-detected.
-        const ds = await uploadMultiDataset(files);
-        startProcessing(ds.dataset_id);
-      }
-    } catch { /* */ } finally { setLocalUploading(false); }
-  }, [startProcessing]);
-
-  // Entering explore-mode from the sidebar doesn't come with a
-  // fetchDatasets() call — the store action just flips the view.
-  // Pull the list here so the rail button lands on fresh data.
   useEffect(() => {
     if (view === "explore") fetchDatasets();
   }, [view, fetchDatasets]);
@@ -126,28 +95,8 @@ function FirstOpen() {
         </video>
       </div>
 
-      {/* Hero — nudged above center so it sits comfortably above the fold */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center -mt-[24vh]">
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          className="hidden"
-          accept=".csv,.tsv,.parquet,.json,.xlsx,.xls"
-          onChange={(e) => {
-            const files = Array.from(e.target.files ?? []);
-            if (files.length > 0) handleFiles(files);
-          }}
-        />
-
-        <div className="flex flex-col items-center text-center">
-          {/* Wordmark — handwritten live via Tegaki. The Italianno bundle
-              is tiny (cursive subset) and plays once on mount; we gate
-              the rest of the hero on its onComplete so the subtitle feels
-              earned, not stapled. TegakiRenderer renders a block div by
-              default, so we wrap it in an inline-flex container and
-              force text-align center on the renderer itself — otherwise
-              the word sits left-aligned in a full-width block. */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 -mt-[14vh] sm:-mt-[24vh]">
+        <div className="flex flex-col items-center text-center w-full max-w-2xl">
           <TegakiRenderer
             font={italianno}
             time={{ mode: "uncontrolled", duration: 1.9 }}
@@ -156,7 +105,7 @@ function FirstOpen() {
             }
             className="text-white select-none"
             style={{
-              fontSize: "clamp(5rem, 13vw, 9.5rem)",
+              fontSize: "clamp(4rem, 16vw, 9.5rem)",
               lineHeight: 0.95,
               textAlign: "center",
               display: "inline-block",
@@ -168,7 +117,7 @@ function FirstOpen() {
 
           <p
             className={cn(
-              "font-body text-white/70 text-base sm:text-lg max-w-2xl mt-4 leading-relaxed font-medium transition-all duration-700 ease-out",
+              "font-body text-white/70 text-sm sm:text-lg mt-4 leading-relaxed font-medium transition-all duration-700 ease-out",
               step === "writing"
                 ? "opacity-0 translate-y-2"
                 : "opacity-100 translate-y-0",
@@ -179,13 +128,9 @@ function FirstOpen() {
             senior analyst, fast enough for the meeting before the meeting.
           </p>
 
-          {/* Trust signals — governed metrics + auditable lineage are the
-              load-bearing Layer 1 primitives, and multi-source ingestion
-              is what the exec actually plugs in. Stated briefly so the
-              hero doesn't turn into a brochure. */}
           <div
             className={cn(
-              "font-body text-white/55 text-xs mt-3 flex items-center gap-2.5 flex-wrap justify-center transition-all duration-700 ease-out delay-150",
+              "font-body text-white/55 text-[11px] sm:text-xs mt-3 flex items-center gap-2 sm:gap-2.5 flex-wrap justify-center transition-all duration-700 ease-out delay-150",
               step === "writing"
                 ? "opacity-0 translate-y-2"
                 : "opacity-100 translate-y-0",
@@ -207,56 +152,25 @@ function FirstOpen() {
 
           <div
             className={cn(
-              "mt-10 flex items-center gap-4 transition-all duration-700 ease-out",
+              "mt-8 sm:mt-10 transition-all duration-700 ease-out",
               step === "ready"
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-3 pointer-events-none",
             )}
           >
-            <button
-              onClick={() => fileRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                // Folder drops arrive as a flat file list via
-                // dataTransfer.files — any .csv/.parquet/etc. inside the
-                // dropped folder is picked up; the backend's FK
-                // detection stitches them into one bundle.
-                const all = Array.from(e.dataTransfer.files ?? []);
-                const allowed = /\.(csv|tsv|parquet|json|xlsx|xls)$/i;
-                const files = all.filter((f) => allowed.test(f.name));
-                if (files.length > 0) handleFiles(files);
-              }}
-              disabled={localUploading}
-              className={cn(
-                "liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium",
-                "hover:scale-[1.03] transition-transform cursor-pointer",
-                dragOver && "scale-[1.03] ring-2 ring-white/40",
-                localUploading && "opacity-60 pointer-events-none",
-              )}
-              title="Single file, multiple files, or a whole folder — FK relationships auto-detected"
+            <a
+              href="https://github.com/hitakshiA/Manthan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="liquid-glass rounded-full px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer inline-flex items-center gap-2.5"
             >
-              {localUploading ? "Uploading…" : "Drop a file or folder"}
-            </button>
-
-            <button
-              onClick={showExplore}
-              className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
-            >
-              Explore existing
-            </button>
-
-            <button
-              onClick={() => setShowPicker(true)}
-              className="liquid-glass rounded-full px-10 py-4 text-base text-white font-body font-medium hover:scale-[1.03] transition-transform cursor-pointer"
-            >
-              Connect a warehouse
-            </button>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.77 1.05.77 2.12 0 1.53-.01 2.77-.01 3.15 0 .31.21.67.8.56C20.21 21.37 23.5 17.08 23.5 12 23.5 5.73 18.27.5 12 .5Z" />
+              </svg>
+              View on GitHub
+            </a>
           </div>
         </div>
-
       </div>
     </div>
   );
