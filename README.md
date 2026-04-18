@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  <strong>Live demo: <a href="https://manthan.quest">manthan.quest</a></strong>
+</p>
+
+<p align="center">
+  <a href="https://manthan.quest"><img src="https://img.shields.io/badge/live-manthan.quest-brightgreen.svg" alt="Live demo"></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-blue.svg" alt="Python 3.12+"></a>
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-19-61dafb.svg" alt="React 19"></a>
   <a href="https://duckdb.org/"><img src="https://img.shields.io/badge/engine-DuckDB-fff000.svg" alt="DuckDB"></a>
@@ -345,6 +350,8 @@ Four tabs in the source picker. Three of them ship wired, the fourth is UI-ready
 ---
 
 ## Getting started
+
+> **Prefer to poke at it first?** A live instance runs at **[manthan.quest](https://manthan.quest)** — upload any CSV and work through the flow without installing anything.
 
 ### Prerequisites
 
