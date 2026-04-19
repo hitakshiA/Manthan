@@ -116,12 +116,39 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
 
     if parquet_files:
         # Alias the first parquet as the canonical ``dataset`` view.
+        # Also attempt to derive the entity slug from the parquet
+        # stem — agents naturally type ``SELECT * FROM startup_funding``
+        # when the entity slug is ``startup_funding``, not
+        # ``SELECT * FROM dataset``. Accept both so a misremembered
+        # table name doesn't bounce the agent into a retry loop.
+        # Stems look like ``gold_<slug>_<8hex>`` for the primary Gold
+        # parquet; rollups add ``_by_<dim>`` which we deliberately
+        # skip so the alias always maps to the base table.
         primary = parquet_files[0]
         escaped = str(primary).replace("'", "''")
         con.execute(
             f"CREATE OR REPLACE VIEW dataset AS SELECT * FROM read_parquet('{escaped}')"
         )
         df = con.execute("SELECT * FROM dataset").df()
+
+        import re as _re
+        stem = primary.stem
+        # gold_<slug>_<8hex>, no _by_ suffix → extract slug
+        m = _re.match(r"^gold_(.+)_[0-9a-f]{6,}$", stem)
+        if m and "_by_" not in stem:
+            slug = m.group(1)
+            if slug and slug != "dataset":
+                try:
+                    con.execute(
+                        f'CREATE OR REPLACE VIEW "{slug}" '
+                        f"AS SELECT * FROM dataset"
+                    )
+                    attached_views.append(slug)
+                except Exception:
+                    # Defensive — some slugs may collide with SQL
+                    # keywords. ``dataset`` remains the canonical
+                    # name either way.
+                    pass
 
     _SESSION_GLOBALS.clear()
     _SESSION_GLOBALS.update(

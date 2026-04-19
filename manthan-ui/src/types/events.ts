@@ -25,8 +25,10 @@ export type AgentEventType =
   | "error"
   | "sql_result"
   | "narrative"
+  | "building_artifact"
   | "artifact_created"
   | "artifact_updated"
+  | "repairing_artifact"
   | "inline_visual"
   | "numeric_claim";
 
@@ -165,7 +167,6 @@ export interface DoneEvent {
   tool_calls: number;
   elapsed_seconds: number;
   mode: string | null;
-  render_spec: Record<string, unknown> | null;
 }
 
 export interface ErrorEvent {
@@ -190,6 +191,19 @@ export interface SqlResultEvent {
 export interface NarrativeEvent {
   type: "narrative";
   text: string;
+}
+
+/** Emitted IMMEDIATELY when the agent calls ``create_artifact`` —
+ *  before any validation/repair runs. The UI uses this to open the
+ *  artifact panel with a skeleton state so the exec sees progress
+ *  during the 30s–3m repair window instead of a silent gap. Followed
+ *  by ``artifact_created`` (and optionally ``repairing_artifact`` in
+ *  between) once the final HTML is ready. */
+export interface BuildingArtifactEvent {
+  type: "building_artifact";
+  artifact_id: string;
+  title: string;
+  filename: string;
 }
 
 export interface ArtifactCreatedEvent {
@@ -282,6 +296,7 @@ export type AgentEvent =
   | ErrorEvent
   | SqlResultEvent
   | NarrativeEvent
+  | BuildingArtifactEvent
   | ArtifactCreatedEvent
   | ArtifactUpdatedEvent
   | RepairingArtifactEvent

@@ -1,13 +1,8 @@
 import { create } from "zustand";
 import type { AgentEvent, WaitingForUserEvent, PlanCreatedEvent } from "@/types/events";
-import type { RenderSpec } from "@/types/render-spec";
 import type { ConversationBlock, ArtifactState, ThinkingStep, NumericClaim } from "@/types/conversation";
 import { TOOL_BADGES, TOOL_LABELS } from "@/types/conversation";
-import { normalizeSpec } from "@/lib/normalize-spec";
 import { inferWorkFromTool } from "@/lib/work-inference";
-
-// Force bundler to keep normalizeSpec (prevent tree-shaking)
-if (typeof normalizeSpec !== "function") throw new Error("normalizeSpec missing");
 
 export type AgentPhase =
   | "idle"
@@ -35,7 +30,6 @@ interface AgentState {
   elapsedSeconds: number;
   pendingQuestion: WaitingForUserEvent | null;
   pendingPlan: PlanCreatedEvent | null;
-  renderSpec: RenderSpec | null;
   agentText: string;
   error: string | null;
   model: string | null;
@@ -69,6 +63,11 @@ interface AgentState {
    *  ``artifact_updated`` event. UI shows a "Polishing dashboard…"
    *  banner in the artifact panel while set. */
   repairingArtifact: { artifact_id: string; reason: string } | null;
+  /** Non-null from the moment the agent calls ``create_artifact`` until
+   *  the final ``artifact_created`` event lands. UI renders a
+   *  skeleton artifact panel during this window (can be 30s–3m for
+   *  large dashboards that trigger an LLM repair pass). */
+  buildingArtifact: { artifact_id: string; title: string; filename: string } | null;
 
   pushEvent: (event: AgentEvent) => void;
   addUserMessage: (text: string) => void;
@@ -240,7 +239,6 @@ export const useAgentStore = create<AgentState>((set) => ({
   elapsedSeconds: 0,
   pendingQuestion: null,
   pendingPlan: null,
-  renderSpec: null,
   agentText: "",
   error: null,
   model: null,
@@ -252,6 +250,7 @@ export const useAgentStore = create<AgentState>((set) => ({
   numericClaims: [],
   inspectedClaim: null,
   repairingArtifact: null,
+  buildingArtifact: null,
 
   setInspectedClaim: (claim) => set({ inspectedClaim: claim }),
 
@@ -282,6 +281,7 @@ export const useAgentStore = create<AgentState>((set) => ({
       numericClaims: [],
       inspectedClaim: null,
       repairingArtifact: null,
+      buildingArtifact: null,
     })),
 
   pushEvent: (event) =>
@@ -481,6 +481,19 @@ export const useAgentStore = create<AgentState>((set) => ({
         }
 
         // ── Artifact ──
+        case "building_artifact": {
+          // Agent called create_artifact; the (possibly long) validate
+          // + repair + save pipeline is now running server-side. Flag
+          // the panel as in-flight so the UI renders a skeleton
+          // instead of sitting silent.
+          patch.buildingArtifact = {
+            artifact_id: event.artifact_id,
+            title: event.title,
+            filename: event.filename,
+          };
+          break;
+        }
+
         case "artifact_created": {
           blocks = flushThinking(blocks);
           const art: ArtifactState = {
@@ -501,8 +514,9 @@ export const useAgentStore = create<AgentState>((set) => ({
             },
           ];
           patch.blocks = blocks;
-          // Fresh artifact lands after repair — drop the polishing banner.
+          // Fresh artifact lands after build/repair — drop the banners.
           patch.repairingArtifact = null;
+          patch.buildingArtifact = null;
           break;
         }
 
@@ -642,15 +656,6 @@ export const useAgentStore = create<AgentState>((set) => ({
             },
           ];
           patch.blocks = blocks;
-
-          // Legacy: if render_spec exists and no artifact was created
-          if (event.render_spec && !state.artifact) {
-            try {
-              patch.renderSpec = normalizeSpec(event.render_spec);
-            } catch {
-              patch.renderSpec = null;
-            }
-          }
           break;
 
         case "error":
@@ -698,7 +703,6 @@ export const useAgentStore = create<AgentState>((set) => ({
       elapsedSeconds: 0,
       pendingQuestion: null,
       pendingPlan: null,
-      renderSpec: null,
       agentText: "",
       error: null,
       model: null,
@@ -710,6 +714,7 @@ export const useAgentStore = create<AgentState>((set) => ({
       numericClaims: [],
       inspectedClaim: null,
       repairingArtifact: null,
+      buildingArtifact: null,
     });
   },
 }));

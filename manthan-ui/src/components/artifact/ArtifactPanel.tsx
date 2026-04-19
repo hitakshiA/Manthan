@@ -63,6 +63,7 @@ interface ArtifactRuntimeError {
 export function ArtifactPanel({ fullscreen = false, onToggleFullscreen, onClose }: ArtifactPanelProps) {
   const artifact = useAgentStore((s) => s.artifact);
   const repairing = useAgentStore((s) => s.repairingArtifact);
+  const building = useAgentStore((s) => s.buildingArtifact);
   const [runtimeError, setRuntimeError] =
     useState<ArtifactRuntimeError | null>(null);
   const { retry, busy: retryBusy, lastQuestion } = useRetryLastQuery();
@@ -101,6 +102,59 @@ export function ArtifactPanel({ fullscreen = false, onToggleFullscreen, onClose 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
+
+  // Skeleton state: agent just called create_artifact and we're
+  // waiting on validation + repair. Show a live "building…" panel so
+  // the user sees progress instead of a silent side panel for ~30s–3m.
+  if (!artifact && building) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col h-full bg-surface-0",
+          !fullscreen && "border-l border-border",
+        )}
+      >
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-1 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[11px] text-text-faint font-body uppercase tracking-wider">
+              Dashboard
+            </span>
+            <span className="text-sm text-text-primary font-body font-medium truncate">
+              {building.title}
+            </span>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 text-text-faint hover:text-text-secondary rounded-md hover:bg-surface-sunken transition-all"
+              title="Close"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <div className="flex-1 min-h-0 p-6 overflow-hidden">
+          <div className="flex items-center gap-2 text-[13px] text-text-secondary font-body mb-4">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+            </span>
+            {repairing ? "Polishing dashboard…" : "Building dashboard…"}
+            <span className="text-text-faint">· this can take 1–3 min for complex visuals</span>
+          </div>
+          <div className="space-y-3">
+            <div className="h-8 w-2/3 rounded-md bg-surface-sunken animate-pulse" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-24 rounded-lg bg-surface-sunken animate-pulse" />
+              <div className="h-24 rounded-lg bg-surface-sunken animate-pulse" />
+            </div>
+            <div className="h-56 rounded-lg bg-surface-sunken animate-pulse" />
+            <div className="h-32 rounded-lg bg-surface-sunken animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!artifact) return null;
 

@@ -6,7 +6,7 @@ import { AskUserBlock } from "./AskUserBlock";
 import { ArtifactCardBlock } from "./ArtifactCardBlock";
 import { InlineVisualBlock } from "./InlineVisualBlock";
 import { FollowUpChips } from "./FollowUpChips";
-import { NarrativeBlock } from "@/components/render/shared/NarrativeBlock";
+import { NarrativeBlock } from "./NarrativeBlock";
 import { Check, AlertCircle, Clock, Wrench } from "lucide-react";
 import { ManthanLogo } from "@/components/ManthanLogo";
 
@@ -223,6 +223,11 @@ export function ConversationStream() {
             </div>
           )}
 
+          {/* Inline "building dashboard" chip — visible even when the
+              artifact side-panel is collapsed so the exec knows the
+              30s–3m repair pass is still making progress. */}
+          <BuildingArtifactChip />
+
           <div ref={bottomRef} />
         </div>
       </div>
@@ -238,6 +243,34 @@ export function ConversationStream() {
           Jump to latest ↓
         </button>
       )}
+    </div>
+  );
+}
+
+/** Chip shown while `create_artifact` is pending server-side — the
+ *  validate + repair + save pipeline can take 30s–3m on large
+ *  dashboards and previously the chat went silent through that gap. */
+function BuildingArtifactChip() {
+  const building = useAgentStore((s) => s.buildingArtifact);
+  const artifact = useAgentStore((s) => s.artifact);
+  const repairing = useAgentStore((s) => s.repairingArtifact);
+  // Only show while in-flight — i.e. building has fired but the final
+  // artifact hasn't landed yet (or landed with a different id).
+  if (!building) return null;
+  if (artifact && artifact.id === building.artifact_id) return null;
+  const label = repairing ? "Polishing dashboard…" : "Building dashboard…";
+  return (
+    <div className="max-w-2xl mx-auto flex items-center gap-3 py-3">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+      </span>
+      <span className="text-sm text-text-primary font-body font-medium">
+        {label}
+      </span>
+      <span className="text-sm text-text-faint font-body truncate">
+        {building.title} · this can take 1–3 min
+      </span>
     </div>
   );
 }

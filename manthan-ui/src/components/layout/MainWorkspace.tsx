@@ -7,7 +7,6 @@ import { QueryInput } from "@/components/workspace/QueryInput";
 import { ConversationStream } from "@/components/conversation/ConversationStream";
 import { ArtifactPanel } from "@/components/artifact/ArtifactPanel";
 import { InlineVisualPanel } from "@/components/conversation/InlineVisualPanel";
-import { RenderRouter } from "@/components/render/RenderRouter";
 import { RoleBar } from "@/components/datasets/RoleBar";
 import { ProcessingWizard } from "@/components/datasets/ProcessingWizard";
 import { MetricCard } from "@/components/datasets/MetricCard";
@@ -28,7 +27,6 @@ import { TegakiRenderer } from "tegaki/react";
 import italianno from "tegaki/fonts/italianno";
 import { queryStream } from "@/api/agent";
 import { uploadDatasetAsync, uploadMultiDataset, refreshDataset } from "@/api/datasets";
-import type { RenderSpec } from "@/types/render-spec";
 import type { DatasetSummary, SchemaSummary } from "@/types/api";
 import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { formatNumber, cn } from "@/lib/utils";
@@ -979,7 +977,7 @@ function DatasetProfile() {
         )}
 
         {/* ═══ Relationships constellation — THIS entity inside the semantic layer ═══ */}
-        {datasets.length > 1 && (
+        {datasets.length >= 1 && schema && (
           <section className="mb-10">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -1275,9 +1273,7 @@ function ReadyToQuery() {
 
 function ActiveWorkspace() {
   const artifact = useAgentStore((s) => s.artifact);
-  const renderSpec = useAgentStore((s) => s.renderSpec);
-  const phase = useAgentStore((s) => s.phase);
-  const isDone = phase === "done";
+  const buildingArtifact = useAgentStore((s) => s.buildingArtifact);
 
   const artifactOpen = useUIStore((s) => s.artifactOpen);
   const artifactFullscreen = useUIStore((s) => s.artifactFullscreen);
@@ -1288,14 +1284,19 @@ function ActiveWorkspace() {
   const setExpandedVisual = useUIStore((s) => s.setExpandedVisual);
   const setExpandedVisualFullscreen = useUIStore((s) => s.setExpandedVisualFullscreen);
 
-  // Auto-open the panel when a new artifact arrives
+  // Auto-open the panel when a new artifact arrives — OR as soon as
+  // the agent starts building one (so the skeleton is visible during
+  // the 30s–3m repair pass, not just after it finishes).
   useEffect(() => {
     if (artifact) setArtifactOpen(true);
   }, [artifact?.id, setArtifactOpen]);
 
-  const showArtifact = !!artifact && artifactOpen;
+  useEffect(() => {
+    if (buildingArtifact) setArtifactOpen(true);
+  }, [buildingArtifact?.artifact_id, setArtifactOpen]);
+
+  const showArtifact = (!!artifact || !!buildingArtifact) && artifactOpen;
   const showVisual = !!expandedVisual;
-  const hasLegacySpec = isDone && renderSpec && !artifact;
 
   // Fullscreen: visual takes precedence if it's in fullscreen, else artifact
   if (showVisual && expandedVisualFullscreen) {
@@ -1331,13 +1332,7 @@ function ActiveWorkspace() {
   return (
     <div className="flex flex-1 min-h-0">
       <div className={cn("flex flex-col min-w-0 min-h-0", showRightPanel ? "w-1/2" : "flex-1")}>
-        {hasLegacySpec ? (
-          <div className="flex-1 overflow-y-auto px-8 py-6">
-            <RenderRouter spec={renderSpec as RenderSpec} />
-          </div>
-        ) : (
-          <ConversationStream />
-        )}
+        <ConversationStream />
         <div className="px-6 pt-4 pb-6 border-t border-border shrink-0 bg-surface-0">
           <QueryInput variant="compact" />
         </div>

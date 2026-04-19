@@ -152,5 +152,4 @@ export interface AgentSyncResponse {
   turns: number;
   tool_calls: number;
   elapsed_seconds: number;
-  render_spec?: Record<string, unknown>;
 }

@@ -149,7 +149,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "for primary table + named views for all gold parquets), "
                 "OUTPUT_DIR (writable), DATA_DIR (read-only). Variables "
                 "persist across calls with same session_id. Write outputs "
-                "to OUTPUT_DIR (parquet files, render_spec.json). "
+                "to OUTPUT_DIR (parquet files). "
                 "NOTE: con here is SEPARATE from run_sql's connection."
             ),
             "parameters": {

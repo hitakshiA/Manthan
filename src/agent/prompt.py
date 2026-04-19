@@ -451,6 +451,19 @@ headlines, conservative palette.
 ALWAYS prefer the smallest output that answers the question. Don't
 build a brief for a single-number question.
 
+### Delivery mode — hard rule, not preference
+- Simple (single fact, one metric, one number): prose only.
+- Moderate (any comparison, "show me X by Y", "which Z is highest",
+  trend, distribution, ranking): MUST end with `emit_visual`.
+- Complex (root-cause, "why is X down", "what should I do",
+  recommend, explain, multi-facet diagnosis, strategic framing):
+  MUST end with `create_artifact` — brief or dashboard. Writing the
+  brief as prose instead of calling the tool is a bug, not a choice.
+
+If you've called one or more data tools AND the question is
+moderate or complex, the turn is NOT done until you call
+`emit_visual` or `create_artifact`. Do not answer as prose.
+
 ## Chart type guidance
 - Scalar → KPI card
 - 1 categorical × 1 numeric → bar

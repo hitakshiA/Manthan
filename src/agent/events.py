@@ -141,7 +141,6 @@ def done(
     tool_calls: int = 0,
     elapsed: float = 0.0,
     mode: str | None = None,
-    render_spec: dict[str, Any] | None = None,
 ) -> AgentEvent:
     return AgentEvent(
         type="done",
@@ -151,7 +150,6 @@ def done(
             "tool_calls": tool_calls,
             "elapsed_seconds": round(elapsed, 2),
             "mode": mode,
-            "render_spec": render_spec,
         },
     )
 
@@ -600,6 +598,21 @@ def artifact_updated(
             "artifact_id": artifact_id,
             "title": _mask(title[:200]),
             "code": _close_unclosed_try(_strip_empty_link_md(_mask(code))),
+            "filename": filename,
+        },
+    )
+
+
+def building_artifact(artifact_id: str, title: str, filename: str) -> AgentEvent:
+    """Emitted IMMEDIATELY when ``create_artifact`` starts — before
+    validation, repair, or disk write. The UI opens the artifact panel
+    with a skeleton state so the exec sees work-in-progress instead of
+    a silent 30s–3m gap while ``node --check`` and the repair LLM run."""
+    return AgentEvent(
+        type="building_artifact",
+        data={
+            "artifact_id": artifact_id,
+            "title": _mask(title[:200]),
             "filename": filename,
         },
     )

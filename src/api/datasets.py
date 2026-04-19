@@ -827,7 +827,7 @@ def get_output_artifact(
     filename: str,
     state: StateDep,
 ) -> Response:
-    """Serve an artifact written by the Python sandbox (e.g. render_spec.json)."""
+    """Serve an artifact file written by the Python sandbox (e.g. parquet outputs)."""
     if dataset_id not in state.dcds:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
     # Prevent path traversal

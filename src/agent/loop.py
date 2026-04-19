@@ -206,6 +206,8 @@ class ManthanAgent:
         turns = 0
         tool_calls_total = 0
         nudged_for_empty = False
+        nudged_for_delivery = False
+        delivered = False  # set True when emit_visual or create_artifact fires
 
         while turns < self.config.max_turns:
             # Call the LLM
@@ -265,6 +267,41 @@ class ManthanAgent:
                     # Loop around — same turn budget, retry with nudge
                     continue
 
+                # Delivery-forcing guard: the agent has done real
+                # analytical work (≥2 data tools), is now trying to
+                # finish with long prose, but never called
+                # emit_visual / create_artifact. For moderate–complex
+                # questions the prompt requires a tool delivery — a
+                # wall of text is the wrong shape. Nudge once.
+                if (
+                    content
+                    and tool_calls_total >= 2
+                    and not delivered
+                    and not nudged_for_delivery
+                    and _looks_like_inline_brief(content)
+                ):
+                    nudged_for_delivery = True
+                    # Drop the prose attempt so the retry doesn't
+                    # stack two briefs in the transcript.
+                    if messages and messages[-1].get("role") == "assistant":
+                        messages.pop()
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": (
+                                "You have the data and you started "
+                                "writing the brief as prose. That's "
+                                "the wrong shape for a moderate-to-"
+                                "complex answer. Call `create_artifact` "
+                                "now with the brief template (or a "
+                                "dashboard if that fits better). Do "
+                                "NOT answer as prose — the artifact IS "
+                                "the answer."
+                            ),
+                        }
+                    )
+                    continue
+
                 # Ground-truth guard: the agent cited specific numbers
                 # (detected via ``[value]()`` citation format OR bare
                 # currency/percent tokens) but didn't run a single
@@ -299,27 +336,32 @@ class ManthanAgent:
                     )
                     continue
 
-                # Agent is done — try to load render_spec from disk
+                # Agent is done
                 elapsed = time.perf_counter() - t0
-                render_spec = await self._load_render_spec(dataset_id)
                 session_history.set_history(session_id, messages)
 
                 # If we still have no content after the nudge retry,
                 # surface it instead of vanishing.
-                if (not content or not content.strip()) and tool_calls_total > 0:
-                    yield events.narrative(
-                        "I pulled the data but didn't produce a final "
-                        "answer — that's a model hiccup, not a missing "
-                        "result. Try asking the same question again; the "
-                        "cached work should make the retry instant."
-                    )
+                if not content or not content.strip():
+                    if tool_calls_total > 0:
+                        yield events.narrative(
+                            "I pulled the data but didn't produce a final "
+                            "answer — that's a model hiccup, not a missing "
+                            "result. Try asking the same question again; the "
+                            "cached work should make the retry instant."
+                        )
+                    else:
+                        yield events.narrative(
+                            "I couldn't produce an answer this turn. Try "
+                            "rephrasing, naming a specific column or "
+                            "metric, or asking a narrower question."
+                        )
 
                 yield events.done(
                     content or "",
                     turns,
                     tool_calls=tool_calls_total,
                     elapsed=elapsed,
-                    render_spec=render_spec,
                 )
                 return
 
@@ -340,6 +382,7 @@ class ManthanAgent:
                 if name == "emit_visual":
                     from uuid import uuid4
 
+                    delivered = True
                     visual_id = f"vis_{uuid4().hex[:8]}"
                     yield events.inline_visual(
                         visual_id=visual_id,
@@ -443,6 +486,7 @@ class ManthanAgent:
                 if name == "create_artifact":
                     from uuid import uuid4
 
+                    delivered = True
                     from src.agent.artifact_repair import (
                         extract_html_from_llm_response,
                         validate_artifact_html_async,
@@ -452,6 +496,16 @@ class ManthanAgent:
                     title = args.get("title", "Artifact")
                     html = args.get("html", "")
                     filename = args.get("filename", "artifact.html")
+
+                    # Fire IMMEDIATELY so the UI opens the side panel
+                    # with a skeleton. Validation + repair below can
+                    # take 30s–3m for big dashboards, and silence during
+                    # that window makes the product look crashed.
+                    yield events.building_artifact(
+                        artifact_id=artifact_id,
+                        title=title,
+                        filename=filename,
+                    )
 
                     # Heal agent-authored SyntaxErrors before anything reads
                     # the HTML. ``events.artifact_created`` would fix the
@@ -783,22 +837,6 @@ class ManthanAgent:
             raise RuntimeError("repair: no choices")
         return choices[0].get("message", {}).get("content", "") or ""
 
-    # ── Render spec loader ──────────────────────────────────
-
-    async def _load_render_spec(self, dataset_id: str) -> dict[str, Any] | None:
-        """Try to read render_spec.json from the dataset output directory."""
-        try:
-            from src.core.config import get_settings
-
-            out = Path(get_settings().data_directory) / dataset_id
-            spec_path = out / "output" / "render_spec.json"
-            if spec_path.exists() and spec_path.stat().st_size > 0:
-                return json.loads(spec_path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-        return None
-
-
 def _content_cites_numbers(text: str) -> bool:
     """True if the assistant narrative looks like it cites concrete
     numbers — either via the ``[value]()`` citation format the prompt
@@ -820,6 +858,21 @@ def _content_cites_numbers(text: str) -> bool:
         return True
     # Big integers (4+ digits, likely counts): "313,000" or "313000 flights"
     return bool(re.search(r"\b\d{1,3}(?:,\d{3})+\b", text))
+
+
+def _looks_like_inline_brief(text: str) -> bool:
+    """True if the assistant's final content looks like it's trying
+    to BE the brief (wall of prose with cited numbers / multiple
+    findings) instead of calling create_artifact. Heuristic:
+    long-ish content that cites real numbers. Keeps the rule tight
+    so one-sentence answers with a single stat don't trigger."""
+    if not text:
+        return False
+    stripped = text.strip()
+    # Short answers — let them through as prose.
+    if len(stripped) < 600:
+        return False
+    return _content_cites_numbers(stripped)
 
 
 def _describe_sql_cell(
