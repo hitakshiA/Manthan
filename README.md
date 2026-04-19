@@ -26,8 +26,8 @@
 
 ## Table of contents
 
-- [Tech stack](#tech-stack)
 - [The problem we're solving](#the-problem-were-solving)
+- [Tech stack](#tech-stack)
 - [Our approach](#our-approach)
 - [Architecture](#architecture)
 - [Layer 1 — the semantic layer](#layer-1--the-semantic-layer)
@@ -42,6 +42,20 @@
 - [Development](#development)
 - [Deployment](#deployment)
 - [License](#license)
+
+---
+
+## The problem we're solving
+
+"Talk to your data" tools have been everywhere this year. Scan the landscape and they sort into three buckets:
+
+1. **Thin wrappers** — stuff the schema into a prompt, ask an LLM for SQL, execute, render.
+2. **Vendor-locked AI analytics** — the Looker-Gemini, Cortex-Analyst, Genie tier. All solid, all require you to live inside the platform.
+3. **Semantic-layer SDKs without a workspace** — beautifully-designed governance toolkits you wire into your own app. Metrics are governed; you still have to build the agent loop and the UI.
+
+All three have the same ceiling. The first fails silently on real data — the industry benchmark shows enterprise text-to-SQL accuracy lives around 20–30%, and the failures aren't syntax errors. They're plausible wrong numbers that nobody catches. The second is great if you've already committed to the platform. The third leaves the hardest parts — the agent behaviour, the trust story, the workspace — as an exercise for the reader.
+
+Manthan is the fourth option: a BI-native agent you run yourself. One repo, one Docker container, Apache 2.0. The semantic layer, the agent loop, the workspace, the audit trail — all in the same codebase, all replaceable piece by piece.
 
 ---
 
@@ -139,20 +153,6 @@
 | **GitHub Actions** | CI — ruff, pytest, npm build, npm typecheck on push/PR | Free for public repos, fast feedback |
 
 **Licensing — every runtime dependency is Apache 2.0, MIT, BSD, or PSF.** No proprietary agent runtime. No vendor-locked semantic layer format. No telemetry. You can fork this and ship it commercially — the only ask is attribution.
-
----
-
-## The problem we're solving
-
-"Talk to your data" tools have been everywhere this year. Scan the landscape and they sort into three buckets:
-
-1. **Thin wrappers** — stuff the schema into a prompt, ask an LLM for SQL, execute, render.
-2. **Vendor-locked AI analytics** — the Looker-Gemini, Cortex-Analyst, Genie tier. All solid, all require you to live inside the platform.
-3. **Semantic-layer SDKs without a workspace** — beautifully-designed governance toolkits you wire into your own app. Metrics are governed; you still have to build the agent loop and the UI.
-
-All three have the same ceiling. The first fails silently on real data — the industry benchmark shows enterprise text-to-SQL accuracy lives around 20–30%, and the failures aren't syntax errors. They're plausible wrong numbers that nobody catches. The second is great if you've already committed to the platform. The third leaves the hardest parts — the agent behaviour, the trust story, the workspace — as an exercise for the reader.
-
-Manthan is the fourth option: a BI-native agent you run yourself. One repo, one Docker container, Apache 2.0. The semantic layer, the agent loop, the workspace, the audit trail — all in the same codebase, all replaceable piece by piece.
 
 ---
 
