@@ -26,6 +26,7 @@
 
 ## Table of contents
 
+- [Tech stack](#tech-stack)
 - [The problem we're solving](#the-problem-were-solving)
 - [Our approach](#our-approach)
 - [Architecture](#architecture)
@@ -41,6 +42,103 @@
 - [Development](#development)
 - [Deployment](#deployment)
 - [License](#license)
+
+---
+
+## Tech stack
+
+<p align="center"><sub><b>Backend · API · agent loop</b></sub></p>
+<p align="center">
+  <a href="https://python.org"><img alt="Python" src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white"/></a>
+  <a href="https://fastapi.tiangolo.com"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white"/></a>
+  <a href="https://www.uvicorn.org"><img alt="Uvicorn" src="https://img.shields.io/badge/Uvicorn-2C2C2C?style=for-the-badge&logo=gunicorn&logoColor=white"/></a>
+  <a href="https://docs.pydantic.dev"><img alt="Pydantic" src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white"/></a>
+  <a href="https://github.com/tobymao/sqlglot"><img alt="SQLGlot" src="https://img.shields.io/badge/SQLGlot-4B8BBE?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://openrouter.ai"><img alt="OpenRouter" src="https://img.shields.io/badge/OpenRouter-000000?style=for-the-badge&logo=openai&logoColor=white"/></a>
+  <a href="https://cryptography.io"><img alt="Fernet" src="https://img.shields.io/badge/Fernet_vault-3F51B5?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://dlthub.com"><img alt="dlt" src="https://img.shields.io/badge/dlt-FCA311?style=for-the-badge&logoColor=white"/></a>
+</p>
+
+<p align="center"><sub><b>Data · analytics · sandbox</b></sub></p>
+<p align="center">
+  <a href="https://duckdb.org"><img alt="DuckDB" src="https://img.shields.io/badge/DuckDB-FFF000?style=for-the-badge&logo=duckdb&logoColor=black"/></a>
+  <a href="https://pandas.pydata.org"><img alt="pandas" src="https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white"/></a>
+  <a href="https://numpy.org"><img alt="NumPy" src="https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white"/></a>
+  <a href="https://scikit-learn.org"><img alt="scikit-learn" src="https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white"/></a>
+  <a href="https://scipy.org"><img alt="SciPy" src="https://img.shields.io/badge/SciPy-8CAAE6?style=for-the-badge&logo=scipy&logoColor=white"/></a>
+  <a href="https://www.statsmodels.org"><img alt="statsmodels" src="https://img.shields.io/badge/statsmodels-3B5B92?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://matplotlib.org"><img alt="Matplotlib" src="https://img.shields.io/badge/Matplotlib-11557C?style=for-the-badge&logoColor=white"/></a>
+</p>
+
+<p align="center"><sub><b>Frontend · workspace</b></sub></p>
+<p align="center">
+  <a href="https://react.dev"><img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black"/></a>
+  <a href="https://www.typescriptlang.org"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/></a>
+  <a href="https://vite.dev"><img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white"/></a>
+  <a href="https://tailwindcss.com"><img alt="Tailwind 4" src="https://img.shields.io/badge/Tailwind-4-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white"/></a>
+  <a href="https://zustand-demo.pmnd.rs"><img alt="Zustand" src="https://img.shields.io/badge/Zustand-FF6B35?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://recharts.org"><img alt="Recharts" src="https://img.shields.io/badge/Recharts-22B5BF?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://lucide.dev"><img alt="Lucide" src="https://img.shields.io/badge/Lucide-F56565?style=for-the-badge&logo=lucide&logoColor=white"/></a>
+  <a href="https://motion.dev"><img alt="Motion" src="https://img.shields.io/badge/Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white"/></a>
+</p>
+
+<p align="center"><sub><b>Infrastructure · deploy · CI</b></sub></p>
+<p align="center">
+  <a href="https://docker.com"><img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"/></a>
+  <a href="https://nginx.org"><img alt="Nginx" src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"/></a>
+  <a href="https://letsencrypt.org"><img alt="Let's Encrypt" src="https://img.shields.io/badge/Let's_Encrypt-003A70?style=for-the-badge&logo=letsencrypt&logoColor=white"/></a>
+  <a href="https://digitalocean.com"><img alt="DigitalOcean" src="https://img.shields.io/badge/DigitalOcean-0080FF?style=for-the-badge&logo=digitalocean&logoColor=white"/></a>
+  <a href="https://fly.io"><img alt="Fly.io" src="https://img.shields.io/badge/Fly.io-8B5CF6?style=for-the-badge&logoColor=white"/></a>
+  <a href="https://github.com/features/actions"><img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white"/></a>
+</p>
+
+### The full stack, explained
+
+#### Backend · API · agent loop
+
+| Piece | What it does | Why we picked it |
+|---|---|---|
+| **FastAPI + uvicorn** | API server, SSE streaming, static bundle serving | First-class async, SSE-friendly, auto-generates OpenAPI from typed Pydantic models |
+| **Pydantic v2** | Typed contracts for DCD, events, requests | Sub-millisecond validation on every tool call, zero boilerplate |
+| **SQLGlot** | AST-level SQL validation before DuckDB sees the query | Dialect-aware; catches hallucinated tables, missing metric filters, unknown columns at parse time |
+| **OpenRouter** | Model-agnostic LLM gateway | Swap Claude, GPT, Llama, DeepSeek without touching code; free tier covers everything in the demo |
+| **`cryptography.fernet`** | Envelope-encrypted credential vault | Per-tenant data-key model, CMK hook for enterprise rotation |
+| **`dlt`** | SaaS connector scaffolding (Stripe, HubSpot, Salesforce, etc.) | Apache-2.0, Python-native, DuckDB destination first-class |
+
+#### Data · analytics · sandbox
+
+| Piece | What it does | Why we picked it |
+|---|---|---|
+| **DuckDB** | Embedded columnar engine — every query, every source | Single-process, fast, read-only `ATTACH` for Postgres/MySQL, `httpfs` for S3/GCS/Azure |
+| **pandas + NumPy** | DataFrame layer in the Python sandbox | Tool-chain the agent already knows; universal I/O |
+| **scikit-learn** | Clustering, scaling, classical ML | K-means, linear, logistic — the shapes real BI questions actually need |
+| **statsmodels + SciPy** | Seasonal decomposition, hypothesis tests, forecasts | Classical stats the agent reaches for when SQL runs out of runway |
+| **matplotlib** | Fallback figure rendering inside the sandbox | Always available; artifact chart path prefers Chart.js/D3 but matplotlib backs Python-first flows |
+
+#### Frontend · workspace
+
+| Piece | What it does | Why we picked it |
+|---|---|---|
+| **React 19 + Vite + TypeScript** | SPA shell, bundling, type safety end-to-end | Concurrent rendering, sub-second HMR, typed SSE event contracts |
+| **Tailwind 4** | Utility-first CSS with the new engine | Brand theming at the token level, zero runtime cost |
+| **Zustand** | Client state — one slice per domain (agent, datasets, artifact, processing) | Minimal ceremony, selector-based re-renders, devtools middleware |
+| **Recharts** | Inline chart rendering in the conversation stream | Composable, SVG-native, easy to theme |
+| **Lucide** | Icon system | Tree-shakeable, consistent weight, 1,500+ icons |
+| **Motion** | Declarative animations (artifact slide-in, ask-user card rise, skeleton pulse) | Physics-based, preserves 60fps even while layout is thrashing |
+| **`simple-icons`** | Brand marks for the SaaS source picker | CC0, comprehensive, one import per brand |
+| **Custom `SmoothText` engine** | Grapheme-safe, animation-frame-paced token reveal | In-house — decouples SSE burstiness from render rhythm so the text never stutters |
+
+#### Infrastructure · deploy · CI
+
+| Piece | What it does | Why we picked it |
+|---|---|---|
+| **Docker + Compose** | Single-container app, bind-mounted `./data` | One `docker compose up` deploys everything end-to-end |
+| **nginx** | TLS termination, SSE-safe reverse proxy (`proxy_buffering off`, 300s read timeout) | The 90% case for self-hosters |
+| **Let's Encrypt + certbot** | Auto-renewed certs via systemd timer | Free, reliable, 90-day rotation with zero-touch renewal |
+| **DigitalOcean / Fly.io** | Current deploy targets — `manthan.quest` on a 2vCPU/4GB DO droplet | Low fixed cost, enough for a full team's workload |
+| **GitHub Actions** | CI — ruff, pytest, npm build, npm typecheck on push/PR | Free for public repos, fast feedback |
+
+**Licensing — every runtime dependency is Apache 2.0, MIT, BSD, or PSF.** No proprietary agent runtime. No vendor-locked semantic layer format. No telemetry. You can fork this and ship it commercially — the only ask is attribution.
 
 ---
 
@@ -464,22 +562,7 @@ manthanv2/
 
 ## Development
 
-### Tech stack
-
-| Layer | What we picked | Why |
-|---|---|---|
-| API | FastAPI + uvicorn | SSE-first, async, typed Pydantic requests |
-| Engine | DuckDB | Single-process, columnar, great scanner ecosystem |
-| Semantic | Pydantic + YAML | Typed contracts, human-editable on disk |
-| SQL guard | `sqlglot` | Dialect-aware AST parsing for pre-exec validation |
-| LLM | OpenRouter (model-agnostic) | One API across providers, free tier works out of the box |
-| Credentials | `cryptography.fernet` | Envelope-encrypted vault, CMK rotation hook |
-| Frontend | React 19 + Vite + TypeScript | |
-| UI | Tailwind 4, Recharts, Lucide, Motion, Tegaki | |
-| Brand icons | `simple-icons` (CC0) | Postgres, MySQL, Stripe, GitHub, etc. |
-| State | Zustand | Slice-per-domain stores, minimal ceremony |
-
-Every runtime dependency is Apache 2.0, MIT, BSD, or PSF.
+> Full stack breakdown lives in **[Tech stack](#tech-stack)** at the top of the README.
 
 ### Environment
 
