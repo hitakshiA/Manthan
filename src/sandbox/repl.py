@@ -132,6 +132,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
         df = con.execute("SELECT * FROM dataset").df()
 
         import re as _re
+
         stem = primary.stem
         # gold_<slug>_<8hex>, no _by_ suffix → extract slug
         m = _re.match(r"^gold_(.+)_[0-9a-f]{6,}$", stem)
@@ -140,8 +141,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
             if slug and slug != "dataset":
                 try:
                     con.execute(
-                        f'CREATE OR REPLACE VIEW "{slug}" '
-                        f"AS SELECT * FROM dataset"
+                        f'CREATE OR REPLACE VIEW "{slug}" AS SELECT * FROM dataset'
                     )
                     attached_views.append(slug)
                 except Exception:

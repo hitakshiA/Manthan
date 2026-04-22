@@ -607,7 +607,7 @@ def building_artifact(artifact_id: str, title: str, filename: str) -> AgentEvent
     """Emitted IMMEDIATELY when ``create_artifact`` starts — before
     validation, repair, or disk write. The UI opens the artifact panel
     with a skeleton state so the exec sees work-in-progress instead of
-    a silent 30s–3m gap while ``node --check`` and the repair LLM run."""
+    a silent 30s-3m gap while ``node --check`` and the repair LLM run."""
     return AgentEvent(
         type="building_artifact",
         data={

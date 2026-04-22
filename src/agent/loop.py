@@ -837,6 +837,7 @@ class ManthanAgent:
             raise RuntimeError("repair: no choices")
         return choices[0].get("message", {}).get("content", "") or ""
 
+
 def _content_cites_numbers(text: str) -> bool:
     """True if the assistant narrative looks like it cites concrete
     numbers — either via the ``[value]()`` citation format the prompt
