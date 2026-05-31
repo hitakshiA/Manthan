@@ -308,7 +308,7 @@ function LaunchPicker({
   onClose,
   onFire,
 }: {
-  visible: { scenarioId: string; sourceId: string; label: string }[];
+  visible: TriggerCard[];
   firingId: string | null;
   onClose: () => void;
   onFire: (id: string) => void;
@@ -424,6 +424,7 @@ function LaunchPicker({
               label={card.label}
               firing={firingId === card.scenarioId}
               disabled={firingId !== null && firingId !== card.scenarioId}
+              comingSoon={card.comingSoon}
               onFire={() => onFire(card.scenarioId)}
             />
           ))}
@@ -1066,28 +1067,47 @@ function useScenarioWithStory() {
  * (redundant with `aperture`'s stripe-webhook surface) and show one
  * card per distinct trigger kind: Stripe / Email / Slack.
  *
- * `aperture` carries the guided ScenarioStory overlay; the other two
- * fire immediately on click via the standard scenario-trigger path.
+ * Only `aperture` is wired up end-to-end today. `maya` (Customer
+ * Email · Resend inbound) and `vermillion` (Slack `@mention` ingest)
+ * render as quiet "coming soon" placeholders so visitors see the
+ * surface area even before those triggers ship.
  */
-const TRIGGER_CARDS: { scenarioId: string; sourceId: string; label: string }[] =
-  [
-    { scenarioId: "aperture", sourceId: "stripe", label: "Stripe Chargeback" },
-    { scenarioId: "maya", sourceId: "resend", label: "Customer Email" },
-    { scenarioId: "vermillion", sourceId: "slack", label: "Slack Thread" },
-  ];
+type TriggerCard = {
+  scenarioId: string;
+  sourceId: string;
+  label: string;
+  comingSoon?: boolean;
+};
+
+const TRIGGER_CARDS: TriggerCard[] = [
+  { scenarioId: "aperture", sourceId: "stripe", label: "Stripe Chargeback" },
+  {
+    scenarioId: "maya",
+    sourceId: "resend",
+    label: "Customer Email",
+    comingSoon: true,
+  },
+  {
+    scenarioId: "vermillion",
+    sourceId: "slack",
+    label: "Slack Thread",
+    comingSoon: true,
+  },
+];
 
 function InboxEmptyState() {
   const { scenarios, firingId, onCardFire, storyOverlay } =
     useScenarioWithStory();
 
   // Resolve the simplified card configs against the live scenario list.
-  // Filter to the ones the backend actually has so we degrade gracefully
-  // if a scenario id ever gets renamed/removed.
+  // Coming-soon cards are kept regardless (they don't need a backend
+  // scenario yet); real cards degrade gracefully if a scenario id ever
+  // gets renamed/removed.
   const visible = scenarios
-    ? TRIGGER_CARDS.filter((c) =>
-        scenarios.some((s) => s.id === c.scenarioId),
+    ? TRIGGER_CARDS.filter(
+        (c) => c.comingSoon || scenarios.some((s) => s.id === c.scenarioId),
       )
-    : [];
+    : TRIGGER_CARDS.filter((c) => c.comingSoon);
 
   return (
     <div
@@ -1150,6 +1170,7 @@ function InboxEmptyState() {
               disabled={
                 firingId !== null && firingId !== card.scenarioId
               }
+              comingSoon={card.comingSoon}
               onFire={() => onCardFire(card.scenarioId)}
             />
           ))}
@@ -1184,6 +1205,7 @@ function BigTriggerCard({
   label,
   firing,
   disabled,
+  comingSoon,
   onFire,
 }: {
   scenarioId: string;
@@ -1191,6 +1213,7 @@ function BigTriggerCard({
   label: string;
   firing: boolean;
   disabled: boolean;
+  comingSoon?: boolean;
   onFire: () => void;
 }) {
   const [hover, setHover] = useState(false);
@@ -1206,7 +1229,7 @@ function BigTriggerCard({
   const fill = isExtreme ? "var(--color-ink-strong)" : `#${brandHex}`;
   const viewBox = sourceMeta?.simpleIcon?.viewBox ?? "0 0 24 24";
 
-  const interactive = !firing && !disabled;
+  const interactive = !firing && !disabled && !comingSoon;
 
   return (
     <button
@@ -1215,22 +1238,50 @@ function BigTriggerCard({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       disabled={!interactive}
-      className="flex flex-col items-center justify-center text-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-line)]"
+      aria-disabled={comingSoon || undefined}
+      title={comingSoon ? `${label} - coming soon` : undefined}
+      className="relative flex flex-col items-center justify-center text-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-line)]"
       style={{
-        background: tint,
-        border: `1px solid ${hover && interactive ? ringHover : ring}`,
+        background: comingSoon ? "var(--color-rule-soft)" : tint,
+        border: `1px solid ${
+          comingSoon
+            ? "var(--color-rule-soft)"
+            : hover && interactive
+              ? ringHover
+              : ring
+        }`,
         borderRadius: 16,
         padding: "56px 24px 48px",
         gap: 28,
         cursor: interactive ? "pointer" : "default",
         transition:
           "transform 240ms ease, border-color 240ms ease, opacity 240ms ease, background 240ms ease",
-        opacity: disabled ? 0.45 : 1,
+        opacity: comingSoon ? 0.55 : disabled ? 0.45 : 1,
         transform:
           hover && interactive ? "translateY(-4px)" : "translateY(0)",
         minHeight: 260,
       }}
     >
+      {comingSoon && (
+        <span
+          className="absolute font-mono uppercase"
+          style={{
+            top: 16,
+            right: 16,
+            padding: "5px 10px",
+            fontSize: 10.5,
+            letterSpacing: "0.22em",
+            color: "var(--color-ink-faint)",
+            background: "var(--color-bg)",
+            border: "1px solid var(--color-rule)",
+            borderRadius: 999,
+            fontWeight: 600,
+          }}
+        >
+          Coming soon
+        </span>
+      )}
+
       {firing ? (
         <Loader2
           size={64}
@@ -1243,10 +1294,12 @@ function BigTriggerCard({
           width={72}
           height={72}
           viewBox={viewBox}
-          fill={fill}
+          fill={comingSoon ? "var(--color-ink-faint)" : fill}
           aria-hidden
           style={{
-            filter: `drop-shadow(0 10px 28px ${fill}33)`,
+            filter: comingSoon
+              ? "none"
+              : `drop-shadow(0 10px 28px ${fill}33)`,
           }}
         >
           <path d={sourceMeta.simpleIcon.path} />
@@ -1260,7 +1313,9 @@ function BigTriggerCard({
         style={{
           fontFamily: "Spectral, serif",
           fontSize: "clamp(22px, 2vw, 28px)",
-          color: "var(--color-ink-strong)",
+          color: comingSoon
+            ? "var(--color-ink-muted)"
+            : "var(--color-ink-strong)",
           letterSpacing: "-0.012em",
           fontWeight: 400,
         }}
