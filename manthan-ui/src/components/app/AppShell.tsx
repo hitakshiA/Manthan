@@ -165,7 +165,10 @@ function NavRow({
       end={to === "/app"}
       className={({ isActive }) =>
         cn(
-          "nav-row group relative flex items-center gap-2.5 px-2.5 py-[8px] text-[13.5px] tracking-[0.003em] transition-colors",
+          // flex-1 makes each row claim an equal share of the sidebar's
+          // remaining vertical space. Type + icon scale up to match so
+          // each row reads as a primary section, not a list item.
+          "nav-row group relative flex flex-1 items-center gap-3.5 px-3 text-[17px] tracking-[0.003em] transition-colors min-h-[48px]",
           isActive && "nav-row-active",
         )
       }
@@ -190,7 +193,7 @@ function NavRow({
           )}
           {count !== undefined && count !== null && (
             <span
-              className="tabular-nums text-[11.5px]"
+              className="tabular-nums text-[15px]"
               style={{
                 color: alert
                   ? "var(--color-amber)"
@@ -226,7 +229,7 @@ function NavAnimatedIcon({
   slug: string;
   active: boolean;
 }) {
-  const size = 20;
+  const size = 28;
   return (
     <span
       // Use a data attribute (not inline CSS custom prop) for the

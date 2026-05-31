@@ -5,8 +5,12 @@
  * header X-Manthan-Dev-Org until Clerk JWT verification is wired.
  */
 
+// `??` (not `||`) so an explicit empty string survives — in prod we set
+// VITE_MANTHAN_API_URL="" so fetches go to relative /api/* (same origin),
+// and Caddy reverse-proxies to the local API. With `||`, "" was falsy
+// and we fell back to localhost:8765 from the browser → CORS hellscape.
 const API_URL =
-  (import.meta.env.VITE_MANTHAN_API_URL as string | undefined) ||
+  (import.meta.env.VITE_MANTHAN_API_URL as string | undefined) ??
   "http://127.0.0.1:8765";
 
 const DEV_ORG_SLUG =

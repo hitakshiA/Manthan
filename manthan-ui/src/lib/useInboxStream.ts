@@ -15,7 +15,7 @@ import { useUser } from "@clerk/react";
 import { getApiUserEmail, listCases, type ApiCase, type ApiCaseList } from "@/lib/api";
 
 const API_URL =
-  (import.meta.env.VITE_MANTHAN_API_URL as string | undefined) ||
+  (import.meta.env.VITE_MANTHAN_API_URL as string | undefined) ??
   "http://127.0.0.1:8765";
 
 const DEV_ORG =
