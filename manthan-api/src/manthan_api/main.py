@@ -1,4 +1,4 @@
-"""FastAPI app entry point — `uvicorn manthan_api.main:app`."""
+"""FastAPI app entry point - `uvicorn manthan_api.main:app`."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
     await init_pool()
-    logger.info("manthan_api startup complete — version=%s", __version__)
+    logger.info("manthan_api startup complete - version=%s", __version__)
     try:
         yield
     finally:

@@ -1,4 +1,4 @@
-"""Tool discovery endpoint — ``GET /tools/list``.
+"""Tool discovery endpoint - ``GET /tools/list``.
 
 A hand-crafted static manifest of every agent-facing tool in Layer 1.
 We keep it static (rather than scraping the FastAPI OpenAPI schema)
@@ -32,7 +32,7 @@ _TOOL_MANIFEST: list[dict[str, Any]] = [
         "input": {
             "dataset_id": "str (required)",
             "sql": (
-                "str (required) — SELECT / WITH / "
+                "str (required) - SELECT / WITH / "
                 "CREATE TEMP TABLE / DROP TABLE (temp only)"
             ),
             "max_rows": "int (default 1000)",
@@ -51,7 +51,7 @@ _TOOL_MANIFEST: list[dict[str, Any]] = [
             "when the same session_id is passed. Pre-loaded globals: "
             "df (pandas DataFrame of the primary Gold table), "
             "con (DuckDB connection with all Gold parquets attached "
-            "as views — the primary table is named 'dataset', "
+            "as views - the primary table is named 'dataset', "
             "additional tables from multi-file uploads are named by "
             "their parquet stem e.g. 'gold_teams_xxx'), "
             "OUTPUT_DIR (writable path for parquet outputs), "
@@ -63,7 +63,7 @@ _TOOL_MANIFEST: list[dict[str, Any]] = [
             "dataset_id": "str (required)",
             "code": "str (required)",
             "session_id": (
-                "str (optional — generated if omitted, reuse to keep state)"
+                "str (optional - generated if omitted, reuse to keep state)"
             ),
             "timeout_seconds": "int (default 60)",
         },
@@ -184,7 +184,7 @@ _TOOL_MANIFEST: list[dict[str, Any]] = [
         "description": (
             "Isolated subagent workspaces for multi-agent analysis. Spawning "
             "creates a new session_id with its own Python kernel, task list, "
-            "and memory scope — so a master agent can delegate exploratory "
+            "and memory scope - so a master agent can delegate exploratory "
             "work without polluting its own context window. Completion can "
             "optionally write the subagent's result back to the parent "
             "session's memory for the master to pick up."
@@ -201,7 +201,7 @@ _TOOL_MANIFEST: list[dict[str, Any]] = [
         "name": "clarification",
         "endpoint": "GET /clarification/{dataset_id}",
         "description": (
-            "Pending profiling-time clarification questions — questions the "
+            "Pending profiling-time clarification questions - questions the "
             "Silver stage emitted about low-confidence column classifications "
             "on this dataset. Answer them via POST /clarification/{id} to "
             "refine the DCD before running expensive analyses."

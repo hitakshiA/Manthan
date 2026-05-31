@@ -2,7 +2,7 @@
 
 W5 = summit-payments usage-fraud REFUTE workflow. The agent's job is to
 look up product analytics and see that Summit Payments is, in fact,
-actively using the platform — not a fraudulent/idle account. To support
+actively using the platform - not a fraudulent/idle account. To support
 that conclusion we seed 40-50 product events scattered across the last
 60 days for 3 finance personas at Summit Payments.
 
@@ -49,7 +49,7 @@ COMPANY_INDUSTRY = "fintech"
 COMPANY_EMAIL_DOMAIN = "summit-payments.test"
 COMPANY_APP_HOST = "app.summit-payments.com"
 
-# 3 finance personas — deterministic distinct_ids so re-runs identify
+# 3 finance personas - deterministic distinct_ids so re-runs identify
 # the same persons (not new ones every time).
 PERSONAS = [
     {
@@ -134,7 +134,7 @@ def _person_set_props(persona: dict) -> dict:
 
 
 def build_identify_events() -> list[dict]:
-    """One $identify per persona — creates / updates the Person row."""
+    """One $identify per persona - creates / updates the Person row."""
     # Anchor 60 days back so $identify timestamp predates the activity.
     anchor = datetime.now(timezone.utc) - timedelta(days=60, hours=1)
     out: list[dict] = []
@@ -233,7 +233,7 @@ def verify_count(client: httpx.Client) -> int | None:
     The personal key in this env only has `persons:read` scope (not
     `query:read`), so HogQL & /events/ both return 403. We fall back to
     confirming the personas exist and that their `last_seen_at` /
-    `created_at` lie within our 60-day window — which only happens if
+    `created_at` lie within our 60-day window - which only happens if
     events landed (PostHog updates last_seen_at off event timestamps).
     """
     # Path 1: HogQL.
@@ -301,7 +301,7 @@ def verify_count(client: httpx.Client) -> int | None:
 
 def main() -> None:
     print("═" * 70)
-    print(f"W5 PostHog patch — {COMPANY_SLUG}")
+    print(f"W5 PostHog patch - {COMPANY_SLUG}")
     print("═" * 70)
 
     with httpx.Client(headers=H_MGMT, timeout=TIMEOUT) as client:
@@ -310,7 +310,7 @@ def main() -> None:
         if not project_key:
             sys.exit(
                 "ERROR: could not fetch project api_token from "
-                f"/api/projects/{PROJECT_ID}/ — check POSTHOG_API_KEY scopes"
+                f"/api/projects/{PROJECT_ID}/ - check POSTHOG_API_KEY scopes"
             )
         print(f"project key: {project_key[:8]}…")
 
@@ -325,7 +325,7 @@ def main() -> None:
             f"total: {len(all_events)}"
         )
 
-        # 3. Distribute across the 60-day window — sanity print.
+        # 3. Distribute across the 60-day window - sanity print.
         days = sorted({
             datetime.fromisoformat(e["timestamp"]).date()
             for e in activity_events
@@ -340,7 +340,7 @@ def main() -> None:
         sent, errs = ingest_events(client, all_events, project_key)
         print(f"  sent: {sent}  errors: {errs}")
 
-        # 5. Verify (after a short sleep — ingestion is async).
+        # 5. Verify (after a short sleep - ingestion is async).
         print("\nWaiting 12s for PostHog ingestion pipeline…")
         time.sleep(12)
         count = verify_count(client)
@@ -363,7 +363,7 @@ def main() -> None:
             ok = "OK" if count >= 40 else "BELOW THRESHOLD"
             print(f"Queryable now : {count}  [{ok} >= 40]")
         else:
-            print("Queryable now : <unknown — verify failed>")
+            print("Queryable now : <unknown - verify failed>")
 
         # Sample
         sample = [e["distinct_id"] for e in activity_events[:5]]

@@ -122,9 +122,9 @@ def propose_metrics(profiles: list[ColumnProfile]) -> list[MetricProposal]:
 
     Emits, when the relevant columns are present:
 
-    - ``average_{revenue}_per_{id}`` — mean revenue per unique identifier
-    - ``{id}_count`` — distinct count of the primary id column
-    - ``{revenue}_per_{quantity}`` — effective unit price
+    - ``average_{revenue}_per_{id}`` - mean revenue per unique identifier
+    - ``{id}_count`` - distinct count of the primary id column
+    - ``{revenue}_per_{quantity}`` - effective unit price
 
     The proposals are deterministic and deliberately conservative; the
     user (or the LLM classifier) always has final say via the DCD.

@@ -7,22 +7,22 @@ seeders fill in as they create records.
 
 The three target workflows are baked into specific companies:
 
-  W1 — Daisy-chained chargebacks: Acme Genomics
+  W1 - Daisy-chained chargebacks: Acme Genomics
        Multiple "I cancelled" disputes across months. No formal cancel
        request exists. Customer keeps using the product.
 
-  W2 — Failed-webhook ghost-paid: Northwind Logistics
+  W2 - Failed-webhook ghost-paid: Northwind Logistics
        Stripe charge succeeded, webhook handler crashed (Datadog +
        Sentry record it), customer never got the upgraded tier
        (PostHog shows still-free behavior), opened a support ticket,
        got slow reply, then disputed.
 
-  W3 — Post-acquisition double-billing: Mockingbird Media
+  W3 - Post-acquisition double-billing: Mockingbird Media
        Company migrated from legacy billing entity onto Stripe in March;
        old entity wasn't cancelled; both sides charged for the same
        service. Customer disputes both.
 
-The OTHER 32 companies are noise — they have realistic but unrelated
+The OTHER 32 companies are noise - they have realistic but unrelated
 activity. This is critical: real customer environments are mostly noise.
 """
 
@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 35 companies. Hand-authored for realism — varied industries, countries,
+# 35 companies. Hand-authored for realism - varied industries, countries,
 # ARR bands, signup years. Includes intentional name collisions
 # (Acme Genomics vs Acme Logistics, Helix Bio vs Helios Bio).
 # ──────────────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ COMPANIES: list[Company] = [
         slug="helios-bio", name="Helios Bio",
         email="ap@helios-bio.test", industry="biotech", country="USA",
         arr_usd=18000, signup_year=2025, plan="Pro Annual", health="green",
-        notes="Typo-trap of Helix Bio — different company entirely.",
+        notes="Typo-trap of Helix Bio - different company entirely.",
     ),
     Company(
         slug="saga-foods", name="Saga Foods",
@@ -175,10 +175,10 @@ COMPANIES: list[Company] = [
             "logistics", "Greece", 33000, 2024, "Pro Annual", "yellow"),
     Company("ember-design", "Ember Design", "ops@ember-design.test",
             "design-agency", "USA", 12000, 2025, "Standard Monthly", "green"),
-    # ============ Q1R demo scenario — Quill Logistics ============
+    # ============ Q1R demo scenario - Quill Logistics ============
     # Seeded by patch_q1_quill_outage.py. Customer filed a $9k chargeback
     # claiming "service outage during Q1, we couldn't access the product."
-    # Evidence will show NO outage and active product usage — agent must
+    # Evidence will show NO outage and active product usage - agent must
     # recommend FIGHT.
     Company(
         slug="quill-logi", name="Quill Logistics",
@@ -190,13 +190,13 @@ COMPANIES: list[Company] = [
             "PagerDuty show clean operations AND PostHog shows active usage."
         ),
     ),
-    # ============ V1R demo scenario — Vermillion Studios ============
+    # ============ V1R demo scenario - Vermillion Studios ============
     # Seeded by patch_v1_vermillion_seats.py. Customer (25-person design
     # agency) filed a $4,500 chargeback claiming "billed for 25 seats but
     # we only have 15." Evidence will show their COO Sarah Chen signed
     # the +10 seat addendum on 2026-02-08, the team actually uses 24/25
     # seats (PostHog + Datadog auth logs), and there are NO billing
-    # complaints in any support channel — the CFO simply missed the
+    # complaints in any support channel - the CFO simply missed the
     # internal handoff from the COO. Agent must recommend FIGHT and
     # offer a reconciliation call with their CFO.
     Company(
@@ -208,11 +208,11 @@ COMPANIES: list[Company] = [
             "25-person design agency. Original 15-seat Pro Annual; expanded "
             "to 25 seats on 2026-02-08 via DocuSigned addendum signed by "
             "COO Sarah Chen. Active 24/25 seats. V1R demo: $4.5k chargeback "
-            "claims 'billed for 25 but we only have 15' — invalid because "
+            "claims 'billed for 25 but we only have 15' - invalid because "
             "COO signed for the expansion and team is using the seats."
         ),
     ),
-    # ============ W7R demo scenario — Aperture Analytics ============
+    # ============ W7R demo scenario - Aperture Analytics ============
     # Seeded by patch_w7r_aperture_prorata.py. B2B data-analytics customer
     # on Premium Monthly @ $8,400/mo. The Custom Reports service (a
     # Premium-only feature) was degraded for 48 hours mid-cycle 2026-04-13
@@ -223,14 +223,14 @@ COMPANIES: list[Company] = [
     # filed a Stripe dispute for the full $8,400 on 2026-05-08 after the
     # promised credit never landed.
     #
-    # Easy answers — both wrong:
+    # Easy answers - both wrong:
     #   FULL REFUND → over-pays; they self-downgraded mid-cycle and got
     #                 26 useful days of Premium minus the 2 degraded ones.
     #   FIGHT       → under-pays; Datadog clearly shows the documented
     #                 incident, Slack engineering owned it, support
     #                 promised the credit.
     #
-    # Right answer — partial credit, math derivable only from cross-source
+    # Right answer - partial credit, math derivable only from cross-source
     # synthesis:
     #   2/30ths of $8,400 = $560 pro-rata for the 2 degraded days, per the
     #   Notion "Documented Incident Pro-Rata Credit" policy.
@@ -247,7 +247,7 @@ COMPANIES: list[Company] = [
             "credit was never actioned by support."
         ),
     ),
-    # ============ M1R demo scenario — Maya Patel Design ============
+    # ============ M1R demo scenario - Maya Patel Design ============
     # Seeded by patch_m1_maya_duplicate.py. Solo designer subscribed to
     # Caldera Pro at $89/month. She emailed support claiming "I was
     # charged twice on 2026-05-22, please refund the duplicate." Evidence
@@ -279,7 +279,7 @@ def find_company(slug: str) -> Company:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Workflow specs — the hidden signals to bake into the noise
+# Workflow specs - the hidden signals to bake into the noise
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -302,7 +302,7 @@ WORKFLOWS: dict[str, Workflow] = {
         target_company_slug="acme-genomics",
         trigger_text=(
             "Slack DM from @priya (CSM):\n"
-            "\"Heads up — Acme Genomics is at it again. Third dispute "
+            "\"Heads up - Acme Genomics is at it again. Third dispute "
             "this year claiming 'I cancelled,' but Intercom has nothing "
             "formal and they keep using the product. We refunded the "
             "first two; this is dp_acme_v3 on the May renewal $4,200. "
@@ -333,7 +333,7 @@ WORKFLOWS: dict[str, Workflow] = {
             "$9,000 for the Enterprise upgrade but their account never "
             "moved off the Standard tier. They have the Stripe receipt. "
             "I checked our entitlement table and they're still on Standard "
-            "— how is that possible? Customer is pissed.\""
+            "- how is that possible? Customer is pissed.\""
         ),
         expected_decision="refund",
         expected_amount_minor=900000,
@@ -346,7 +346,7 @@ WORKFLOWS: dict[str, Workflow] = {
             "unhandled exception (visible in Sentry + Datadog) right around "
             "the Northwind charge time. The customer's Stripe charge "
             "succeeded but our internal entitlement never flipped. Right "
-            "answer is refund-full + apology + manual upgrade — NEVER "
+            "answer is refund-full + apology + manual upgrade - NEVER "
             "fight. This is vendor failure, not friendly fraud."
         ),
     ),
@@ -356,7 +356,7 @@ WORKFLOWS: dict[str, Workflow] = {
         target_company_slug="mockingbird-media",
         trigger_text=(
             "Linear ticket from @gina (AR):\n"
-            "\"Mockingbird Media is disputing TWO charges — one $5,500 "
+            "\"Mockingbird Media is disputing TWO charges - one $5,500 "
             "from us (Stripe) and one $5,500 from our legacy billing "
             "entity (the one we were supposed to retire post-acquisition). "
             "They've been paying both since March. They want both refunded "
@@ -371,7 +371,7 @@ WORKFLOWS: dict[str, Workflow] = {
             "acquisition", "duplicate",
         ],
         notes=(
-            "Customer is right — we double-billed across the migration. "
+            "Customer is right - we double-billed across the migration. "
             "Right answer is refund-full of the duplicate period from "
             "WHICHEVER system was supposed to terminate (per the runbook, "
             "the legacy one), consolidate to Stripe, write off. The "
@@ -386,7 +386,7 @@ WORKFLOWS: dict[str, Workflow] = {
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Identity allocation helpers — every seeder uses these to assign IDs
+# Identity allocation helpers - every seeder uses these to assign IDs
 # consistently across sources.
 # ──────────────────────────────────────────────────────────────────────
 

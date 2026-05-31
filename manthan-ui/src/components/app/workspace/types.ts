@@ -16,7 +16,7 @@ export type Owner = "you" | string;
 export type CaseStatus = "awaiting" | "approving" | "approved" | "held";
 
 export interface WorkspaceCaseRow {
-  num: string;                 // "4821" — display short id
+  num: string;                 // "4821" - display short id
   customer: string;
   type: string;                // "Chargeback"
   amount: number;              // dollars (not minor)
@@ -27,7 +27,7 @@ export interface WorkspaceCaseRow {
   owner: Owner;                // "you" if assigned to current member, else email
   watching: boolean;
   caseId: string;              // uuid for routing
-  /** Raw API trigger_surface — drives surface-specific affordances
+  /** Raw API trigger_surface - drives surface-specific affordances
       like the "Original email" button. Optional so older callers
       that built rows by hand still compile. */
   triggerSurface?: string;
@@ -50,14 +50,14 @@ export interface WorkspaceEvidence {
   field?: string | null;
 }
 
-/** A single recorded finding — text + the citations that back it. The
+/** A single recorded finding - text + the citations that back it. The
     Brief postmortem renders these as numbered paragraphs with inline
     citation chips. */
 export interface WorkspaceFinding {
   seq: number;
   text: string;
   confidence: number | null;
-  /** Indices into the `evidence` array — every citation chip resolves
+  /** Indices into the `evidence` array - every citation chip resolves
       to one evidence row so clicking opens the same modal in both places. */
   citationIndices: number[];
 }
@@ -79,12 +79,12 @@ export interface WorkspaceAction {
   /** Raw kind from the API (`stripe_refund`, `customer_email`, etc.).
       Used by the ApprovalCinematic to resolve the source icon. */
   kind?: string;
-  /** Source id (`stripe` | `notion` | ...) — derived from `kind`. */
+  /** Source id (`stripe` | `notion` | ...) - derived from `kind`. */
   source?: string;
   title: string;               // "Refund $1,200 via Stripe"
   target: string;              // "POST /v1/refunds · ch_xxx"
   body: string;                // the drafted text or a 1-line summary
-  /** Status from the actions table — drives the pill + 'fired' check. */
+  /** Status from the actions table - drives the pill + 'fired' check. */
   status?: ActionStatus;
   /** External reference once executed: re_xxx (Stripe), Resend msg id, Notion page id, etc. */
   externalRef?: string | null;
@@ -92,7 +92,7 @@ export interface WorkspaceAction {
   errorMessage?: string | null;
   /** Deep-link to the source where this action landed (e.g. Stripe Dashboard for a refund). */
   externalUrl?: string | null;
-  /** The raw payload JSON — used by the edit affordance + power-user view. */
+  /** The raw payload JSON - used by the edit affordance + power-user view. */
   payload?: Record<string, unknown>;
 }
 

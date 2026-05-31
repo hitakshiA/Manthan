@@ -44,7 +44,7 @@ else:
 
 def _load_world() -> dict[str, dict[str, list[dict[str, Any]]]]:
     if not _JSON_PATH.exists():
-        # Don't crash — return empty world. Coral will see zero rows
+        # Don't crash - return empty world. Coral will see zero rows
         # rather than a server failure.
         return {}
     return json.loads(_JSON_PATH.read_text())

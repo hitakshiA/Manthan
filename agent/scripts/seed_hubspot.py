@@ -4,16 +4,16 @@ Drives the Manthan billing-dispute investigation agent. Reads from
 seed_world.py for canonical company identity so cross-source JOINs stay
 consistent.
 
-Idempotent — re-runs check existence by domain (companies), email
+Idempotent - re-runs check existence by domain (companies), email
 (contacts), and dealname/subject (deals/tickets) before creating.
 
 The three workflow targets get specific signals baked in:
 
-  W1 — Acme Genomics: description note about data export request +
+  W1 - Acme Genomics: description note about data export request +
        multiple disputes despite continued usage (no formal cancel).
-  W2 — Northwind Logistics: associated "Enterprise Upgrade Q2 2026" deal
+  W2 - Northwind Logistics: associated "Enterprise Upgrade Q2 2026" deal
        at $9,000 closedwon + open ticket about Standard tier still showing.
-  W3 — Mockingbird Media: description note about Stripe migration +
+  W3 - Mockingbird Media: description note about Stripe migration +
        "Migration Cutover" deal at $5,500 closedwon + double-billing ticket.
 
 Run:
@@ -136,20 +136,20 @@ def _translate_email(c: Company, email: str) -> str:
 def _hubspot_description(c: Company) -> str:
     """Build a description property for the company."""
     if c.slug == "acme-genomics":
-        # W1 signal — daisy-chained chargebacks.
+        # W1 signal - daisy-chained chargebacks.
         return (
             "Customer asked about data export options in March 2026. "
-            "CSM Priya flagged yellow health — possible churn but no "
+            "CSM Priya flagged yellow health - possible churn but no "
             "formal cancel request on file. Multiple chargebacks filed "
             "despite continued usage of the platform. Multiple disputes "
             "filed in 2025-2026 despite continued active product usage. "
             "CSM flagged for review. Renewed May 2026."
         )
     if c.slug == "mockingbird-media":
-        # W3 signal — migration from legacy billing.
+        # W3 signal - migration from legacy billing.
         return (
             "Migrated from legacy billing entity to Stripe in March 2026. "
-            "Acquisition integration in progress — legacy subscription "
+            "Acquisition integration in progress - legacy subscription "
             "should have been terminated at end-of-March cutover per the "
             "post-acquisition runbook. Customer has reported duplicate "
             "charges across legacy and Stripe entities."
@@ -157,7 +157,7 @@ def _hubspot_description(c: Company) -> str:
     if c.slug == "northwind-logi":
         return (
             "Strategic enterprise account. Upgraded to Enterprise tier "
-            "Q2 2026 — paid $9,000 upgrade fee on May 12 2026 but "
+            "Q2 2026 - paid $9,000 upgrade fee on May 12 2026 but "
             "entitlement system showed customer remained on Standard "
             "tier. Webhook handler crash flagged in engineering. "
             "Renewal cycle November. " + (c.notes or "")
@@ -503,7 +503,7 @@ def upsert_ticket(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Contact plan — 2-4 contacts per company (primary, finance, exec, IT)
+# Contact plan - 2-4 contacts per company (primary, finance, exec, IT)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -588,7 +588,7 @@ def _build_contact_plan(c: Company) -> list[dict]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Deal plan generator — renewals, new business, lost, expansion, open
+# Deal plan generator - renewals, new business, lost, expansion, open
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -614,20 +614,20 @@ def _build_deal_plan() -> list[DealSpec]:
     # ---- Hard-coded workflow signal deals ----
     plan.append(DealSpec(
         company_slug="northwind-logi",
-        name="Northwind — Enterprise Upgrade Q2 2026",
+        name="Northwind - Enterprise Upgrade Q2 2026",
         amount=9000,
         close_date="2026-05-12",
         stage="closedwon",
         description=(
             "Customer paid $9,000 Enterprise upgrade fee. Stripe charge "
-            "succeeded but webhook handler crashed (see Sentry/Datadog) — "
+            "succeeded but webhook handler crashed (see Sentry/Datadog) - "
             "entitlement never flipped. Customer remained on Standard tier. "
             "Refund + manual upgrade required."
         ),
     ))
     plan.append(DealSpec(
         company_slug="mockingbird-media",
-        name="Mockingbird — Migration Cutover",
+        name="Mockingbird - Migration Cutover",
         amount=5500,
         close_date="2026-03-15",
         stage="closedwon",
@@ -645,7 +645,7 @@ def _build_deal_plan() -> list[DealSpec]:
         new_biz_amount = _arr_jitter(c.arr_usd, RNG.uniform(0.7, 1.0))
         plan.append(DealSpec(
             company_slug=c.slug,
-            name=f"{c.name} — New Business {c.signup_year}",
+            name=f"{c.name} - New Business {c.signup_year}",
             amount=new_biz_amount,
             close_date=f"{c.signup_year}-{new_biz_month:02d}-{RNG.randint(2, 27):02d}",
             stage="closedwon",
@@ -659,7 +659,7 @@ def _build_deal_plan() -> list[DealSpec]:
             amount = _arr_jitter(c.arr_usd, RNG.uniform(0.95, 1.15))
             plan.append(DealSpec(
                 company_slug=c.slug,
-                name=f"{c.name} — {c.plan} Renewal {year}",
+                name=f"{c.name} - {c.plan} Renewal {year}",
                 amount=amount,
                 close_date=f"{year}-{month:02d}-{day:02d}",
                 stage="closedwon",
@@ -668,51 +668,51 @@ def _build_deal_plan() -> list[DealSpec]:
 
     # ---- Closed-lost deals (competitive evals lost) ----
     lost_candidates = [
-        ("acme-logistics", "Acme Logistics — Renewal Lost 2026", 18000, "2026-04-22"),
-        ("helix-bio", "Helix Bio — Expansion Lost", 24000, "2025-12-04"),
-        ("delta-payments", "Delta Payments — Competitive Eval Lost", 30000, "2025-11-18"),
-        ("voyager-shipping", "Voyager Shipping — Renewal Lost", 60000, "2025-10-25"),
-        ("titan-marine", "Titan Marine — Competitive Eval Lost", 28000, "2025-09-08"),
-        ("ember-design", "Ember Design — Downgrade Lost", 9000, "2025-08-15"),
-        ("alchemy-foods", "Alchemy Foods — Renewal Lost", 14000, "2026-02-09"),
+        ("acme-logistics", "Acme Logistics - Renewal Lost 2026", 18000, "2026-04-22"),
+        ("helix-bio", "Helix Bio - Expansion Lost", 24000, "2025-12-04"),
+        ("delta-payments", "Delta Payments - Competitive Eval Lost", 30000, "2025-11-18"),
+        ("voyager-shipping", "Voyager Shipping - Renewal Lost", 60000, "2025-10-25"),
+        ("titan-marine", "Titan Marine - Competitive Eval Lost", 28000, "2025-09-08"),
+        ("ember-design", "Ember Design - Downgrade Lost", 9000, "2025-08-15"),
+        ("alchemy-foods", "Alchemy Foods - Renewal Lost", 14000, "2026-02-09"),
     ]
     for slug, name, amt, dt in lost_candidates:
         plan.append(DealSpec(
             company_slug=slug, name=name, amount=amt,
             close_date=dt, stage="closedlost",
-            description="Competitive evaluation — lost to alternative vendor.",
+            description="Competitive evaluation - lost to alternative vendor.",
         ))
 
     # ---- Expansion deals (add-on seat purchases) for ~10 customers ----
     expansion_candidates = [
-        ("acme-genomics", "Acme Genomics — Seat Expansion", 12000, "2025-09-14", "closedwon"),
-        ("northwind-logi", "Northwind — Add-On Seats 2025", 18000, "2025-08-22", "closedwon"),
-        ("stellar-ai", "Stellar AI — Premium Tier Expansion", 36000, "2026-01-19", "closedwon"),
-        ("phoenix-fund", "Phoenix Fund — Multi-Region Expansion", 42000, "2025-10-03", "closedwon"),
-        ("cascade-cloud", "Cascade Cloud — Storage Expansion", 14000, "2026-02-27", "closedwon"),
-        ("nexus-data", "Nexus Data — Premium Tier Add-On", 30000, "2025-04-08", "closedwon"),
-        ("zephyr-ventures", "Zephyr Ventures — Power User Seats", 22000, "2024-11-15", "closedwon"),
-        ("solstice-care", "Solstice Care — Compliance Tier Add-On", 28000, "2025-07-12", "closedwon"),
-        ("globex-software", "Globex Software — API Tier Upgrade", 12000, "2025-06-29", "closedwon"),
-        ("helio-energy", "Helio Energy — Multi-Site Expansion", 24000, "2025-12-18", "closedwon"),
+        ("acme-genomics", "Acme Genomics - Seat Expansion", 12000, "2025-09-14", "closedwon"),
+        ("northwind-logi", "Northwind - Add-On Seats 2025", 18000, "2025-08-22", "closedwon"),
+        ("stellar-ai", "Stellar AI - Premium Tier Expansion", 36000, "2026-01-19", "closedwon"),
+        ("phoenix-fund", "Phoenix Fund - Multi-Region Expansion", 42000, "2025-10-03", "closedwon"),
+        ("cascade-cloud", "Cascade Cloud - Storage Expansion", 14000, "2026-02-27", "closedwon"),
+        ("nexus-data", "Nexus Data - Premium Tier Add-On", 30000, "2025-04-08", "closedwon"),
+        ("zephyr-ventures", "Zephyr Ventures - Power User Seats", 22000, "2024-11-15", "closedwon"),
+        ("solstice-care", "Solstice Care - Compliance Tier Add-On", 28000, "2025-07-12", "closedwon"),
+        ("globex-software", "Globex Software - API Tier Upgrade", 12000, "2025-06-29", "closedwon"),
+        ("helio-energy", "Helio Energy - Multi-Site Expansion", 24000, "2025-12-18", "closedwon"),
     ]
     for slug, name, amt, dt, st in expansion_candidates:
         plan.append(DealSpec(
             company_slug=slug, name=name, amount=amt,
             close_date=dt, stage=st,
-            description="Add-on expansion — additional seats or modules.",
+            description="Add-on expansion - additional seats or modules.",
         ))
 
     # ---- Open pipeline deals (in-progress) ----
     open_candidates = [
-        ("quantum-synth", "Quantum Synth — Enterprise Upgrade 2026", 84000, "2026-09-30", "presentationscheduled"),
-        ("orion-labs", "Orion Labs — Compliance Tier Eval", 24000, "2026-08-15", "qualifiedtobuy"),
-        ("apex-software", "Apex Software — Pro Tier Upgrade", 18000, "2026-07-22", "decisionmakerboughtin"),
-        ("hydra-finance", "Hydra Finance — APAC Expansion", 36000, "2026-09-10", "contractsent"),
-        ("cobra-cybersec", "Cobra Cybersec — Premium Tier", 30000, "2026-08-03", "presentationscheduled"),
-        ("polaris-pay", "Polaris Pay — Renewal + Expansion 2026", 48000, "2026-10-12", "qualifiedtobuy"),
-        ("horizon-genomics", "Horizon Genomics — Multi-Site Pilot", 18000, "2026-07-18", "decisionmakerboughtin"),
-        ("summit-payments", "Summit Payments — Enterprise Migration", 96000, "2026-09-05", "contractsent"),
+        ("quantum-synth", "Quantum Synth - Enterprise Upgrade 2026", 84000, "2026-09-30", "presentationscheduled"),
+        ("orion-labs", "Orion Labs - Compliance Tier Eval", 24000, "2026-08-15", "qualifiedtobuy"),
+        ("apex-software", "Apex Software - Pro Tier Upgrade", 18000, "2026-07-22", "decisionmakerboughtin"),
+        ("hydra-finance", "Hydra Finance - APAC Expansion", 36000, "2026-09-10", "contractsent"),
+        ("cobra-cybersec", "Cobra Cybersec - Premium Tier", 30000, "2026-08-03", "presentationscheduled"),
+        ("polaris-pay", "Polaris Pay - Renewal + Expansion 2026", 48000, "2026-10-12", "qualifiedtobuy"),
+        ("horizon-genomics", "Horizon Genomics - Multi-Site Pilot", 18000, "2026-07-18", "decisionmakerboughtin"),
+        ("summit-payments", "Summit Payments - Enterprise Migration", 96000, "2026-09-05", "contractsent"),
     ]
     for slug, name, amt, dt, st in open_candidates:
         plan.append(DealSpec(
@@ -725,7 +725,7 @@ def _build_deal_plan() -> list[DealSpec]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Ticket plan generator — varied subjects, statuses, priorities
+# Ticket plan generator - varied subjects, statuses, priorities
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -745,7 +745,7 @@ class TicketTemplate:
 
 TICKET_TEMPLATES: list[TicketTemplate] = [
     TicketTemplate(
-        "Onboarding kickoff — need help configuring SSO",
+        "Onboarding kickoff - need help configuring SSO",
         "Hi team, we just signed and want to set up SSO via Okta before "
         "rolling the platform out to our team. Can someone walk us through "
         "the SAML metadata exchange? We'd like to schedule a 30-min call "
@@ -765,7 +765,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
         "LOW", "open",
     ),
     TicketTemplate(
-        "Integration help — Salesforce sync stopped",
+        "Integration help - Salesforce sync stopped",
         "Our SFDC sync stopped pushing new contacts ~3 days ago. We see "
         "no errors in the dashboard. Can you investigate?",
         "HIGH", "open",
@@ -777,7 +777,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
         "MEDIUM", "closed",
     ),
     TicketTemplate(
-        "Billing question — invoice doesn't match quote",
+        "Billing question - invoice doesn't match quote",
         "We were quoted $X for the Pro annual plan but the invoice we "
         "just received is higher. Can someone walk us through the line items?",
         "MEDIUM", "closed",
@@ -797,7 +797,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
         "HIGH", "closed",
     ),
     TicketTemplate(
-        "Add 5 new seats — need procurement quote",
+        "Add 5 new seats - need procurement quote",
         "We want to add 5 seats to our Pro plan. Can you send a formal "
         "PDF quote to procurement@? They need it for PO approval.",
         "MEDIUM", "open",
@@ -810,7 +810,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
         "HIGH", "open",
     ),
     TicketTemplate(
-        "Renewal — clarify auto-renew terms",
+        "Renewal - clarify auto-renew terms",
         "Our renewal is coming up. Can someone clarify whether the contract "
         "auto-renews and what notice we need to give to opt out? "
         "Procurement is asking.",
@@ -867,7 +867,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
     ),
     TicketTemplate(
         "Need to update the billing contact email",
-        "Please update billing contact from ap@old to ap@new — we changed "
+        "Please update billing contact from ap@old to ap@new - we changed "
         "our finance email forwarder.",
         "LOW", "closed",
     ),
@@ -879,7 +879,7 @@ TICKET_TEMPLATES: list[TicketTemplate] = [
     ),
     TicketTemplate(
         "API key rotation procedure",
-        "Quarterly security review — we need to rotate our API keys. "
+        "Quarterly security review - we need to rotate our API keys. "
         "What's the recommended procedure for zero-downtime rotation?",
         "LOW", "closed",
     ),
@@ -912,7 +912,7 @@ def _build_ticket_plan() -> list[tuple[str, str, str, str, str, datetime]]:
         "northwind-logi",
         "Paid for Enterprise upgrade but still showing Standard tier",
         "We paid the $9k upgrade fee on May 12 but our account is still "
-        "on the Standard plan. URGENT — we have a board demo tomorrow. "
+        "on the Standard plan. URGENT - we have a board demo tomorrow. "
         "Stripe receipt shows charge succeeded. Need this fixed today.",
         "1",  # New (open)
         "HIGH",
@@ -958,14 +958,14 @@ def _build_ticket_plan() -> list[tuple[str, str, str, str, str, datetime]]:
         "Can you confirm data export options?",
         "Hi, we're reviewing our data ownership story for an internal "
         "audit. Can you point us to the data export options? We just "
-        "want to know what's available — not cancelling.",
+        "want to know what's available - not cancelling.",
         "4",  # Closed
         "MEDIUM",
         datetime(2026, 3, 4, 10, 22, tzinfo=timezone.utc),
     ))
     plan.append((
         "acme-genomics",
-        "Disputed charge on April invoice — please review",
+        "Disputed charge on April invoice - please review",
         "Filed a chargeback on the April invoice. We thought our "
         "subscription was paused. Can someone reach out so we can "
         "reconcile?",
@@ -1042,7 +1042,7 @@ def _build_ticket_plan() -> list[tuple[str, str, str, str, str, datetime]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Cleanup pass — HubSpot auto-creates "shadow" companies from every new
+# Cleanup pass - HubSpot auto-creates "shadow" companies from every new
 # contact email's domain. Since our contacts use ``<slug>.example.com``
 # emails (.test is rejected for emails), each first contact create
 # triggers a phantom Company record with that domain and a null name.
@@ -1291,7 +1291,7 @@ def verify_workflows(
     """
     out: dict[str, str | None] = {}
 
-    # ---- W1 — Acme Genomics ----
+    # ---- W1 - Acme Genomics ----
     w1_id = company_ids.get("acme-genomics")
     w1_ok = False
     if w1_id:
@@ -1320,9 +1320,9 @@ def verify_workflows(
     if not w1_ok:
         print(f"W1 acme-genomics       company={w1_id}  signal=NO")
 
-    # ---- W2 — Northwind Logistics ----
+    # ---- W2 - Northwind Logistics ----
     w2_id = company_ids.get("northwind-logi")
-    w2_deal_id = find_deal_by_name(client, "Northwind — Enterprise Upgrade Q2 2026")
+    w2_deal_id = find_deal_by_name(client, "Northwind - Enterprise Upgrade Q2 2026")
     w2_ticket_id = find_ticket_by_subject(
         client,
         "Paid for Enterprise upgrade but still showing Standard tier",
@@ -1349,9 +1349,9 @@ def verify_workflows(
         f"ticket_signal={w2_ticket_ok}"
     )
 
-    # ---- W3 — Mockingbird Media ----
+    # ---- W3 - Mockingbird Media ----
     w3_id = company_ids.get("mockingbird-media")
-    w3_deal_id = find_deal_by_name(client, "Mockingbird — Migration Cutover")
+    w3_deal_id = find_deal_by_name(client, "Mockingbird - Migration Cutover")
     w3_ticket_id = find_ticket_by_subject(client, "Why are we getting two bills?")
     out["w3_deal_id"] = w3_deal_id
     out["w3_ticket_id"] = w3_ticket_id

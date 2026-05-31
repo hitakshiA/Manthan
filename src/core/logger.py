@@ -31,7 +31,7 @@ def configure_logging(level: str = "info", log_format: str = "json") -> None:
     numeric_level = getattr(logging, level.upper(), logging.INFO)
 
     # Route stdlib logging to the same sink. Only configure if no handlers
-    # have been installed yet — this keeps repeated calls idempotent.
+    # have been installed yet - this keeps repeated calls idempotent.
     if not logging.getLogger().handlers:
         logging.basicConfig(
             format="%(message)s",

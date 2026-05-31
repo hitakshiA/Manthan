@@ -30,7 +30,7 @@ from src.core.logger import get_logger
 
 _DEFAULT_TIMEOUT_SECONDS = 180.0
 # With a 3-model cascade, each model gets a SHORT retry window.
-# The cascade itself is the redundancy — don't burn 4 minutes
+# The cascade itself is the redundancy - don't burn 4 minutes
 # retrying one model when there are two more to try.
 _DEFAULT_MAX_RETRIES = 2
 _RETRY_BACKOFF_BASE_SECONDS = 2.0
@@ -104,9 +104,9 @@ class LlmClient:
         The model cascade is:
 
         1. ``model`` param (if provided) or ``settings.gemini_model``
-           (default: ``gemini-3-flash-preview`` — Gemini 3 Flash)
+           (default: ``gemini-3-flash-preview`` - Gemini 3 Flash)
         2. Each model in ``settings.gemini_fallback_models`` (in order)
-           (default: ``gemini-3.1-pro-preview`` — Gemini 3.1 Pro, the
+           (default: ``gemini-3.1-pro-preview`` - Gemini 3.1 Pro, the
            deeper escalation model)
 
         Flash is the primary because it benchmarked 2.5x faster than Pro
@@ -222,7 +222,7 @@ class LlmClient:
                     )
                     raise LlmError(f"Gemini returned HTTP {status}") from exc
                 # Any 429 = this model is rate-limited. Don't retry
-                # the same model — immediately bail out to let the
+                # the same model - immediately bail out to let the
                 # cascade try the next model in the list. This keeps
                 # total cascade time under 30s instead of burning
                 # minutes retrying a rate-limited provider.
@@ -245,7 +245,7 @@ class LlmClient:
                 last_error = LlmError(f"Gemini transport error: {exc}")
                 _logger.warning("llm.transport_error", attempt=attempt, error=str(exc))
             except ValueError as exc:
-                # response.json() parse failure — treat as retryable
+                # response.json() parse failure - treat as retryable
                 last_error = LlmError(f"Gemini response not JSON: {exc}")
                 _logger.warning("llm.body_not_json", attempt=attempt, error=str(exc))
 

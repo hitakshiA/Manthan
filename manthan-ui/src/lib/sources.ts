@@ -1,5 +1,5 @@
 /**
- * Source catalog for Manthan — every SaaS Manthan reads (via Coral) or
+ * Source catalog for Manthan - every SaaS Manthan reads (via Coral) or
  * writes to (via native action layer). Logos are sourced from simple-icons.
  *
  * Categories map to the operational dashboard sidebar grouping.
@@ -32,7 +32,7 @@ export interface SourceMeta {
   description: string;
   /** Path data + brand hex. simple-icons defaults to a "0 0 24 24"
    *  viewBox; brands shipped from their own kits may use a different
-   *  one (e.g. Resend ships 0 0 1800 1800). `viewBox` is optional —
+   *  one (e.g. Resend ships 0 0 1800 1800). `viewBox` is optional -
    *  omit it for simple-icons entries. */
   simpleIcon?: { hex: string; path: string; viewBox?: string };
   capabilities: ManthanCapability[];
@@ -43,7 +43,7 @@ export interface SourceMeta {
 
 /**
  * Manual fallbacks for brands that simple-icons has dropped due to
- * trademark requests (Salesforce, Slack — both removed mid-2024) or
+ * trademark requests (Salesforce, Slack - both removed mid-2024) or
  * never carried (Resend ships its own brand kit).
  *
  * Most entries omit `viewBox` and inherit the simple-icons standard
@@ -64,7 +64,7 @@ const ICON_OVERRIDES: Record<
     path:
       "M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z",
   },
-  // Resend ships its own brand assets — the white icon from
+  // Resend ships its own brand assets - the white icon from
   // resend-brand-assets.zip. Native 1800x1800 viewBox; SourceIcon
   // honors the override. The brand hex is white; on light backgrounds
   // the DARK_ON_DARK override in SourceIcon flips it to ink-strong
@@ -124,7 +124,7 @@ export const SOURCES: SourceMeta[] = [
     id: "salesforce",
     name: "Salesforce",
     category: "crm",
-    description: "Enterprise CRM — accounts, opportunities",
+    description: "Enterprise CRM - accounts, opportunities",
     simpleIcon: icon("Salesforce"),
     capabilities: ["read", "write", "trigger"],
     oauth: true,
@@ -134,7 +134,7 @@ export const SOURCES: SourceMeta[] = [
     id: "hubspot",
     name: "HubSpot",
     category: "crm",
-    description: "Mid-market CRM — contacts, companies, deals",
+    description: "Mid-market CRM - contacts, companies, deals",
     simpleIcon: icon("Hubspot"),
     capabilities: ["read", "write", "trigger"],
     oauth: true,
@@ -194,7 +194,7 @@ export const SOURCES: SourceMeta[] = [
     id: "resend",
     name: "Resend",
     category: "comms",
-    description: "Transactional + inbound email — Manthan's outbound rail",
+    description: "Transactional + inbound email - Manthan's outbound rail",
     simpleIcon: icon("Resend"),
     capabilities: ["write"],
     oauth: false,
@@ -308,7 +308,7 @@ export const SOURCES: SourceMeta[] = [
     id: "sentry",
     name: "Sentry",
     category: "observability",
-    description: "Error tracking — bug context for billing issues",
+    description: "Error tracking - bug context for billing issues",
     simpleIcon: icon("Sentry"),
     capabilities: ["read", "trigger"],
     oauth: true,

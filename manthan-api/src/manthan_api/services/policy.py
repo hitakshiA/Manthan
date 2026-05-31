@@ -1,4 +1,4 @@
-"""Policy engine — evaluates rules against a case to decide auto vs HITL.
+"""Policy engine - evaluates rules against a case to decide auto vs HITL.
 
 After a brief drops, the investigate worker calls `evaluate_for_case()`. We
 walk enabled rules in priority order, evaluate conditions, return the first

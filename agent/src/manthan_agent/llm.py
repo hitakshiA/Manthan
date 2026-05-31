@@ -45,7 +45,7 @@ def client(cfg: Config) -> OpenAI:
             # Forward strict-mode tool calls to providers that support it.
             # Without this header OpenRouter strips `strict: true` from the
             # tool-call schema. With it, DeepSeek's beta strict-mode kicks
-            # in (constrained decoding at the token level — the model
+            # in (constrained decoding at the token level - the model
             # literally cannot emit a malformed tool call).
             "structured-outputs-2025-11-13": "true",
         },

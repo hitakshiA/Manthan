@@ -14,14 +14,14 @@ loop:
      already required by the UI toolchain, so it's always present in
      a dev/prod environment).
   3. If any script fails to parse, route the HTML + the Node error
-     to a focused LLM repair call. The repair prompt is narrow — fix
-     the parse error, preserve data / design / structure — so it's
+     to a focused LLM repair call. The repair prompt is narrow - fix
+     the parse error, preserve data / design / structure - so it's
      much cheaper and faster than a full agent turn.
   4. Re-validate after repair. If still broken, ship the original and
      let the client best-effort-render; at least the exec sees
      something instead of silently retrying forever.
 
-``_close_unclosed_try`` in ``events.py`` is the cheap pre-pass — it
+``_close_unclosed_try`` in ``events.py`` is the cheap pre-pass - it
 catches the single most common failure shape (unclosed outer try)
 without an LLM hop. This module is the wider safety net for
 everything else (template literal bugs, stray commas, bad string
@@ -55,7 +55,7 @@ def extract_inline_scripts(html: str) -> list[str]:
     for m in _SCRIPT_TAG_RE.finditer(html):
         attrs = m.group(1) or ""
         if _SRC_ATTR_RE.search(attrs):
-            continue  # external script — trust the CDN
+            continue  # external script - trust the CDN
         body = (m.group(2) or "").strip()
         if body:
             bodies.append(body)
@@ -107,7 +107,7 @@ def validate_artifact_html(html: str) -> ValidationResult:
 
 
 async def validate_artifact_html_async(html: str) -> ValidationResult:
-    """Async-friendly validation — runs subprocess in a thread so the
+    """Async-friendly validation - runs subprocess in a thread so the
     agent loop's event stream isn't blocked while Node parses."""
     return await asyncio.to_thread(validate_artifact_html, html)
 
@@ -116,7 +116,7 @@ REPAIR_SYSTEM_PROMPT = """\
 You are an artifact REPAIR agent. A dashboard HTML document failed
 JavaScript syntax validation. You receive the broken HTML and the
 exact parse error from Node. Return the COMPLETE FIXED HTML document,
-nothing else — no prose, no markdown fences, no commentary.
+nothing else - no prose, no markdown fences, no commentary.
 
 Constraints:
 - Fix ONLY what's needed to resolve the parse error.
@@ -139,7 +139,7 @@ def extract_html_from_llm_response(content: str) -> str:
     added despite instructions.
 
     Returns an empty string if the response doesn't look like an HTML
-    document — a clear "not a repair" signal so callers can fall back
+    document - a clear "not a repair" signal so callers can fall back
     rather than ship an apology or half-message as the dashboard.
     """
     s = content.strip()
@@ -156,7 +156,7 @@ def extract_html_from_llm_response(content: str) -> str:
     m = re.search(r"(<html[^>]*>.*?</html>)", s, re.IGNORECASE | re.DOTALL)
     if m:
         return m.group(1)
-    # Final sanity gate — if there's no ``<html`` or ``<!DOCTYPE`` in
+    # Final sanity gate - if there's no ``<html`` or ``<!DOCTYPE`` in
     # the response at all, treat it as garbage (apology, refusal,
     # truncation) and signal "no repair available" to the caller.
     low = s.lower()

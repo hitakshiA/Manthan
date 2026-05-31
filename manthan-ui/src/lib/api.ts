@@ -13,7 +13,7 @@ const DEV_ORG_SLUG =
   (import.meta.env.VITE_MANTHAN_DEV_ORG as string | undefined) || "acme";
 
 // ──────────────────────────────────────────────────────────────────────
-// Wire types — mirror what the Python API returns
+// Wire types - mirror what the Python API returns
 // ──────────────────────────────────────────────────────────────────────
 
 export type CaseStatus =
@@ -119,7 +119,7 @@ export interface ApiCaseList {
 // the Clerk session changes; every API call threads it as
 // X-Manthan-Dev-Email so the backend's dev tenant resolver can map to
 // the right member row (and upsert if absent). Null when no Clerk user
-// is signed in — backend falls back to oldest-admin in that case.
+// is signed in - backend falls back to oldest-admin in that case.
 let API_USER_EMAIL: string | null = null;
 
 export function setApiUserEmail(email: string | null | undefined): void {
@@ -270,7 +270,7 @@ export async function chatWithCase(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Live investigation narrative — one paragraph + interim findings,
+// Live investigation narrative - one paragraph + interim findings,
 // synthesized server-side by feeding the last 25 events to a fast LLM.
 // Polled every 6s while a case is investigating.
 // ──────────────────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export async function getInvestigationNarrative(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Clicky citation reasoning — the "why this matters" popup.
+// Clicky citation reasoning - the "why this matters" popup.
 //
 // Each click on a citation chip in the Brief asks the backend for a
 // 2-3 sentence explanation. The backend caches in `citation_reasonings`
@@ -326,7 +326,7 @@ export async function listCitationReasonings(
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Inbound email — for the "Original email" panel in the workspace.
+// Inbound email - for the "Original email" panel in the workspace.
 // 404s when the case wasn't opened via email; callers should treat that
 // as "no panel to show" rather than an error.
 // ──────────────────────────────────────────────────────────────────────
@@ -529,7 +529,7 @@ export async function listAuditRecent(limit = 200): Promise<ApiAuditEvent[]> {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// View-shape helpers — map API rows to the Dashboard's local types
+// View-shape helpers - map API rows to the Dashboard's local types
 // ──────────────────────────────────────────────────────────────────────
 
 const CASE_TYPE_LABEL: Record<CaseType, string> = {
@@ -596,7 +596,7 @@ export function humanizeTrigger(s: string): string {
 
 
 // ──────────────────────────────────────────────────────────────────────
-// Action rendering — translate an ApiActionRow into a human card
+// Action rendering - translate an ApiActionRow into a human card
 // ──────────────────────────────────────────────────────────────────────
 
 /** Map an action kind + payload into a 1-line title for the UI card. */
@@ -615,19 +615,19 @@ export function actionTitle(row: ApiActionRow): string {
     }
     case "customer_email": {
       const subj = (p.subject as string | undefined) ?? "";
-      return subj ? `Email customer — ${subj}` : "Email customer";
+      return subj ? `Email customer - ${subj}` : "Email customer";
     }
     case "notion_decision_log": {
       const title = (p.title as string | undefined) ?? "";
-      return title ? `Notion log — ${title.slice(0, 80)}` : "Append Notion decision log";
+      return title ? `Notion log - ${title.slice(0, 80)}` : "Append Notion decision log";
     }
     case "slack_brief": {
       const channel = (p.channel as string | undefined) ?? "";
-      return channel ? `Slack post — #${channel}` : "Post brief to Slack";
+      return channel ? `Slack post - #${channel}` : "Post brief to Slack";
     }
     case "linear_issue": {
       const t = (p.title as string | undefined) ?? "";
-      return t ? `Linear ticket — ${t.slice(0, 80)}` : "Create Linear ticket";
+      return t ? `Linear ticket - ${t.slice(0, 80)}` : "Create Linear ticket";
     }
     case "hubspot_note": {
       return "Append HubSpot CRM note";
@@ -642,16 +642,16 @@ export function actionTarget(row: ApiActionRow): string {
   const p = row.payload || {};
   switch (row.kind) {
     case "stripe_refund": {
-      const charge = (p.charge as string | undefined) ?? "—";
+      const charge = (p.charge as string | undefined) ?? "-";
       return `POST /v1/refunds · ${charge}`;
     }
     case "stripe_dispute_response": {
-      const dispute = (p.dispute as string | undefined) ?? "—";
+      const dispute = (p.dispute as string | undefined) ?? "-";
       const submit = (p.submit as boolean | undefined) ?? false;
       return `POST /v1/disputes/${dispute}${submit ? " (submit=true)" : " (submit=false · draft)"}`;
     }
     case "customer_email": {
-      const to = (p.to as string | undefined) ?? "—";
+      const to = (p.to as string | undefined) ?? "-";
       return `POST resend/emails · to=${to}`;
     }
     case "notion_decision_log": {
@@ -659,7 +659,7 @@ export function actionTarget(row: ApiActionRow): string {
       return parent ? `notion.children.append · ${shortRef(parent)}` : "notion.children.append";
     }
     case "slack_brief": {
-      const ch = (p.channel as string | undefined) ?? "—";
+      const ch = (p.channel as string | undefined) ?? "-";
       return `chat.postMessage · #${ch}`;
     }
     case "linear_issue":
@@ -736,7 +736,7 @@ function shortRef(ref: string): string {
 
 
 // ──────────────────────────────────────────────────────────────────────
-// Demo triggers — dev-only endpoint that synthesizes case_opened events
+// Demo triggers - dev-only endpoint that synthesizes case_opened events
 // against the pre-seeded scenarios. Useful for in-UI "fire scenario"
 // buttons during the recording.
 // ──────────────────────────────────────────────────────────────────────
@@ -761,7 +761,7 @@ export async function listDemoScenarios(): Promise<{ scenarios: DemoScenario[] }
  * Fire a demo scenario. Optionally plumbs the operator's own login
  * email as `demo_email_to`, which (a) routes the customer_email action
  * to that exact inbox with no [demo →] subject prefix, and (b) forces
- * the case to require manual approval — policy auto-approval is
+ * the case to require manual approval - policy auto-approval is
  * skipped so the operator gets to approve the brief before the email
  * actually fires.
  */

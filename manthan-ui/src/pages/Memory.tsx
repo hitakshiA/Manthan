@@ -1,5 +1,5 @@
 /**
- * Memory — per-customer episodic recall.
+ * Memory - per-customer episodic recall.
  *
  * Editorial form: a customer ledger, not a bubble-pill card grid. Each
  * customer is one row in a hairline-separated stack with the counts as
@@ -37,7 +37,7 @@ export default function Memory() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Index — list every customer Manthan has touched.
+// Index - list every customer Manthan has touched.
 // ──────────────────────────────────────────────────────────────────────
 
 function CustomerList() {
@@ -142,7 +142,7 @@ function CustomerRow({ row }: { row: CustomerMemoryRow }) {
           className="text-right text-[11.5px] tabular-nums whitespace-nowrap"
           style={{ color: "var(--color-ink-ghost)" }}
         >
-          {row.last_seen ? formatAge(row.last_seen) + " ago" : "—"}
+          {row.last_seen ? formatAge(row.last_seen) + " ago" : "-"}
           <ArrowRight
             className="inline h-3 w-3 ml-2 opacity-0 group-hover:opacity-100"
             style={{ color: "var(--color-ink-faint)" }}
@@ -154,7 +154,7 @@ function CustomerRow({ row }: { row: CustomerMemoryRow }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Drill-down — one customer's full case history.
+// Drill-down - one customer's full case history.
 // ──────────────────────────────────────────────────────────────────────
 
 function CustomerDrillDown({ ref_ }: { ref_: string }) {

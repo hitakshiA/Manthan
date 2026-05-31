@@ -32,24 +32,24 @@ classifiers = [
 # Runtime dependencies. All licenses must be Apache 2.0, MIT, BSD, or PSF.
 # See SPEC.md §8 (Dependency Matrix) for rationale and per-package purpose.
 dependencies = [
-    "duckdb>=1.2.0",               # MIT — analytical engine, ingestion, SQL
-    "pyyaml>=6.0",                 # MIT — DCD serialization
-    "fastapi>=0.115.0",            # MIT — API server
-    "uvicorn[standard]>=0.34.0",   # BSD-3 — ASGI server
-    "docker>=7.0",                 # Apache-2.0 — sandbox management
-    "httpx>=0.28.0",               # BSD-3 — async HTTP client (Gemini)
-    "pandas>=2.2.0",               # BSD-3 — DataFrame interop
-    "pyarrow>=17.0",               # Apache-2.0 — Parquet read/write for agent artifacts
-    "pydantic>=2.9.0",             # MIT — data models
-    "pydantic-settings>=2.5.0",    # MIT — typed env-var configuration
-    "structlog>=24.4.0",           # MIT / Apache-2.0 dual — structured JSON logs
-    "python-multipart>=0.0.12",    # Apache-2.0 — multipart upload parsing
-    "openpyxl>=3.1",               # MIT — Excel xlsx read/write for tests + loader
-    "slowapi>=0.1.9",              # MIT — IP-based rate limiting
-    "websockets>=13.0",            # BSD-3 — FastAPI websocket dependency
-    "sqlglot>=23",                 # MIT — SQL parser for semantic validator (Phase 2)
-    "cryptography>=42",            # Apache-2.0 / BSD — Fernet for credential vault (Phase 5)
-    "dlt[duckdb]>=1.8",            # Apache-2.0 — SaaS ingestion long tail (Phase 6)
+    "duckdb>=1.2.0",               # MIT - analytical engine, ingestion, SQL
+    "pyyaml>=6.0",                 # MIT - DCD serialization
+    "fastapi>=0.115.0",            # MIT - API server
+    "uvicorn[standard]>=0.34.0",   # BSD-3 - ASGI server
+    "docker>=7.0",                 # Apache-2.0 - sandbox management
+    "httpx>=0.28.0",               # BSD-3 - async HTTP client (Gemini)
+    "pandas>=2.2.0",               # BSD-3 - DataFrame interop
+    "pyarrow>=17.0",               # Apache-2.0 - Parquet read/write for agent artifacts
+    "pydantic>=2.9.0",             # MIT - data models
+    "pydantic-settings>=2.5.0",    # MIT - typed env-var configuration
+    "structlog>=24.4.0",           # MIT / Apache-2.0 dual - structured JSON logs
+    "python-multipart>=0.0.12",    # Apache-2.0 - multipart upload parsing
+    "openpyxl>=3.1",               # MIT - Excel xlsx read/write for tests + loader
+    "slowapi>=0.1.9",              # MIT - IP-based rate limiting
+    "websockets>=13.0",            # BSD-3 - FastAPI websocket dependency
+    "sqlglot>=23",                 # MIT - SQL parser for semantic validator (Phase 2)
+    "cryptography>=42",            # Apache-2.0 / BSD - Fernet for credential vault (Phase 5)
+    "dlt[duckdb]>=1.8",            # Apache-2.0 - SaaS ingestion long tail (Phase 6)
 ]
 
 [project.optional-dependencies]
@@ -58,7 +58,7 @@ dev = [
     "pytest-cov>=5.0",             # MIT
     "pytest-asyncio>=0.24",        # Apache-2.0
     "ruff>=0.7",                   # MIT
-    "testcontainers[postgres]>=4.0", # Apache-2.0 — ephemeral Postgres for tests
+    "testcontainers[postgres]>=4.0", # Apache-2.0 - ephemeral Postgres for tests
 ]
 
 [project.urls]

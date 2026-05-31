@@ -1,6 +1,6 @@
 # Multi-stage build:
-#   1. coral-builder — Rust 1.95, compiles the Coral binary from sibling source
-#   2. base          — Python 3.12 + uv + FastAPI app + 3 workers
+#   1. coral-builder - Rust 1.95, compiles the Coral binary from sibling source
+#   2. base          - Python 3.12 + uv + FastAPI app + 3 workers
 #
 # Build context: the manthanv2/ root (so coral/, agent/, manthan-api/ are
 # all siblings). Configured in fly.toml: `build.dockerfile`.
@@ -9,7 +9,7 @@
 # prettifier as separate machines, each launched from this image.
 
 # ──────────────────────────────────────────────────────────────────────
-# Stage 1 — compile Coral
+# Stage 1 - compile Coral
 # ──────────────────────────────────────────────────────────────────────
 
 FROM rust:1.95-slim AS coral-builder
@@ -26,7 +26,7 @@ COPY coral /build/coral
 RUN cargo build --release --bin coral
 
 # ──────────────────────────────────────────────────────────────────────
-# Stage 2 — Python runtime + workers + Coral binary
+# Stage 2 - Python runtime + workers + Coral binary
 # ──────────────────────────────────────────────────────────────────────
 
 FROM python:3.12-slim AS base

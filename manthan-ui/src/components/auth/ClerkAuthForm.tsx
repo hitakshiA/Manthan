@@ -1,12 +1,12 @@
 /**
- * ClerkAuthForm — Clerk's `<SignIn>` / `<SignUp>` themed for the dark
+ * ClerkAuthForm - Clerk's `<SignIn>` / `<SignUp>` themed for the dark
  * AuthShell.
  *
  * We deliberately do NOT use a base theme package; instead we tune
  * `appearance.variables` + `elements` so the widget visually matches the
  * existing form (white-on-dark, accent green for the primary button,
  * rounded-xl 14px height, no extra chrome). That keeps the design the
- * user originally crafted — Clerk only owns the submission logic.
+ * user originally crafted - Clerk only owns the submission logic.
  *
  * If `VITE_CLERK_PUBLISHABLE_KEY` isn't set, the widget falls back to a
  * quiet hint pointing the operator at the env file. The Try-demo block
@@ -68,7 +68,7 @@ const APPEARANCE = {
     header: { display: "none" },
     headerTitle: { display: "none" },
     headerSubtitle: { display: "none" },
-    // Social buttons — match our SocialButton look.
+    // Social buttons - match our SocialButton look.
     socialButtonsBlockButton: {
       background: "rgba(255,255,255,0.04)",
       border: "1px solid rgba(255,255,255,0.10)",
@@ -95,7 +95,7 @@ const APPEARANCE = {
     formFieldInputShowPasswordButton: { color: "rgba(255,255,255,0.55)" },
     formFieldHintText: { color: "rgba(255,255,255,0.45)" },
     formFieldErrorText: { color: "var(--color-danger, #d04545)" },
-    // Primary submit — match the existing white-on-black submit style
+    // Primary submit - match the existing white-on-black submit style
     // (we keep the white-on-black look operators are used to instead of
     // accent-green here, because it sits next to the "Try the demo"
     // accent block and we don't want two competing greens).
@@ -114,7 +114,7 @@ const APPEARANCE = {
     footer: { display: "none" },
     footerAction: { display: "none" },
     footerActionLink: { display: "none" },
-    // Verification screens / OTP — match input styling.
+    // Verification screens / OTP - match input styling.
     otpCodeFieldInput: {
       background: "rgba(255,255,255,0.04)",
       border: "1px solid rgba(255,255,255,0.10)",
@@ -134,7 +134,7 @@ const APPEARANCE = {
  *  and `*Url` (where they go on success / pivot). */
 const COMMON = {
   appearance: APPEARANCE,
-  /** Clerk's router-aware mode — keeps url state inside react-router. */
+  /** Clerk's router-aware mode - keeps url state inside react-router. */
   routing: "path" as const,
   signInUrl: "/login",
   signUpUrl: "/signup",
@@ -157,14 +157,14 @@ export function ClerkAuthForm({ mode }: { mode: "signin" | "signup" }) {
 
 /**
  * Wraps Clerk's `<SignUp />` widget with a watcher that catches the
- * specific "account already exists" failure mode — which Clerk
+ * specific "account already exists" failure mode - which Clerk
  * surfaces as a generic "Unable to complete action at this time"
  * error message. When a user clicks Google/GitHub on the sign-up
  * form but their OAuth identity is already registered, that vague
  * error is all Clerk offers; we replace it with a clear banner
  * pointing at the sign-in page.
  *
- * Detection is text-pattern based on the widget's rendered DOM —
+ * Detection is text-pattern based on the widget's rendered DOM -
  * the only signal Clerk exposes for this state without going
  * full-custom-UI with `useSignUp`.
  */
@@ -209,7 +209,7 @@ function SignUpWithExistsDetection() {
 /**
  * Banner shown when sign-up fails because the OAuth/email identity is
  * already in the system. Routes the visitor to /login with a clean
- * one-line explanation — no jargon, no "contact support".
+ * one-line explanation - no jargon, no "contact support".
  */
 function AccountExistsBanner() {
   return (
@@ -299,7 +299,7 @@ function MissingKeyNotice() {
         >
           Clerk dashboard
         </a>{" "}
-        — the publishable key starts with{" "}
+        - the publishable key starts with{" "}
         <code className="font-mono">pk_test_</code>. Restart{" "}
         <code className="font-mono">npm run dev</code> afterwards.
       </p>

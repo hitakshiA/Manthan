@@ -1,7 +1,7 @@
 """Core types for the Manthan investigator.
 
 These flow through every stage of the agent loop. Pydantic enforces the
-contract at each boundary — the LLM's structured output is parsed into
+contract at each boundary - the LLM's structured output is parsed into
 a typed object, and the next iteration only sees the typed object.
 
 This is the locked vocabulary. Every other module operates on these
@@ -9,12 +9,12 @@ types. Read this file first.
 
 Design notes:
 - NO Pattern enum. The agent reasons about each case from first
-  principles — it doesn't classify into a fixed taxonomy. Patterns
+  principles - it doesn't classify into a fixed taxonomy. Patterns
   exist for evals and docs, not control flow.
 - The Event log is the single source of truth. State is derived.
 - Tool results carry full provenance via Evidence.
 - HITL gates are deterministic, computed outside the model.
-- NextStep is a typed Union — no string-based intent parsing.
+- NextStep is a typed Union - no string-based intent parsing.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, Field
 
 # ──────────────────────────────────────────────────────────────────────
-# Trigger — what starts a case
+# Trigger - what starts a case
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -34,7 +34,7 @@ class CaseTrigger(BaseModel):
     """The opening event for a case.
 
     Free-form text plus optional structured payload. The agent reads
-    this and reasons about what kind of work it is — no classifier
+    this and reasons about what kind of work it is - no classifier
     stage.
     """
 
@@ -59,7 +59,7 @@ class CaseTrigger(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Evidence — one row from any source, full provenance
+# Evidence - one row from any source, full provenance
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -67,7 +67,7 @@ class Evidence(BaseModel):
     """One row retrieved from a source. Every Finding cites by index.
 
     Provenance fields are populated by the tool executor, not the LLM.
-    The LLM never sees the raw row — it sees the Evidence wrapper with
+    The LLM never sees the raw row - it sees the Evidence wrapper with
     `source.table.record_id` so citation is structural.
     """
 
@@ -80,7 +80,7 @@ class Evidence(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Finding — a typed, cited claim
+# Finding - a typed, cited claim
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -89,7 +89,7 @@ class Finding(BaseModel):
 
     Every Finding cites at least one Evidence index. Type-system rejects
     findings without citations. The brief is rendered from a list of
-    Findings — no free-form prose lives outside this structure.
+    Findings - no free-form prose lives outside this structure.
     """
 
     text: str = Field(description="1-2 sentences, present-tense, factual")
@@ -101,7 +101,7 @@ class Finding(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Decision — the agent's recommendation
+# Decision - the agent's recommendation
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -109,7 +109,7 @@ class HitlGate(StrEnum):
     """Where the case lands in the approval flow.
 
     Computed deterministically by the orchestrator after the agent
-    proposes a Decision. The LLM does NOT pick the gate — policy does.
+    proposes a Decision. The LLM does NOT pick the gate - policy does.
 
     Locked thresholds (from marketing site):
       AUTO        amount_minor < 5000  (i.e. < $50)
@@ -138,7 +138,7 @@ class Decision(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Drafted actions — the writes the agent proposes (gated by HITL)
+# Drafted actions - the writes the agent proposes (gated by HITL)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -164,7 +164,7 @@ class DraftedAction(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Brief — the approve-page artifact
+# Brief - the approve-page artifact
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -213,7 +213,7 @@ class ToolCall(BaseModel):
 class ToolResult(BaseModel):
     """Envelope every tool returns. Saves ~60% on retry-driven loops.
 
-    The LLM sees `status`, `data`, `next_action_hint` — never raw
+    The LLM sees `status`, `data`, `next_action_hint` - never raw
     exceptions. Categorized errors so the LLM can decide whether to
     retry, change inputs, or escalate.
     """
@@ -231,7 +231,7 @@ class ToolResult(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# NextStep — the typed dispatch (OpenAI Agents SDK pattern)
+# NextStep - the typed dispatch (OpenAI Agents SDK pattern)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -267,7 +267,7 @@ NextStep = Annotated[
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Event — the single source of truth
+# Event - the single source of truth
 # ──────────────────────────────────────────────────────────────────────
 
 

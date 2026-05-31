@@ -7,9 +7,9 @@ Conventions every seeder follows:
   2. Phase-banner output via `seed_phase(...)` so the user can see what's
      happening and where time is going.
   3. Fail loud on misconfiguration (missing key, scope error). Fail
-     informatively — say which env var to fix.
+     informatively - say which env var to fix.
   4. Read scenarios from `seed.scenarios.SCENARIOS`. Don't hardcode
-     scenario data inside source modules — keep that single source of
+     scenario data inside source modules - keep that single source of
      truth.
 """
 

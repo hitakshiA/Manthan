@@ -6,7 +6,7 @@ the DCD (non-null checks on high-completeness columns, value-set checks
 on low-cardinality dimensions, numeric range checks on metrics) and
 returns a structured pass/fail report.
 
-Great Expectations' newer APIs (v1+) are heavy — we use the simpler
+Great Expectations' newer APIs (v1+) are heavy - we use the simpler
 expectations available via the ``gx`` namespace against a pandas
 DataFrame exported from DuckDB. This keeps the suite runnable on any
 size that fits in memory while avoiding the full EphemeralContext dance.

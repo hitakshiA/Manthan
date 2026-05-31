@@ -1,25 +1,25 @@
 """Seed PostHog (project 442171, us.posthog.com) for the Manthan agent.
 
 Coral's PostHog source exposes analytics METADATA (insights, dashboards,
-feature flags, cohorts, surveys) — not raw events. So this script focuses
+feature flags, cohorts, surveys) - not raw events. So this script focuses
 on management-API artifacts first, and ingests events as a "future use"
 bonus when the project API key is available.
 
 Workflow signals baked into the analytics layer:
 
-  W1 — Acme daisy disputes
+  W1 - Acme daisy disputes
        Cohort "Customers with multiple disputes" containing Acme
-       Insight "Refund rate by company — Acme outlier"
+       Insight "Refund rate by company - Acme outlier"
 
-  W2 — Northwind webhook crash
+  W2 - Northwind webhook crash
        Feature flag `enterprise_dashboard_v2` (enabled, rollout 100%)
-         — Northwind's stuck-on-Standard issue is this flag's eval failing
-       Insight "Webhook delivery failures by hour" — May 2026 spike
-       Dashboard "Engineering — Webhook Reliability" pointing at the above
+         - Northwind's stuck-on-Standard issue is this flag's eval failing
+       Insight "Webhook delivery failures by hour" - May 2026 spike
+       Dashboard "Engineering - Webhook Reliability" pointing at the above
 
-  W3 — Mockingbird legacy billing migration
+  W3 - Mockingbird legacy billing migration
        Feature flag `legacy_billing_entity_deprecated` (50% rollout)
-       Insight "Customers on dual billing entities" — points at Mockingbird
+       Insight "Customers on dual billing entities" - points at Mockingbird
 
 Idempotent: searches by name/key before creating each artifact.
 
@@ -61,7 +61,7 @@ PROJECT_ID = 442171
 if not PERSONAL_KEY:
     sys.exit("ERROR: POSTHOG_API_KEY missing from .env")
 
-# Personal key — for management API (Bearer header).
+# Personal key - for management API (Bearer header).
 H_MGMT: dict[str, str] = {
     "Authorization": f"Bearer {PERSONAL_KEY}",
     "Content-Type": "application/json",
@@ -131,7 +131,7 @@ def list_all(
         data = r.json()
         out.extend(data.get("results", []))
         next_url = data.get("next")
-        # PostHog returns absolute URLs in 'next' — pass through.
+        # PostHog returns absolute URLs in 'next' - pass through.
     return out
 
 
@@ -154,7 +154,7 @@ def fetch_project_api_key(client: httpx.Client) -> str | None:
 
 # Helpful wrappers around the modern PostHog "query" format. Coral
 # reads the metadata (name/description/query.kind/series), so any valid
-# query that round-trips through the API is fine — we don't need the
+# query that round-trips through the API is fine - we don't need the
 # numbers to render to anything specific.
 
 
@@ -184,15 +184,15 @@ def _events(*names: str) -> list[dict]:
     return [{"kind": "EventsNode", "event": n, "name": n} for n in names]
 
 
-# Full list of insights we seed. Order matters — workflow-signal
+# Full list of insights we seed. Order matters - workflow-signal
 # insights are at the start so they appear high in any UI listing.
 INSIGHT_SPECS: list[dict] = [
     # ── Workflow-signal insights (must succeed) ──
     {
-        "name": "Refund rate by company — Acme outlier",  # W1
+        "name": "Refund rate by company - Acme outlier",  # W1
         "description": (
             "Tracks per-company refund rate. Acme Genomics shows 3x the "
-            "median over the last 8 months — flagged for pattern review "
+            "median over the last 8 months - flagged for pattern review "
             "(daisy-chained chargebacks)."
         ),
         "query": _trends(_events("refund_issued"), interval="month"),
@@ -212,7 +212,7 @@ INSIGHT_SPECS: list[dict] = [
         "name": "Webhook delivery failures by hour",  # W2
         "description": (
             "invoice.payment_succeeded webhook handler exceptions. "
-            "Major spike on 2026-05-08 around 14:00 UTC — handler "
+            "Major spike on 2026-05-08 around 14:00 UTC - handler "
             "crashed on enterprise tier evaluation, leaving customers "
             "paid-but-not-entitled (Northwind impact)."
         ),
@@ -239,7 +239,7 @@ INSIGHT_SPECS: list[dict] = [
         "description": (
             "Customers with active subscriptions in BOTH the legacy "
             "billing system and Stripe. Should be 0 after the March 2026 "
-            "migration cutover — Mockingbird Media is the outlier."
+            "migration cutover - Mockingbird Media is the outlier."
         ),
         "query": _trends(
             _events("dual_billing_detected"), interval="week"
@@ -247,7 +247,7 @@ INSIGHT_SPECS: list[dict] = [
         "tags": ["billing", "migration", "w3", "mockingbird"],
     },
     {
-        "name": "Legacy billing entity — active subscriptions",  # W3
+        "name": "Legacy billing entity - active subscriptions",  # W3
         "description": (
             "Subscriptions still active on the legacy billing entity "
             "that was supposed to be deprecated at end-of-March 2026. "
@@ -277,7 +277,7 @@ INSIGHT_SPECS: list[dict] = [
     },
     {
         "name": "Weekly Active Users by Plan",
-        "description": "WAU by plan tier — Standard / Pro / Enterprise.",
+        "description": "WAU by plan tier - Standard / Pro / Enterprise.",
         "query": _trends(_events("$pageview"), interval="week"),
         "tags": ["product"],
     },
@@ -376,7 +376,7 @@ INSIGHT_SPECS: list[dict] = [
         "tags": ["engineering"],
     },
     {
-        "name": "Churn signals — last login age",
+        "name": "Churn signals - last login age",
         "description": (
             "Customers whose last_login is > 30 days. Pre-churn signal."
         ),
@@ -471,7 +471,7 @@ FLAG_SPECS: list[dict] = [
         "name": "Legacy billing entity deprecated",
         "description": (
             "When ON, charges are routed exclusively through Stripe; the "
-            "legacy entity should not bill. Rollout still in progress — "
+            "legacy entity should not bill. Rollout still in progress - "
             "Mockingbird Media is in the non-deprecated bucket due to a "
             "migration miss. Related to W3."
         ),
@@ -531,7 +531,7 @@ FLAG_SPECS: list[dict] = [
     },
     {
         "key": "audit_log_retention_365d",
-        "name": "Audit log retention — 365 days",
+        "name": "Audit log retention - 365 days",
         "description": (
             "Extends audit log retention to 365 days for Enterprise."
         ),
@@ -558,7 +558,7 @@ FLAG_SPECS: list[dict] = [
     {
         "key": "intercom_v2_chat",
         "name": "Intercom v2 chat widget",
-        "description": "New chat widget — A/B against the old one.",
+        "description": "New chat widget - A/B against the old one.",
         "active": False,
         "rollout": 0,
         "tags": ["support"],
@@ -634,7 +634,7 @@ def upsert_flag(
 
 DASHBOARD_SPECS: list[dict] = [
     {
-        "name": "Engineering — Webhook Reliability",  # W2
+        "name": "Engineering - Webhook Reliability",  # W2
         "description": (
             "Webhook delivery health, retry queue depth, and exception "
             "rate. Surfaced the May 2026 invoice.payment_succeeded "
@@ -650,7 +650,7 @@ DASHBOARD_SPECS: list[dict] = [
         ],
     },
     {
-        "name": "Finance — Conversion",
+        "name": "Finance - Conversion",
         "description": (
             "Trial → paid funnel, checkout conversion, MRR, dispute "
             "volume."
@@ -664,7 +664,7 @@ DASHBOARD_SPECS: list[dict] = [
         ],
     },
     {
-        "name": "Product — Activation",
+        "name": "Product - Activation",
         "description": (
             "Activation funnel + feature adoption for new signups."
         ),
@@ -685,14 +685,14 @@ DASHBOARD_SPECS: list[dict] = [
         ),
         "tags": ["customer-success", "w1"],
         "tile_insight_names": [
-            "Churn signals — last login age",
-            "Refund rate by company — Acme outlier",
+            "Churn signals - last login age",
+            "Refund rate by company - Acme outlier",
             "Disputes filed per customer (rolling 12 months)",
             "Time-to-resolution: Support tickets",
         ],
     },
     {
-        "name": "Billing — Migration Tracking",  # W3
+        "name": "Billing - Migration Tracking",  # W3
         "description": (
             "Tracks the legacy billing → Stripe migration that finished "
             "March 2026. Surfaces dual-billing regressions like the "
@@ -701,7 +701,7 @@ DASHBOARD_SPECS: list[dict] = [
         "tags": ["billing", "w3"],
         "tile_insight_names": [
             "Customers on dual billing entities",
-            "Legacy billing entity — active subscriptions",
+            "Legacy billing entity - active subscriptions",
             "MRR by plan",
         ],
     },
@@ -981,7 +981,7 @@ COHORT_SPECS: list[dict] = [
         "tags": ["customer-success"],
     },
     {
-        "name": "Churning — Q2 2026",
+        "name": "Churning - Q2 2026",
         "description": "Customers with cancel-intent signals in Q2 2026.",
         "is_static": False,
         "filters": {
@@ -1115,7 +1115,7 @@ SURVEY_SPECS: list[dict] = [
         ],
     },
     {
-        "name": "Enterprise dashboard — feature request",
+        "name": "Enterprise dashboard - feature request",
         "description": (
             "Surfaced inside the Enterprise dashboard to collect "
             "feature requests. Linked to enterprise_dashboard_v2 flag."
@@ -1132,7 +1132,7 @@ SURVEY_SPECS: list[dict] = [
         ],
     },
     {
-        "name": "Billing experience — disputes",
+        "name": "Billing experience - disputes",
         "description": (
             "Targeted at customers who recently went through a dispute "
             "or refund flow. Captures whether the resolution felt fair."
@@ -1190,7 +1190,7 @@ def upsert_survey(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Event ingestion (bonus — needs project API key)
+# Event ingestion (bonus - needs project API key)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1324,7 +1324,7 @@ def build_events(
             })
 
     # ── Workflow-specific events ──
-    # W1: Acme Genomics — 3 dispute_filed events, 2 refund_issued.
+    # W1: Acme Genomics - 3 dispute_filed events, 2 refund_issued.
     acme_admin = _distinct_id_for_user(
         company_by_slug["acme-genomics"], "admin"
     )
@@ -1353,7 +1353,7 @@ def build_events(
             "timestamp": (now - timedelta(days=days_ago)).isoformat(),
         })
 
-    # W2: Northwind — webhook_delivery_failed cluster on 2026-05-08.
+    # W2: Northwind - webhook_delivery_failed cluster on 2026-05-08.
     northwind_admin = _distinct_id_for_user(
         company_by_slug["northwind-logi"], "admin"
     )
@@ -1384,7 +1384,7 @@ def build_events(
         "timestamp": (now - timedelta(days=14)).isoformat(),
     })
 
-    # W3: Mockingbird — dual_billing_detected + legacy_subscription_charged.
+    # W3: Mockingbird - dual_billing_detected + legacy_subscription_charged.
     mb_admin = _distinct_id_for_user(
         company_by_slug["mockingbird-media"], "admin"
     )
@@ -1458,9 +1458,9 @@ def verify_workflows(
     """Confirm W1/W2/W3 signals exist in PostHog."""
     results: dict[str, bool] = {}
 
-    # W1 — Acme outlier insight + multiple-disputes cohort exist.
+    # W1 - Acme outlier insight + multiple-disputes cohort exist.
     w1 = (
-        "Refund rate by company — Acme outlier" in insight_ids
+        "Refund rate by company - Acme outlier" in insight_ids
         and "Disputes filed per customer (rolling 12 months)"
         in insight_ids
         and "Customers with multiple disputes" in cohort_ids
@@ -1471,12 +1471,12 @@ def verify_workflows(
         f"insights={'yes' if w1 else 'NO'}"
     )
 
-    # W2 — Webhook reliability dashboard, webhook insight, flag exist.
+    # W2 - Webhook reliability dashboard, webhook insight, flag exist.
     w2 = (
         "Webhook delivery failures by hour" in insight_ids
         and "Entitlement mismatch: paid vs tier" in insight_ids
         and "enterprise_dashboard_v2" in flag_ids
-        and "Engineering — Webhook Reliability" in dashboard_ids
+        and "Engineering - Webhook Reliability" in dashboard_ids
         and "Customers stuck on wrong plan" in cohort_ids
     )
     results["W2"] = w2
@@ -1485,14 +1485,14 @@ def verify_workflows(
         f"{'yes' if w2 else 'NO'}"
     )
 
-    # W3 — Legacy migration flag + dual-billing insight + cohort.
+    # W3 - Legacy migration flag + dual-billing insight + cohort.
     w3 = (
         "Customers on dual billing entities" in insight_ids
-        and "Legacy billing entity — active subscriptions"
+        and "Legacy billing entity - active subscriptions"
         in insight_ids
         and "legacy_billing_entity_deprecated" in flag_ids
         and "Customers on dual billing entities" in cohort_ids
-        and "Billing — Migration Tracking" in dashboard_ids
+        and "Billing - Migration Tracking" in dashboard_ids
     )
     results["W3"] = w3
     print(
@@ -1778,8 +1778,8 @@ def main() -> int:
         f"{flag_ids.get('enterprise_dashboard_v2', '(missing)')}"
     )
     print(
-        f"  W2 dashboard 'Engineering — Webhook Reliability' → "
-        f"{dashboard_ids.get('Engineering — Webhook Reliability', '(missing)')}"
+        f"  W2 dashboard 'Engineering - Webhook Reliability' → "
+        f"{dashboard_ids.get('Engineering - Webhook Reliability', '(missing)')}"
     )
     print(
         f"  W3 flag 'legacy_billing_entity_deprecated' → "

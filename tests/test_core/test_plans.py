@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`src.core.plans` — the plan approval gate."""
+"""Unit tests for :mod:`src.core.plans` - the plan approval gate."""
 
 from __future__ import annotations
 

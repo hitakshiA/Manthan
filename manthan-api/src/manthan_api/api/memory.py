@@ -1,4 +1,4 @@
-"""Episodic memory — past cases per customer.
+"""Episodic memory - past cases per customer.
 
 Powers /app/memory in the UI. For each customer the org has seen, returns
 a count + outcome breakdown + recent case list. This is the surface that
@@ -71,7 +71,7 @@ async def customer_cases(
     customer_ref: str,
     ctx: TenantCtx = Depends(get_ctx),
 ) -> dict[str, Any]:
-    """Past cases for one customer — used in the drill-down view."""
+    """Past cases for one customer - used in the drill-down view."""
     async with get_conn() as conn:
         rows = await conn.fetch(
             """

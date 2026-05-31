@@ -43,7 +43,7 @@ body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text-1)
 - Container: max-width:1200px; margin:0 auto; padding:24px;
 - CSS Grid: grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:16px;
 
-## Chart.js Setup (CRITICAL — follow exactly)
+## Chart.js Setup (CRITICAL - follow exactly)
 ```javascript
 const COLORS = ['#6e56cf','#3b8263','#bd9e14','#c92f31','#3b82f6','#8b5cf6','#14b8a6','#f59e0b'];
 Chart.defaults.font.family = "'Inter', sans-serif";
@@ -163,7 +163,7 @@ class Dashboard {
 
 ## FILTER RULES (NON-NEGOTIABLE)
 1. applyFilters() MUST update EVERY KPI, EVERY chart, and EVERY table
-2. Filters are global — changing one filter re-renders the entire dashboard
+2. Filters are global - changing one filter re-renders the entire dashboard
 3. Show active filter pills below the filter bar so the user knows what's applied
 4. Include a "Reset All" button that clears all filters
 5. Date range filters: use two <input type="date"> elements
@@ -269,7 +269,7 @@ When a user clicks a chart bar or table row, show a detail panel:
 ## NUMBER FORMATTING (always use these helpers)
 ```javascript
 function fmt(v, type) {
-  if (v == null) return '—';
+  if (v == null) return '-';
   switch(type) {
     case '$': return v >= 1e6 ? `$${(v/1e6).toFixed(1)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(1)}K` : `$${v.toFixed(0)}`;
     case '%': return `${v.toFixed(1)}%`;
@@ -280,11 +280,11 @@ function fmt(v, type) {
 ```
 
 ## IMPORTANT RULES
-- Background is ALWAYS var(--bg) (#f6f6f5) — NEVER dark/black
+- Background is ALWAYS var(--bg) (#f6f6f5) - NEVER dark/black
 - Cards are ALWAYS white with 1px border
 - ALL headings use Instrument Serif, ALL body uses Inter
-- Filters MUST update EVERY tile — KPIs, charts, AND tables
-- Every chart is clickable — click drills into that dimension value
+- Filters MUST update EVERY tile - KPIs, charts, AND tables
+- Every chart is clickable - click drills into that dimension value
 - Tables are sortable AND clickable (row click = drill)
 - Show breadcrumb trail when drilled: "All → Region: North → Status: Delivered"
 - Include "Reset All Filters" button
@@ -301,7 +301,7 @@ function fmt(v, type) {
 - Always call the main render/init function at the END of the script
   so the dashboard loads with data on page open (not just on interaction)
 - DO NOT wrap the entire script in try/catch. If you open ``try {`` you
-  MUST close it with ``} catch (e) { console.error(e); }`` — a missing
+  MUST close it with ``} catch (e) { console.error(e); }`` - a missing
   catch clause is a SyntaxError and renders the whole dashboard blank.
   Safer default: write correct code and skip the try/catch entirely.
 - Test every function: if a chart or KPI doesn't render, the user sees blank cards

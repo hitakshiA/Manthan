@@ -1,4 +1,4 @@
-"""Slack adapter — post brief / decision summaries to a channel."""
+"""Slack adapter - post brief / decision summaries to a channel."""
 
 from __future__ import annotations
 
@@ -82,7 +82,7 @@ def post(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
             return ExecutionResult(
                 external_ref=ref,
                 summary=(
-                    f"Slack post queued (demo): tried {', '.join(attempted)} — "
+                    f"Slack post queued (demo): tried {', '.join(attempted)} - "
                     f"last error: {err}"
                 ),
                 raw={

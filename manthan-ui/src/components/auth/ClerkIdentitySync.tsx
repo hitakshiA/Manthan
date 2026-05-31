@@ -1,5 +1,5 @@
 /**
- * ClerkIdentitySync — bridges Clerk's signed-in user into the api
+ * ClerkIdentitySync - bridges Clerk's signed-in user into the api
  * module's per-request identity header.
  *
  * Why: the dev tenant resolver in manthan-api can read an

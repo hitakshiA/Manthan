@@ -1,6 +1,6 @@
 # VPS deployment
 
-Manthan runs on any Ubuntu 22.04 / 24.04 VPS — DigitalOcean, Linode,
+Manthan runs on any Ubuntu 22.04 / 24.04 VPS - DigitalOcean, Linode,
 Vultr, Hetzner, AWS Lightsail, OVH, or your own metal. The stack is a
 single Docker image, fronted by Caddy for TLS. Three supported paths
 from a fresh VPS to a running Manthan.
@@ -21,7 +21,7 @@ nano /opt/manthan/.env             # paste GEMINI_API_KEY
 docker compose -f /opt/manthan/docker-compose.yml restart
 ```
 
-Open `http://<your-vps-ip>:8000` — you're live.
+Open `http://<your-vps-ip>:8000` - you're live.
 
 ## B · Manual bootstrap
 
@@ -67,7 +67,7 @@ GEMINI_API_KEY=<from https://aistudio.google.com/apikey>
 ```
 
 All other settings have sensible defaults. The default model cascade is
-`gemini-3-flash-preview` → `gemini-3.1-pro-preview` — Flash for speed,
+`gemini-3-flash-preview` → `gemini-3.1-pro-preview` - Flash for speed,
 Pro as the escalation fallback. See `.env.example` for the full list.
 
 ## Resources
@@ -82,6 +82,6 @@ For production loads, scale up.
 
 The agent's connection to Google AI Studio can be routed through Veea's
 Lobster Trap DPI proxy for prompt-injection and credential-leak
-inspection — see [`infra/lobstertrap/README.md`](../lobstertrap/README.md).
+inspection - see [`infra/lobstertrap/README.md`](../lobstertrap/README.md).
 On a production VPS you'd run Lobster Trap as a sibling container or
 systemd service and point `GEMINI_BASE_URL` at `http://localhost:8080/v1beta/openai`.

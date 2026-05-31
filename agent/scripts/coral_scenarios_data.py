@@ -53,7 +53,7 @@ random.seed(42)
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S01 — Friendly fraud (Acme Genomics)
+# S01 - Friendly fraud (Acme Genomics)
 # Sources: stripe, intercom, zendesk, gmail, notion, salesforce
 # Decision: fight
 # ──────────────────────────────────────────────────────────────────────
@@ -83,17 +83,17 @@ _S01_WORLD: dict[str, dict[str, list]] = {
             make_stripe_charge(
                 id="ch_3MqAcmeRen", customer=_S01_CUS, amount=420000,
                 status="succeeded", created="2026-05-09T11:02:00",
-                description="Acme Genomics — Pro Annual renewal",
+                description="Acme Genomics - Pro Annual renewal",
             ),
             # Acme prior years
             make_stripe_charge(id="ch_Acme2025", customer=_S01_CUS,
                                amount=420000, status="succeeded",
                                created="2025-05-09T11:02:00",
-                               description="Acme Genomics — Pro Annual renewal"),
+                               description="Acme Genomics - Pro Annual renewal"),
             make_stripe_charge(id="ch_Acme2024", customer=_S01_CUS,
                                amount=360000, status="succeeded",
                                created="2024-05-09T11:02:00",
-                               description="Acme Genomics — Pro Annual initial"),
+                               description="Acme Genomics - Pro Annual initial"),
         ],
         "subscriptions": [
             make_stripe_subscription(
@@ -117,7 +117,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
             make_stripe_customer(id=_S01_CUS, email=_S01_EMAIL,
                                  name=_S01_NAME,
                                  created="2023-04-15T11:02:00",
-                                 description="Acme Genomics — sequencing analytics"),
+                                 description="Acme Genomics - sequencing analytics"),
             # 80 noise customers
             *noise_stripe_customers(80, seed=102),
         ],
@@ -133,7 +133,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
                 state="closed",
                 created_at=1741449600,  # 2026-03-08
                 source_body_snippet=(
-                    "Hi team — we're evaluating whether to continue with you "
+                    "Hi team - we're evaluating whether to continue with you "
                     "for another year and need to understand what data export "
                     "looks like. Could you walk us through the formats? We're "
                     "not planning to cancel right now, just want to know "
@@ -147,7 +147,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
                 source_author_name="Priya R (Acme Ops)",
                 state="closed",
                 created_at=1741536000,  # 2026-03-09
-                source_body_snippet="Thanks for the walkthrough — that's helpful. No action needed for now.",
+                source_body_snippet="Thanks for the walkthrough - that's helpful. No action needed for now.",
             ),
             make_intercom_conversation(
                 id="C-Acme-003",
@@ -165,7 +165,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
                 id="ICON-Acme-001",
                 email=_S01_EMAIL,
                 name="Priya R (Acme Ops)",
-                last_seen_at=1746423000,  # 2026-05-04 — 5 days before dispute
+                last_seen_at=1746423000,  # 2026-05-04 - 5 days before dispute
                 last_replied_at=1745405000,
                 created_at=1683633720,
             ),
@@ -176,7 +176,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
             make_zendesk_user(id=_S01_ZD_USER, email=_S01_EMAIL, name="Priya R"),
         ],
         "tickets": [
-            # Acme's tickets — neither is cancel-related
+            # Acme's tickets - neither is cancel-related
             make_zendesk_ticket(
                 id=600100, subject="Add new viewer-role user",
                 description="Need to invite analytics@acme-genomics.example as viewer.",
@@ -198,11 +198,11 @@ _S01_WORLD: dict[str, dict[str, list]] = {
             # Acme's Q1 check-in (NOT a cancel email)
             make_gmail_thread(
                 id="gm_Acme_001",
-                snippet="Acme Genomics Q1 check-in — discussed renewal expectations, no objections raised. — CSM",
+                snippet="Acme Genomics Q1 check-in - discussed renewal expectations, no objections raised. - CSM",
                 history_id="200001",
             ),
             # 200 noise threads from many customers. NOTE: noise pool includes
-            # "please cancel" snippets from OTHER customers — red herrings.
+            # "please cancel" snippets from OTHER customers - red herrings.
             *noise_gmail_threads(200, seed=105),
         ],
     },
@@ -211,7 +211,7 @@ _S01_WORLD: dict[str, dict[str, list]] = {
             # THE current authoritative SOP
             make_notion_page(
                 id="n_refunds_2026_sop",
-                title="Refunds & Disputes — 2026 SOP (CURRENT)",
+                title="Refunds & Disputes - 2026 SOP (CURRENT)",
                 body=(
                     "OFFICIAL CURRENT POLICY. For subscription_canceled chargebacks: "
                     "FIGHT when (a) no formal cancellation request exists across "
@@ -239,15 +239,15 @@ _S01_WORLD: dict[str, dict[str, list]] = {
         ],
         "opportunities": [
             make_salesforce_opportunity(
-                id="opp_Acme_2024", name="Acme Genomics — New", stage_name="Closed Won",
+                id="opp_Acme_2024", name="Acme Genomics - New", stage_name="Closed Won",
                 amount=360000, close_date="2024-05-09", account_id=_S01_ACCT,
             ),
             make_salesforce_opportunity(
-                id="opp_Acme_2025", name="Acme Genomics — Renewal", stage_name="Closed Won",
+                id="opp_Acme_2025", name="Acme Genomics - Renewal", stage_name="Closed Won",
                 amount=420000, close_date="2025-05-09", account_id=_S01_ACCT,
             ),
             make_salesforce_opportunity(
-                id="opp_Acme_2026", name="Acme Genomics — Renewal", stage_name="Closed Won",
+                id="opp_Acme_2026", name="Acme Genomics - Renewal", stage_name="Closed Won",
                 amount=420000, close_date="2026-05-09", account_id=_S01_ACCT,
             ),
         ],
@@ -261,7 +261,7 @@ SCENARIO_S01 = Scenario(
     trigger_text=(
         "Slack DM from @priya (CSM):\n"
         "\"Hey can you take dp_3MqAcmeRen? Acme Genomics is fighting the $4,200 annual "
-        "renewal. They keep insisting they tried to cancel earlier this year — I poked "
+        "renewal. They keep insisting they tried to cancel earlier this year - I poked "
         "around Intercom and there's something from a couple months back but it didn't "
         "feel like a formal cancel request to me. They're using the product. Brief "
         "please by EOD Thu (evidence due Fri).\"\n\n"
@@ -293,9 +293,9 @@ SCENARIO_S01 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S02 — SLA partial credit (Northwind Logistics)
+# S02 - SLA partial credit (Northwind Logistics)
 # Sources: stripe, salesforce, pagerduty, datadog, notion, intercom
-# Decision: refund (PARTIAL — $111 credit, NOT the $2,250 short-pay)
+# Decision: refund (PARTIAL - $111 credit, NOT the $2,250 short-pay)
 # ──────────────────────────────────────────────────────────────────────
 
 _S02_EMAIL = "ar@northwind-logi.example"
@@ -310,7 +310,7 @@ _S02_WORLD: dict[str, dict[str, list]] = {
                 id="in_INV9821", customer=_S02_CUS, amount_due=900000,
                 amount_paid=675000, status="open",
                 due_date="2026-05-30T00:00:00", created="2026-05-01T00:00:00",
-                description="Monthly Enterprise plan — May 2026",
+                description="Monthly Enterprise plan - May 2026",
             ),
         ],
         "charges": [
@@ -331,7 +331,7 @@ _S02_WORLD: dict[str, dict[str, list]] = {
         "customers": [
             make_stripe_customer(id=_S02_CUS, email=_S02_EMAIL,
                                  name=_S02_NAME, created="2024-05-01T11:00:00",
-                                 description="Northwind Logistics — fleet routing"),
+                                 description="Northwind Logistics - fleet routing"),
             *noise_stripe_customers(50, seed=201),
         ],
     },
@@ -382,14 +382,14 @@ _S02_WORLD: dict[str, dict[str, list]] = {
         "pages": [
             make_notion_page(
                 id="n_northw_msa_addendum",
-                title="Northwind Logistics MSA — SLA Addendum (CURRENT)",
+                title="Northwind Logistics MSA - SLA Addendum (CURRENT)",
                 body=(
                     "AUTHORITATIVE MSA TERMS for Northwind. Section 7.4: SLA "
                     "credit = (downtime_hours / total_hours_in_month) * "
                     "monthly_fee * multiplier. Multiplier=2 for SEV-2, 4 for "
                     "SEV-1. Credits cap at one month's fee. Customer must claim "
                     "within 30 days. Customers may NOT unilaterally short-pay "
-                    "invoices — SLA credits are issued as billing adjustments. "
+                    "invoices - SLA credits are issued as billing adjustments. "
                     "Worked example: 4.45 hours / 720 monthly hours * $9,000 * "
                     "2 = approximately $111 credit."
                 ),
@@ -404,7 +404,7 @@ _S02_WORLD: dict[str, dict[str, list]] = {
         "conversations": [
             make_intercom_conversation(
                 id="C-Nwnd-001",
-                source_subject="Outage May 14 — credit request",
+                source_subject="Outage May 14 - credit request",
                 source_author_email=_S02_EMAIL,
                 source_author_name="Marcus T (Northwind AR)",
                 state="open",
@@ -431,9 +431,9 @@ SCENARIO_S02 = Scenario(
     pattern_name="sla_partial_credit_real_coral",
     trigger_text=(
         "Forwarded email from @marcus (AR):\n"
-        "\"FYI — Northwind short-paid INV-9821 by 25% ($2,250 on a $9k invoice). "
+        "\"FYI - Northwind short-paid INV-9821 by 25% ($2,250 on a $9k invoice). "
         "They cite 'SLA breach during May 14-15 outage.' I'm not sure we owe them "
-        "anything — please double-check. AE wants us to not ding the renewal.\"\n\n"
+        "anything - please double-check. AE wants us to not ding the renewal.\"\n\n"
         "Customer: Northwind Logistics (cus_Nwnd2024, ar@northwind-logi.example)\n"
         "Invoice INV-9821 · $9,000 USD · paid $6,750 (short $2,250)\n"
         "Cited window: 2026-05-14 09:00 to 2026-05-15 14:00"
@@ -454,7 +454,7 @@ SCENARIO_S02 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S03 — AE off-contract promise (Globex Software)
+# S03 - AE off-contract promise (Globex Software)
 # Sources: stripe, salesforce, gmail, hubspot, notion
 # Decision: refund (full $8,200)
 # ──────────────────────────────────────────────────────────────────────
@@ -488,7 +488,7 @@ _S03_WORLD: dict[str, dict[str, list]] = {
         "customers": [
             make_stripe_customer(id=_S03_CUS, email=_S03_EMAIL,
                                  name=_S03_NAME, created="2024-01-01T11:00:00",
-                                 description="Globex Software — Pro Annual 200 seats"),
+                                 description="Globex Software - Pro Annual 200 seats"),
             *noise_stripe_customers(60, seed=301),
         ],
     },
@@ -503,7 +503,7 @@ _S03_WORLD: dict[str, dict[str, list]] = {
         ],
         "opportunities": [
             make_salesforce_opportunity(
-                id="opp_Globex_2026", name="Globex Software — New Pro Annual",
+                id="opp_Globex_2026", name="Globex Software - New Pro Annual",
                 stage_name="Closed Won", amount=4000000, close_date="2026-01-15",
                 account_id=_S03_ACCT,
             ),
@@ -511,14 +511,14 @@ _S03_WORLD: dict[str, dict[str, list]] = {
     },
     "gmail": {
         "threads": [
-            # THE smoking gun — AE Mark's promise
+            # THE smoking gun - AE Mark's promise
             make_gmail_thread(
                 id="gm_Globex_AEpromise",
                 snippet=(
-                    "From: mark@us (AE) To: accounting@globex.example: Hey Sarah — "
+                    "From: mark@us (AE) To: accounting@globex.example: Hey Sarah - "
                     "we can flex you up to 220 seats at no extra charge through end "
                     "of Q3 as we'd talked about. Just keep me in the loop on hiring. "
-                    "— Mark, 2026-03-18"
+                    "- Mark, 2026-03-18"
                 ),
                 history_id="300001",
             ),
@@ -536,7 +536,7 @@ _S03_WORLD: dict[str, dict[str, list]] = {
         ],
         "deals": [
             make_hubspot_deal(
-                id="deal_Globex_2026", dealname="Globex Software — Pro Annual",
+                id="deal_Globex_2026", dealname="Globex Software - Pro Annual",
                 dealstage="closedwon", amount=4000000,
                 closedate="2026-01-15",
             ),
@@ -546,7 +546,7 @@ _S03_WORLD: dict[str, dict[str, list]] = {
         "pages": [
             make_notion_page(
                 id="n_ae_promises_sop",
-                title="Off-contract AE Promises — RevOps SOP (CURRENT)",
+                title="Off-contract AE Promises - RevOps SOP (CURRENT)",
                 body=(
                     "AUTHORITATIVE POLICY. If a Gmail/Slack AE promise exists "
                     "but no Salesforce opportunity amendment was filed, the "
@@ -561,7 +561,7 @@ _S03_WORLD: dict[str, dict[str, list]] = {
             ),
             make_notion_page(
                 id="n_globex_msa",
-                title="Globex MSA — Seat Billing Terms",
+                title="Globex MSA - Seat Billing Terms",
                 body=(
                     "Standard MSA. Seat overage billed at contract rate * overage_count, "
                     "prorated monthly. Side letters or AE-issued promises must be "
@@ -605,7 +605,7 @@ SCENARIO_S03 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S04 — VAT compliance (Bottega Romano)
+# S04 - VAT compliance (Bottega Romano)
 # Sources: stripe, salesforce, hubspot, intercom, notion, sentry
 # Decision: refund $900 (VAT portion only, NOT full $5,400)
 # ──────────────────────────────────────────────────────────────────────
@@ -631,7 +631,7 @@ _S04_WORLD: dict[str, dict[str, list]] = {
                 id=_S04_CUS, email=_S04_EMAIL, name=_S04_NAME,
                 created="2025-09-12T00:00:00",
                 description=(
-                    "Bottega Romano — Italian B2B. VAT ID IT12345678901 "
+                    "Bottega Romano - Italian B2B. VAT ID IT12345678901 "
                     "(VIES-verified 2025-09-12)."
                 ),
             ),
@@ -662,7 +662,7 @@ _S04_WORLD: dict[str, dict[str, list]] = {
         "conversations": [
             make_intercom_conversation(
                 id="C-Bott-001",
-                source_subject="VAT question — EU business customer",
+                source_subject="VAT question - EU business customer",
                 source_author_email=_S04_EMAIL,
                 source_author_name="Giulia P (Bottega Finance)",
                 state="closed",
@@ -687,10 +687,10 @@ _S04_WORLD: dict[str, dict[str, list]] = {
         "pages": [
             make_notion_page(
                 id="n_eu_vat_sop",
-                title="EU B2B Tax Handling — RevOps SOP v4 (CURRENT)",
+                title="EU B2B Tax Handling - RevOps SOP v4 (CURRENT)",
                 body=(
                     "AUTHORITATIVE POLICY. EU B2B customers with a VIES-verified "
-                    "VAT ID are subject to reverse-charge VAT — we do NOT charge "
+                    "VAT ID are subject to reverse-charge VAT - we do NOT charge "
                     "VAT on their invoices. They self-report VAT in their own "
                     "jurisdiction. Configure tax_exempt=true in the billing "
                     "platform once VAT ID is VIES-verified. If a customer is "
@@ -710,7 +710,7 @@ _S04_WORLD: dict[str, dict[str, list]] = {
         "issues": [
             make_sentry_issue(
                 id="SENT-EU001",
-                title="GDPR cleanup task — unrelated infra refactor",
+                title="GDPR cleanup task - unrelated infra refactor",
                 status="resolved", level="info", count=3,
                 first_seen="2026-03-12T00:00:00",
                 last_seen="2026-03-20T00:00:00",
@@ -727,7 +727,7 @@ SCENARIO_S04 = Scenario(
     pattern_name="vat_compliance_real_coral",
     trigger_text=(
         "Stripe webhook + slack note from @finance:\n"
-        "\"Italian customer is disputing INV-4521 ($5,400 total) — they say they "
+        "\"Italian customer is disputing INV-4521 ($5,400 total) - they say they "
         "shouldn't have been charged VAT because they're a business with a valid "
         "IT VAT ID. Avalara computed VAT anyway. I think they have a point but "
         "the dispute is for $5,400 (the whole invoice) which can't be right.\"\n\n"
@@ -749,7 +749,7 @@ SCENARIO_S04 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S05 — Migration orphan (Saga Robotics)
+# S05 - Migration orphan (Saga Robotics)
 # Sources: stripe, salesforce, intercom, notion, zendesk
 # Decision: refund full $3,600 (orphan customer record was charged in error)
 # ──────────────────────────────────────────────────────────────────────
@@ -787,7 +787,7 @@ _S05_WORLD: dict[str, dict[str, list]] = {
                 id="ch_Saga_new_jun",
                 customer=_S05_NEW_CUS, amount=360000,
                 status="succeeded", created="2026-06-04T08:00:00",
-                description="Saga Robotics monthly — paid via cus_newSaga",
+                description="Saga Robotics monthly - paid via cus_newSaga",
             ),
             make_stripe_charge(
                 id="ch_Saga_new_may",
@@ -801,7 +801,7 @@ _S05_WORLD: dict[str, dict[str, list]] = {
             ),
         ],
         "subscriptions": [
-            # ORPHAN — supposed to be canceled but is somehow still active
+            # ORPHAN - supposed to be canceled but is somehow still active
             make_stripe_subscription(
                 id="sub_oldSaga", customer=_S05_OLD_CUS, status="active",
                 cancel_at_period_end=True, canceled_at=None,
@@ -821,7 +821,7 @@ _S05_WORLD: dict[str, dict[str, list]] = {
         ],
         "customers": [
             make_stripe_customer(id=_S05_OLD_CUS, email=_S05_EMAIL,
-                                 name=f"{_S05_NAME} (LEGACY — migrated)",
+                                 name=f"{_S05_NAME} (LEGACY - migrated)",
                                  created="2023-03-12T00:00:00",
                                  description="Pre-migration record. Should have been deactivated 2026-03-12."),
             make_stripe_customer(id=_S05_NEW_CUS, email=_S05_EMAIL,
@@ -852,7 +852,7 @@ _S05_WORLD: dict[str, dict[str, list]] = {
                 state="closed",
                 created_at=1741737600,  # 2026-03-12
                 source_body_snippet=(
-                    "Hi Saga — we've migrated your billing to cus_newSaga effective "
+                    "Hi Saga - we've migrated your billing to cus_newSaga effective "
                     "Mar 12. Your old subscription on cus_oldSaga will cancel at "
                     "period end. New invoices will go to the same AP contact."
                 ),
@@ -876,7 +876,7 @@ _S05_WORLD: dict[str, dict[str, list]] = {
                     "a migration: ALWAYS (a) refund the orphan charge in full, "
                     "(b) force-cancel the orphan subscription, (c) file an "
                     "engineering ticket against billing-bug-7172 (the known "
-                    "migration cleanup defect). Do NOT fight — the charge is "
+                    "migration cleanup defect). Do NOT fight - the charge is "
                     "operationally invalid. Cite billing-bug-7172 in your action."
                 ),
                 status="current",

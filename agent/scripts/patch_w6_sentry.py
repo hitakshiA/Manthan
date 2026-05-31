@@ -1,7 +1,7 @@
-"""Patch Sentry with W6 signal — cascade-cloud auth-svc outage.
+"""Patch Sentry with W6 signal - cascade-cloud auth-svc outage.
 
 Adds a new dominating issue on the existing `auth-svc` project:
-  TokenIssuanceError: signing key 'auth-prod-2026q2' rejected by KMS —
+  TokenIssuanceError: signing key 'auth-prod-2026q2' rejected by KMS -
   auth-service login flow degraded
 
 Bakes ~40-60 events tagged customer_id=cus_UankGYRlc7WiW1 (cascade-cloud)
@@ -27,7 +27,7 @@ import sentry_sdk
 SCRIPT_DIR = Path(__file__).parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-# Reuse everything from seed_sentry — auth, HTTP client config, helpers.
+# Reuse everything from seed_sentry - auth, HTTP client config, helpers.
 from seed_sentry import (  # noqa: E402
     API_BASE,
     HEADERS,
@@ -46,7 +46,7 @@ from seed_sentry import (  # noqa: E402
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W6 config — cascade-cloud auth-svc outage
+# W6 config - cascade-cloud auth-svc outage
 # ──────────────────────────────────────────────────────────────────────
 
 W6_CUSTOMER_ID = "cus_UankGYRlc7WiW1"          # Stripe id for Cascade Cloud
@@ -58,15 +58,15 @@ W6_TEAM_SLUG = "platform"
 
 W6_EXC_TYPE = "TokenIssuanceError"
 W6_TITLE = (
-    "TokenIssuanceError: signing key 'auth-prod-2026q2' rejected by KMS — "
+    "TokenIssuanceError: signing key 'auth-prod-2026q2' rejected by KMS - "
     "auth-service login flow degraded"
 )
 
-# Outage window — 15 days, 2026-05-08 → 2026-05-22 (intermittent).
+# Outage window - 15 days, 2026-05-08 → 2026-05-22 (intermittent).
 W6_WINDOW_START = "2026-05-08"
 W6_WINDOW_END = "2026-05-22"
 
-# Noise customer ids — totally unrelated tenants. Agent must filter these
+# Noise customer ids - totally unrelated tenants. Agent must filter these
 # out when scoping to cascade-cloud.
 W6_NOISE_CUSTOMER_IDS = [
     "cus_test_aurora_health",
@@ -84,7 +84,7 @@ random.seed(2026_05_27 ^ 0xCA5CADE)
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Exception class — preserves type name in the issue title
+# Exception class - preserves type name in the issue title
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -136,18 +136,18 @@ def ingest_w6_signal(dsn: str) -> int:
 
         try:
             raise TokenIssuanceError(
-                f"signing key 'auth-prod-2026q2' rejected by KMS — "
+                f"signing key 'auth-prod-2026q2' rejected by KMS - "
                 f"token issuance failed for customer {W6_CUSTOMER_ID} "
                 f"(domain={W6_CUSTOMER_DOMAIN}) around "
                 f"{narrative_date}T{narrative_time}Z. KMS error: "
-                f"AccessDeniedException — key version disabled."
+                f"AccessDeniedException - key version disabled."
             )
         except TokenIssuanceError:
             with sentry_sdk.push_scope() as scope:
                 scope.level = "error"  # type: ignore[assignment]
                 # Pin fingerprint so all events group into a single issue.
                 scope.fingerprint = [W6_EXC_TYPE, W6_TITLE]
-                # Filterable tags — these are how the agent should
+                # Filterable tags - these are how the agent should
                 # discover the W6/cascade-cloud link.
                 scope.set_tag("service", "auth-service")
                 scope.set_tag("env", "production")
@@ -182,7 +182,7 @@ def ingest_w6_signal(dsn: str) -> int:
                             "operation": "Sign",
                             "rejection_reason": (
                                 "key version disabled by rotation policy "
-                                "— replacement key not yet promoted"
+                                "- replacement key not yet promoted"
                             ),
                         },
                     )
@@ -190,7 +190,7 @@ def ingest_w6_signal(dsn: str) -> int:
         cascade_events += 1
         time.sleep(INGEST_SLEEP)
 
-    # Noise events — same fingerprint so they all roll up into the same
+    # Noise events - same fingerprint so they all roll up into the same
     # issue, but tagged with unrelated customer_ids. Agent must filter by
     # customer_id=cus_UankGYRlc7WiW1 to scope correctly.
     for i in range(W6_NOISE_EVENT_COUNT):
@@ -201,10 +201,10 @@ def ingest_w6_signal(dsn: str) -> int:
         )
         try:
             raise TokenIssuanceError(
-                f"signing key 'auth-prod-2026q2' rejected by KMS — "
+                f"signing key 'auth-prod-2026q2' rejected by KMS - "
                 f"token issuance failed for customer {noise_cust} "
                 f"around {narrative_date}T{_narrative_hhmm(i * 31)}Z. "
-                "(noise — unrelated tenant during same outage)"
+                "(noise - unrelated tenant during same outage)"
             )
         except TokenIssuanceError:
             with sentry_sdk.push_scope() as scope:
@@ -225,9 +225,9 @@ def ingest_w6_signal(dsn: str) -> int:
     # the customer id or domain surface the issue.
     for breadcrumb in (
         f"auth-service token issuance failures impacting "
-        f"{W6_CUSTOMER_DOMAIN} (customer {W6_CUSTOMER_ID}) — intermittent "
+        f"{W6_CUSTOMER_DOMAIN} (customer {W6_CUSTOMER_ID}) - intermittent "
         f"between {W6_WINDOW_START} and {W6_WINDOW_END}",
-        f"KMS Sign() rejecting auth-prod-2026q2 — degrading "
+        f"KMS Sign() rejecting auth-prod-2026q2 - degrading "
         f"login flow for {W6_CUSTOMER_ID}",
     ):
         with sentry_sdk.push_scope() as scope:
@@ -246,7 +246,7 @@ def ingest_w6_signal(dsn: str) -> int:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Verification — find the W6 issue back via the API
+# Verification - find the W6 issue back via the API
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -302,7 +302,7 @@ def count_w6_events_with_customer_tag(
 
 
 def main() -> int:
-    print("== Sentry W6 patch — cascade-cloud auth-svc outage ==")
+    print("== Sentry W6 patch - cascade-cloud auth-svc outage ==")
     print(f"  customer_id    : {W6_CUSTOMER_ID}")
     print(f"  customer_domain: {W6_CUSTOMER_DOMAIN}")
     print(f"  project        : {W6_PROJECT_SLUG}")

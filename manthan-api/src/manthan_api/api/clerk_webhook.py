@@ -1,4 +1,4 @@
-"""Clerk webhook — fires the MVP welcome email when a user signs up.
+"""Clerk webhook - fires the MVP welcome email when a user signs up.
 
 Wire flow:
     Clerk dashboard → POST /webhooks/clerk → verify svix signature →
@@ -7,11 +7,11 @@ Wire flow:
     table) → 200 OK.
 
 Why a webhook (and not just calling send_welcome from a UI action):
-    1. Clerk owns the source of truth for "user created" — webhook
+    1. Clerk owns the source of truth for "user created" - webhook
        fires once per real signup, regardless of which client did it.
     2. Idempotency comes for free at the DB layer (auth_signups primary
        key on clerk_user_id), so Clerk redelivery is safe.
-    3. The UI doesn't need to know about emails — auth code stays clean.
+    3. The UI doesn't need to know about emails - auth code stays clean.
 
 Svix signature scheme is identical to what Resend inbound uses, so we
 share verification with email_webhook.py.
@@ -54,7 +54,7 @@ async def clerk_events(
         )
     else:
         logger.warning(
-            "CLERK_WEBHOOK_SECRET unset — skipping signature check (dev only)"
+            "CLERK_WEBHOOK_SECRET unset - skipping signature check (dev only)"
         )
 
     try:
@@ -69,14 +69,14 @@ async def clerk_events(
         try:
             args = _extract_user_args(data)
         except ValueError as e:
-            # Bad payload (no email, etc.) — ack but don't try to send.
+            # Bad payload (no email, etc.) - ack but don't try to send.
             logger.warning("user.created payload skipped: %s", e)
             return {"ok": True, "skipped": True, "reason": str(e)}
         # Background-send so we ACK Clerk within their 3s window.
         background.add_task(_send_welcome_async, **args)
         return {"ok": True, "queued": True, "event": event_type}
 
-    # Other event types (user.updated, session.created, etc.) — ack and
+    # Other event types (user.updated, session.created, etc.) - ack and
     # ignore for now. Easy to extend here if we want to react to them.
     return {"ok": True, "ignored": True, "event": event_type}
 
@@ -92,7 +92,7 @@ def _extract_user_args(data: dict) -> dict[str, Any]:
     if not clerk_user_id:
         raise ValueError("missing clerk user id")
 
-    # Primary email — Clerk gives an array of email_addresses with
+    # Primary email - Clerk gives an array of email_addresses with
     # primary_email_address_id pointing at the chosen one. Fall back to
     # the first email address if none is marked primary.
     primary_id = data.get("primary_email_address_id")

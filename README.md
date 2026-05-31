@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://manthan.quest">
-    <img src="docs/banner.png" alt="Manthan — the operations layer for revenue disputes" />
+    <img src="docs/banner.png" alt="Manthan - the operations layer for revenue disputes" />
   </a>
 </p>
 
@@ -9,7 +9,7 @@
 <p align="center">
   The operations layer for revenue disputes.
   <br />
-  Settles chargebacks, refund requests, and failed payments in minutes — not days.
+  Settles chargebacks, refund requests, and failed payments in minutes - not days.
   <br /><br />
   <a href="https://manthan.quest"><strong>manthan.quest »</strong></a>
   <br /><br />
@@ -33,11 +33,11 @@
 
 ## About Manthan
 
-Manthan is the autonomous investigator for B2B SaaS billing operations. The moment a chargeback hits Stripe, a refund request lands in your inbox, or a customer @-mentions you in Slack, Manthan reads across **every connected system** — Stripe, HubSpot, Datadog, Notion, Intercom, Zendesk, Slack, PostHog — drafts a **cited decision brief**, and queues the right actions (refunds, dispute responses, customer emails, CRM notes, Slack posts) for one-click human approval.
+Manthan is the autonomous investigator for B2B SaaS billing operations. The moment a chargeback hits Stripe, a refund request lands in your inbox, or a customer @-mentions you in Slack, Manthan reads across **every connected system** - Stripe, HubSpot, Datadog, Notion, Intercom, Zendesk, Slack, PostHog - drafts a **cited decision brief**, and queues the right actions (refunds, dispute responses, customer emails, CRM notes, Slack posts) for one-click human approval.
 
 A senior analyst spends 5 hours on a chargeback. Manthan spends 3 minutes.
 
-The data layer is [**Coral**](https://coral.dev), a unified SQL surface over the 8 vendors above — the agent literally writes `SELECT * FROM stripe.disputes JOIN hubspot.companies ON …` and gets one rowset back, no per-API integration code. Every claim in the brief is grounded in a citation chip that links back to the underlying record; click it to open the source dashboard.
+The data layer is [**Coral**](https://coral.dev), a unified SQL surface over the 8 vendors above - the agent literally writes `SELECT * FROM stripe.disputes JOIN hubspot.companies ON …` and gets one rowset back, no per-API integration code. Every claim in the brief is grounded in a citation chip that links back to the underlying record; click it to open the source dashboard.
 
 ## How it works
 
@@ -47,17 +47,17 @@ The data layer is [**Coral**](https://coral.dev), a unified SQL surface over the
 | **2 · Investigate** | The agent queries every connected source in parallel via Coral SQL, surfaces facts with citations, and writes a live narrative you can watch in real time. |
 | **3 · Brief** | A two-paragraph executive memo with the math shown, every number cited back to a source record. |
 | **4 · Decide** | Recommends refund / fight / partial-credit / escalate, and **drafts the actions** (Stripe refund, dispute response, customer email, HubSpot note, Slack post). |
-| **5 · Approve** | One click. Each action fires against the real systems in a sequential cinematic — refund posts to Stripe, email lands in the inbox, HubSpot note appears, Slack pings. |
+| **5 · Approve** | One click. Each action fires against the real systems in a sequential cinematic - refund posts to Stripe, email lands in the inbox, HubSpot note appears, Slack pings. |
 
 ## Features
 
 - 🧠 **Cross-source investigation.** Coral exposes Stripe, HubSpot, Salesforce, Zendesk, Intercom, Slack, Notion, PostHog, Sentry, Datadog, PagerDuty, Resend as queryable SQL schemas. The agent writes joins across all of them in a single query.
-- 📑 **Cited brief.** Every claim in the postmortem carries a citation chip linking back to the underlying record (Stripe dispute, Notion page, Datadog incident). No fabrication — if it's in the brief, it's in a source.
+- 📑 **Cited brief.** Every claim in the postmortem carries a citation chip linking back to the underlying record (Stripe dispute, Notion page, Datadog incident). No fabrication - if it's in the brief, it's in a source.
 - 🔴 **Live cinematic investigation.** Watch the agent query each source in real time, with brand glyphs inline in the narrative ("Manthan is asking 🟢 Intercom") and a running list of facts it surfaces.
 - ✋ **Human-in-the-loop approval.** Operator reviews the brief, approves with one click, and watches each action fire in a full-screen cinematic with per-action status, external-ref links, and graceful demo-mode fallbacks when a source isn't fully wired.
-- ✉️ **Branded customer emails.** Templated HTML emails (table-based for Outlook/Gmail compat) with summary cards, branded header, and policy-grounded reasoning — never the raw decision rationale.
+- ✉️ **Branded customer emails.** Templated HTML emails (table-based for Outlook/Gmail compat) with summary cards, branded header, and policy-grounded reasoning - never the raw decision rationale.
 - 🔒 **Per-user workspace isolation.** Every Clerk-authenticated user gets their own isolated org. Two operators can run investigations in parallel against the same demo data without seeing each other's cases.
-- 📖 **Editorial UI.** The whole product reads like a magazine spread — Spectral serif, hairline rules, brand-colored source pills, Geist Mono for the data — not a SaaS dashboard.
+- 📖 **Editorial UI.** The whole product reads like a magazine spread - Spectral serif, hairline rules, brand-colored source pills, Geist Mono for the data - not a SaaS dashboard.
 - 🔌 **Demo-mode adapters.** All four side-effecting adapters (Stripe / HubSpot / Slack / Linear) ship with graceful fallbacks so demos always show green even when a key is missing or a Stripe charge is already disputed.
 
 ## Quick start
@@ -66,7 +66,7 @@ The data layer is [**Coral**](https://coral.dev), a unified SQL surface over the
 - Node 20+ · `pnpm` or `bun`
 - Python 3.12+ · [`uv`](https://github.com/astral-sh/uv)
 - Docker (for the local Postgres)
-- `ffmpeg` (only for regenerating story-slide images — optional)
+- `ffmpeg` (only for regenerating story-slide images - optional)
 
 ### Setup
 ```sh
@@ -166,7 +166,7 @@ For a one-shot demo run, [`DEMO_RUNBOOK.md`](./DEMO_RUNBOOK.md) walks the exact 
 
 ## Contributing
 
-Issues and PRs welcome — start with a [help-wanted issue](https://github.com/miny-labs/manthan/labels/help%20wanted) or open a discussion. A formal `CONTRIBUTING.md` is on the way; in the meantime:
+Issues and PRs welcome - start with a [help-wanted issue](https://github.com/miny-labs/manthan/labels/help%20wanted) or open a discussion. A formal `CONTRIBUTING.md` is on the way; in the meantime:
 
 - Run `pnpm typecheck` in `manthan-ui/` before pushing
 - Run `uv run pytest` in `manthan-api/` and `agent/`
@@ -174,13 +174,13 @@ Issues and PRs welcome — start with a [help-wanted issue](https://github.com/m
 
 ## Security
 
-If you find a security vulnerability, please email **security@miny-labs.com** directly — do not file a public issue. We'll acknowledge within 48 hours.
+If you find a security vulnerability, please email **security@miny-labs.com** directly - do not file a public issue. We'll acknowledge within 48 hours.
 
 ## Community
 
-- 💬 [Discord](https://discord.gg/manthan) — chat with the team and other operators
-- 🐦 [@manthan_quest](https://twitter.com/manthan_quest) — release notes + product clips
-- 📨 [hello@miny-labs.com](mailto:hello@miny-labs.com) — design partnerships, customer ops, anything else
+- 💬 [Discord](https://discord.gg/manthan) - chat with the team and other operators
+- 🐦 [@manthan_quest](https://twitter.com/manthan_quest) - release notes + product clips
+- 📨 [hello@miny-labs.com](mailto:hello@miny-labs.com) - design partnerships, customer ops, anything else
 
 ## License
 

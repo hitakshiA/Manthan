@@ -1,4 +1,4 @@
-# Deploy `app.manthan.quest` — 60-90 min runbook
+# Deploy `app.manthan.quest` - 60-90 min runbook
 
 Everything below assumes you're sitting at the manthanv2/ directory.
 
@@ -13,7 +13,7 @@ Once this runs, your laptop can sleep. Stripe, Resend, and Slack all hit the pub
 
 ---
 
-## Step 1 — install the two CLIs (5 min)
+## Step 1 - install the two CLIs (5 min)
 
 ```bash
 # Fly
@@ -25,22 +25,22 @@ brew install vercel-cli
 vercel login        # browser auth
 ```
 
-## Step 2 — provision Fly infrastructure (10 min)
+## Step 2 - provision Fly infrastructure (10 min)
 
 ```bash
 cd "/Users/akshmnd/Dev Projects/manthanv2"
 
-# Create the app — picks up fly.toml automatically
+# Create the app - picks up fly.toml automatically
 fly apps create manthan-api
 
 # Create managed Postgres (free tier, 1GB)
 fly postgres create --name manthan-db --region iad --vm-size shared-cpu-1x --volume-size 3
 
-# Attach Postgres to the app — this auto-sets DATABASE_URL secret
+# Attach Postgres to the app - this auto-sets DATABASE_URL secret
 fly postgres attach manthan-db --app manthan-api
 ```
 
-## Step 3 — push all your local secrets to Fly (3 min)
+## Step 3 - push all your local secrets to Fly (3 min)
 
 The helper script reads `manthan-api/.env` + `agent/.env` and uploads them as Fly secrets:
 
@@ -56,7 +56,7 @@ That includes:
 
 Skips `DATABASE_URL` (Fly Postgres set it in step 2).
 
-## Step 4 — first deploy (15-20 min, mostly Coral compile)
+## Step 4 - first deploy (15-20 min, mostly Coral compile)
 
 ```bash
 cd "/Users/akshmnd/Dev Projects/manthanv2"
@@ -76,7 +76,7 @@ curl https://manthan-api.fly.dev/
 # → {"service": "manthan-api", ...}
 ```
 
-## Step 5 — run migrations on the Fly Postgres (2 min)
+## Step 5 - run migrations on the Fly Postgres (2 min)
 
 ```bash
 # Get a psql shell connected to the prod DB
@@ -98,7 +98,7 @@ fly ssh console --app manthan-api -C "uv run python -m manthan_api.scripts.boots
 fly ssh console --app manthan-api -C "uv run python -m manthan_api.scripts.seed_policy_rules"
 ```
 
-## Step 6 — assign the API custom domain (5 min)
+## Step 6 - assign the API custom domain (5 min)
 
 ```bash
 fly certs create api.app.manthan.quest --app manthan-api
@@ -115,7 +115,7 @@ curl https://api.app.manthan.quest/
 # → {"service": "manthan-api", ...}
 ```
 
-## Step 7 — deploy the UI to Vercel (5 min)
+## Step 7 - deploy the UI to Vercel (5 min)
 
 ```bash
 cd manthan-ui
@@ -128,7 +128,7 @@ vercel
 vercel --prod
 ```
 
-## Step 8 — assign the UI custom domain (3 min)
+## Step 8 - assign the UI custom domain (3 min)
 
 In Vercel dashboard → manthan-ui project → Settings → Domains → Add `app.manthan.quest`.
 
@@ -141,7 +141,7 @@ curl https://app.manthan.quest/
 # → HTML page (the landing)
 ```
 
-## Step 9 — repoint webhooks at the public URL (5 min)
+## Step 9 - repoint webhooks at the public URL (5 min)
 
 You're now at `https://api.app.manthan.quest`. Update three webhook destinations:
 
@@ -166,7 +166,7 @@ You're now at `https://api.app.manthan.quest`. Update three webhook destinations
 ### Slack (later, when you install the Slack bot)
 - URL: `https://api.app.manthan.quest/webhooks/slack/acme/events`
 
-## Step 10 — smoke test the live demo (5 min)
+## Step 10 - smoke test the live demo (5 min)
 
 ```bash
 # Quill scenario via the demo trigger

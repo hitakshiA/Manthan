@@ -84,16 +84,16 @@ render_spec.json
 # Docker
 .docker/
 
-# Pitch video / demo assets (renders, snapshots, working animations — local-only)
+# Pitch video / demo assets (renders, snapshots, working animations - local-only)
 pitch-video/
 
-# Lobster Trap audit log — runtime, contains prompt + response payloads
+# Lobster Trap audit log - runtime, contains prompt + response payloads
 infra/lobstertrap/audit.log
 
 # Claude Code runtime & session artifacts (can contain local settings / scheduled task state)
 .claude/
 
-# Secrets / credentials — never commit
+# Secrets / credentials - never commit
 *.pem
 *.key
 *.p12
@@ -133,7 +133,7 @@ Thumbs.db
 *.orig
 
 # ─────────────────────────────────────────────────────────────────────
-# Audit pass — repo-specific things we never want tracked.
+# Audit pass - repo-specific things we never want tracked.
 # ─────────────────────────────────────────────────────────────────────
 
 # Symlinks to sibling repos (e.g. `coral` → ~/Dev Projects/coral, 10GB)
@@ -143,14 +143,14 @@ Thumbs.db
 dist/
 build/
 
-# Pitch video sub-projects — heavy renders, frames, thumbnails. The
+# Pitch video sub-projects - heavy renders, frames, thumbnails. The
 # original pitch-video/ is explicit above; the pattern below catches
 # any future pitch-* folder so a fresh elevator/30s/teaser cut doesn't
 # accidentally end up in history.
 pitch-*/
 # (anything matching pitch-video/ stays excluded by the explicit rule above)
 
-# Agent run state — scenario JSONs, replay SQL captures, locally-built
+# Agent run state - scenario JSONs, replay SQL captures, locally-built
 # state for the W*R / M*R / V*R / Q*R demos. The seed *scripts* under
 # agent/scripts/*.py stay tracked; the .manthan/ produced state does not.
 .manthan/
@@ -170,7 +170,7 @@ pitch-*/
 manthan-*.log
 
 # Database backups + agent memory snapshots that shouldn't ride in git.
-# (data/* above already catches the main offenders — these belt-and-
+# (data/* above already catches the main offenders - these belt-and-
 # suspenders for files that might land outside data/.)
 *.sqlite
 *.sqlite3

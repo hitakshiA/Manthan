@@ -1,41 +1,41 @@
-"""Patch V1R — Vermillion Studios seat-count chargeback.
+"""Patch V1R - Vermillion Studios seat-count chargeback.
 
 Seeds evidence across all 11 connected sources so the Manthan agent
 investigating the $4,500 chargeback can recommend FIGHT + a reconciliation
 call with overwhelming corroboration:
 
-  Stripe       — $4,500 test-mode dispute on a Pro Annual seat invoice
+  Stripe       - $4,500 test-mode dispute on a Pro Annual seat invoice
                  (25 seats x $180/mo) with metadata
                  semantic_reason=seat_count_dispute, claimed_seats=15,
                  billed_seats=25, prior_disputes_count=0.
-  Salesforce   — "Vermillion Studios" account, Pro Annual, $54k ARR.
+  Salesforce   - "Vermillion Studios" account, Pro Annual, $54k ARR.
                  Plus a closed-won Opportunity "Seat Expansion +10 (Pro
                  Annual)" dated 2026-02-08 noting the COO Sarah Chen
                  DocuSigned the addendum. Activated 2026-02-15.
-  HubSpot      — Company record + signed Note engagement dated 2026-02-08
+  HubSpot      - Company record + signed Note engagement dated 2026-02-08
                  attributing the 25-seat addendum signature to COO Sarah
                  Chen.
-  Intercom     — 3 Feb-Mar 2026 conversations from admin Lisa Martinez
+  Intercom     - 3 Feb-Mar 2026 conversations from admin Lisa Martinez
                  about ONBOARDING new team members (SSO, provisioning).
                  No billing complaints.
-  Zendesk      — Zero billing-dispute tickets in 90 days. 2 unrelated
+  Zendesk      - Zero billing-dispute tickets in 90 days. 2 unrelated
                  solved feature-request tickets from 2025 to show
                  normal customer behavior.
-  Slack        — One post in #deal-desk from the AE on 2026-02-08
+  Slack        - One post in #deal-desk from the AE on 2026-02-08
                  confirming Vermillion expansion to 25 seats provisioned
                  by CS, addendum signed by COO Sarah Chen.
-  Notion       — "Seat Disputes — Playbook for the 'we only have N seats'
+  Notion       - "Seat Disputes - Playbook for the 'we only have N seats'
                  chargeback" codifying the FIGHT + reconciliation-call
                  path when addendum exists AND seats are used.
-  PostHog      — April 2026 activity: 24 distinct user IDs from
+  PostHog      - April 2026 activity: 24 distinct user IDs from
                  @vermillion-design.test domain (logins + project actions).
-  Sentry       — ~10 baseline error events tagged to Vermillion's tenant
+  Sentry       - ~10 baseline error events tagged to Vermillion's tenant
                  (no seat-provisioning errors).
-  Datadog      — Auth API log monitor + event/log showing 24 unique user
+  Datadog      - Auth API log monitor + event/log showing 24 unique user
                  IDs from vermillion-design.test authenticating during
                  the disputed period (proves seats USED, not just
                  provisioned).
-  PagerDuty    — Zero relevant incidents. One low-priority noise
+  PagerDuty    - Zero relevant incidents. One low-priority noise
                  incident summarising "no seat-provisioning incidents
                  in window" as a queryable anchor.
 
@@ -168,7 +168,7 @@ from seed_world import (  # noqa: E402
 )
 
 
-# Salesforce is optional — only seed it if the access token is valid.
+# Salesforce is optional - only seed it if the access token is valid.
 SALESFORCE_AVAILABLE = bool(
     os.getenv("SALESFORCE_API_URL") and os.getenv("SALESFORCE_ACCESS_TOKEN")
 )
@@ -185,7 +185,7 @@ if SALESFORCE_AVAILABLE:
         SALESFORCE_AVAILABLE = False
 
 
-# Stripe is required — bail loudly if not configured.
+# Stripe is required - bail loudly if not configured.
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 if not stripe.api_key or not stripe.api_key.startswith("sk_test_"):
     raise SystemExit("STRIPE_API_KEY must be a sk_test_... key in agent/.env")
@@ -213,7 +213,7 @@ VERMILLION_SEATS_USED = 24      # actual active users (24/25)
 VERMILLION_PRICE_PER_SEAT_USD = 180
 VERMILLION_DISPUTED_AMOUNT_MINOR = 4_500_00  # $4,500
 
-# Disputed billing window — April 2026 invoice
+# Disputed billing window - April 2026 invoice
 DISPUTED_INVOICE_DATE = "2026-04-12"
 DISPUTED_WINDOW_START = "2026-04-01"
 DISPUTED_WINDOW_END = "2026-04-30"
@@ -245,7 +245,7 @@ def log(msg: str = "") -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 1. Stripe — customer, subscription, charge, dispute
+# 1. Stripe - customer, subscription, charge, dispute
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -297,7 +297,7 @@ def stripe_find_pro_annual_price() -> stripe.Price:
                 and md.get("price_key") == "pro_annual_current"):
             return pr
     raise SystemExit(
-        "ERROR: no Pro Annual current price found in Stripe — "
+        "ERROR: no Pro Annual current price found in Stripe - "
         "run seed_stripe.py first."
     )
 
@@ -512,11 +512,11 @@ def stripe_create_disputed_charge_and_dispute(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 2. Salesforce — Vermillion account + Seat Expansion Opportunity
+# 2. Salesforce - Vermillion account + Seat Expansion Opportunity
 # ──────────────────────────────────────────────────────────────────────
 
 
-SF_OPP_NAME = "Vermillion Studios — Seat Expansion +10 (Pro Annual)"
+SF_OPP_NAME = "Vermillion Studios - Seat Expansion +10 (Pro Annual)"
 SF_OPP_DESCRIPTION = (
     f"[manthan_patch_v1_vermillion_seats] Seat expansion from 15 to 25 "
     f"seats on Pro Annual plan. COO Sarah Chen e-signed the addendum via "
@@ -525,7 +525,7 @@ SF_OPP_DESCRIPTION = (
     f"workspace). Increment: +10 seats x ${VERMILLION_PRICE_PER_SEAT_USD}/mo = "
     f"+$1,800 MRR (+$21,600 ARR). Addendum filed in DocuSign envelope "
     f"DSE-2026-VRM-0208. Internal handoff to CFO Marcus Webb was logged "
-    f"in the AE's deal-desk thread but Marcus appears to have missed it — "
+    f"in the AE's deal-desk thread but Marcus appears to have missed it - "
     f"hence the $4,500 chargeback he filed on the April seat invoice. "
     f"This Opportunity is the authoritative contract-evidence anchor for "
     f"V1R chargeback investigation."
@@ -536,7 +536,7 @@ def salesforce_seed(
     c: Company, stripe_customer_id: str
 ) -> tuple[str | None, str | None, str | None]:
     if not SALESFORCE_AVAILABLE:
-        log("\n[SALESFORCE]  SKIP — SALESFORCE_ACCESS_TOKEN not configured.")
+        log("\n[SALESFORCE]  SKIP - SALESFORCE_ACCESS_TOKEN not configured.")
         return None, None, None
     log("\n[SALESFORCE]  ensuring Vermillion Studios account + addendum opp…")
     try:
@@ -578,7 +578,7 @@ def salesforce_seed(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 3. HubSpot — company + COO-signed addendum note
+# 3. HubSpot - company + COO-signed addendum note
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -611,7 +611,7 @@ def hubspot_upsert_company(
         f"COO Sarah Chen on {ADDENDUM_SIGNED_DATE}, activated "
         f"{ADDENDUM_ACTIVATED_DATE}. Team actively uses 24/25 seats. CFO "
         f"Marcus Webb filed a $4,500 chargeback on the April 2026 seat "
-        f"invoice (INV-2026-04-12) claiming 'we only have 15 seats' — "
+        f"invoice (INV-2026-04-12) claiming 'we only have 15 seats' - "
         f"appears the COO->CFO internal handoff broke down. Workspace "
         f"admin Lisa Martinez has been ASKING about onboarding flows for "
         f"new hires, which corroborates the actual seat growth. "
@@ -665,7 +665,7 @@ def hubspot_upsert_company(
 
 HUBSPOT_NOTE_SIGNATURE = "[manthan_patch_v1_vermillion_seats]"
 HUBSPOT_NOTE_BODY = (
-    f"{HUBSPOT_NOTE_SIGNATURE} {ADDENDUM_SIGNED_DATE} — Vermillion Studios "
+    f"{HUBSPOT_NOTE_SIGNATURE} {ADDENDUM_SIGNED_DATE} - Vermillion Studios "
     f"seat expansion addendum SIGNED. COO {COO_FULL_NAME} e-signed via "
     f"DocuSign (envelope DSE-2026-VRM-0208) adding 10 seats to the Pro "
     f"Annual contract (15 -> 25 total). +$1,800 MRR / +$21,600 ARR. "
@@ -673,7 +673,7 @@ HUBSPOT_NOTE_BODY = (
     f"new producers provisioned to the workspace. Internal handoff to CFO "
     f"{CFO_FULL_NAME} attempted via deal-desk thread same day. "
     f"NOTE: Marcus subsequently filed a $4,500 chargeback on INV-2026-04-12 "
-    f"claiming 'we only have 15 seats' — recommend FIGHT and offer a "
+    f"claiming 'we only have 15 seats' - recommend FIGHT and offer a "
     f"reconciliation call per the Seat Disputes Playbook (SD-2026-V1). "
     f"COO signature + DocuSign envelope are dispositive."
 )
@@ -753,14 +753,14 @@ def hubspot_seed(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 4. Intercom — 3 onboarding conversations from admin Lisa Martinez
+# 4. Intercom - 3 onboarding conversations from admin Lisa Martinez
 # ──────────────────────────────────────────────────────────────────────
 
 
 def intercom_ensure_contact(client: httpx.Client) -> str | None:
     """Create/find Lisa Martinez (the workspace admin) as the Intercom
     contact. She's the one actively talking to support about onboarding
-    new hires — strong positive signal for the seat-usage case."""
+    new hires - strong positive signal for the seat-usage case."""
     ext_id = f"{intercom_external_id(VERMILLION_SLUG)}_admin"
     existing = intercom_find_contact_by_external_id(client, ext_id)
     if existing:
@@ -803,7 +803,7 @@ V1R_INTERCOM_CONVOS = [
     {
         "subject": "Walking through SSO setup for new hires",
         "body": (
-            "Hi — we've got a batch of new designers starting next week "
+            "Hi - we've got a batch of new designers starting next week "
             "and I want to make sure they're set up cleanly. Can you walk "
             "me through setting up SSO for our new hires? We're on Okta "
             "and I'd rather not provision them one-by-one. Want them "
@@ -812,7 +812,7 @@ V1R_INTERCOM_CONVOS = [
         "created_at": _epoch(2026, 2, 11, 14, 12),
         "final_state": "closed",
         "admin_reply": (
-            "Hi Lisa — yes, SSO via Okta is the cleanest path. Settings -> "
+            "Hi Lisa - yes, SSO via Okta is the cleanest path. Settings -> "
             "Team -> SSO -> Connect Okta will walk you through SAML setup. "
             "Once that's live, group-based JIT provisioning will add anyone "
             "in your 'workspace-members' Okta group on first login. Happy "
@@ -823,7 +823,7 @@ V1R_INTERCOM_CONVOS = [
     {
         "subject": "Adding 8 more designers next month",
         "body": (
-            "Hey — we're adding 8 more designers next month to support "
+            "Hey - we're adding 8 more designers next month to support "
             "the new client engagements (couple of agencies subbed work "
             "to us). What's the cleanest way to provision seats? Do I "
             "just invite them through the workspace and the seat count "
@@ -833,7 +833,7 @@ V1R_INTERCOM_CONVOS = [
         "created_at": _epoch(2026, 2, 19, 10, 47),
         "final_state": "closed",
         "admin_reply": (
-            "Hi Lisa — your AE handles the seat-count amendment on the "
+            "Hi Lisa - your AE handles the seat-count amendment on the "
             "contract side, and once that's signed our CS team provisions "
             "the workspace capacity. Then you invite users normally and "
             "they consume seats up to the contract maximum. I'll loop in "
@@ -844,7 +844,7 @@ V1R_INTERCOM_CONVOS = [
     {
         "subject": "Welcome flow working for the new team",
         "body": (
-            "Quick follow-up — got the welcome flow working for the new "
+            "Quick follow-up - got the welcome flow working for the new "
             "team. SSO is humming, Okta JIT provisioning is creating users "
             "cleanly, and the new designers are already in their first "
             "shared workspace. Thanks for the help last month. Will be in "
@@ -854,7 +854,7 @@ V1R_INTERCOM_CONVOS = [
         "final_state": "closed",
         "admin_reply": (
             "That's great to hear, Lisa. Glad the rollout went smoothly. "
-            "Ping us anytime on the Asana side — we have a native "
+            "Ping us anytime on the Asana side - we have a native "
             "integration that may shortcut the work."
         ),
         "tag": "V1R.welcome-flow",
@@ -900,7 +900,7 @@ def intercom_seed() -> tuple[str | None, list[str]]:
             pass
 
         for spec in V1R_INTERCOM_CONVOS:
-            # Match on the first 60 chars of body — distinct across V1R specs.
+            # Match on the first 60 chars of body - distinct across V1R specs.
             body_key = spec["body"][:60]
             if any(body_key in existing for existing in existing_bodies):
                 log(f"  [reuse] {spec['tag']}: convo already exists")
@@ -952,11 +952,11 @@ def intercom_seed() -> tuple[str | None, list[str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 5. Zendesk — org + 2 older feature-request tickets (zero billing in 90d)
+# 5. Zendesk - org + 2 older feature-request tickets (zero billing in 90d)
 # ──────────────────────────────────────────────────────────────────────
 
 
-# Both tickets are old (2025) and unrelated to billing/seats — they
+# Both tickets are old (2025) and unrelated to billing/seats - they
 # establish that Vermillion is a normal, non-complaining customer.
 V1R_ZENDESK_TICKETS = [
     {
@@ -1018,7 +1018,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
                 return {"org_id": None, "ticket_ids": []}
         else:
             log(f"  org [reuse] id={org_id}")
-        # User — the workspace admin Lisa Martinez (active CS contact).
+        # User - the workspace admin Lisa Martinez (active CS contact).
         user_ext = f"ext_{VERMILLION_SLUG}_0"
         user_id = state["users"].get(user_ext)
         if not user_id:
@@ -1040,7 +1040,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
         else:
             log(f"  user [reuse] id={user_id}")
 
-        # Tickets — idempotency via state['v1r_vermillion_tickets']
+        # Tickets - idempotency via state['v1r_vermillion_tickets']
         existing_tids = state.get("v1r_vermillion_tickets", [])
         if existing_tids:
             still_exist = []
@@ -1071,7 +1071,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
             try:
                 tid = zendesk_import_ticket(client, ticket_spec)
             except TrialCapHit:
-                log("  ! Zendesk trial cap hit — stopping ticket creation")
+                log("  ! Zendesk trial cap hit - stopping ticket creation")
                 break
             if tid:
                 new_tids.append(tid)
@@ -1084,13 +1084,13 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 6. Slack — #deal-desk post from AE confirming seat expansion
+# 6. Slack - #deal-desk post from AE confirming seat expansion
 # ──────────────────────────────────────────────────────────────────────
 
 
 SLACK_V1R_MESSAGE = (
     f"V1R / Vermillion Studios expansion to 25 seats provisioned by CS, "
-    f"addendum signed by COO {COO_FULL_NAME}. {ADDENDUM_SIGNED_DATE} — "
+    f"addendum signed by COO {COO_FULL_NAME}. {ADDENDUM_SIGNED_DATE} - "
     f"DocuSign envelope DSE-2026-VRM-0208 closed. Originally 15 seats on "
     f"Pro Annual; +10 seats added (8 designers + 2 producers) to support "
     f"new client work. CS provisioned the workspace capacity "
@@ -1141,7 +1141,7 @@ def slack_seed() -> tuple[str | None, str | None]:
                 channel_id = c["id"]
                 break
         if not channel_id:
-            log("  deal-desk not found — creating…")
+            log("  deal-desk not found - creating…")
             create = slack_call(
                 client, "conversations.create",
                 json={"name": "deal-desk", "is_private": False},
@@ -1213,19 +1213,19 @@ def slack_seed() -> tuple[str | None, str | None]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 7. Notion — Seat Disputes Playbook
+# 7. Notion - Seat Disputes Playbook
 # ──────────────────────────────────────────────────────────────────────
 
 
 V1R_NOTION_PAGES = [
     NotionPage(
-        title="Seat Disputes — Playbook for the 'we only have N seats' chargeback",
+        title="Seat Disputes - Playbook for the 'we only have N seats' chargeback",
         category="Policy & SOP",
         signal_id="V1R",
         headings=[(2, "Seat Disputes Playbook (SD-2026-V1)")],
         paragraphs=[
             "Owner: RevOps (priya@miny-labs.com) + Billing Engineering + "
-            "Deal Desk. Status: CURRENT — authoritative. Doc version 1.0 "
+            "Deal Desk. Status: CURRENT - authoritative. Doc version 1.0 "
             "(2026-05). Last reviewed 2026-05-20. Internal policy id "
             "SD-2026-V1.",
 
@@ -1237,7 +1237,7 @@ V1R_NOTION_PAGES = [
             "FIGHT-vs-REFUND decision in seat-count disputes.",
 
             "",
-            "Section 1 — The three-step verification.",
+            "Section 1 - The three-step verification.",
             "When a customer disputes seat count, verify in order:",
 
             "(1) Signed contract addendum in Salesforce or HubSpot.",
@@ -1262,7 +1262,7 @@ V1R_NOTION_PAGES = [
             "    domain in the disputed window. Count unique user IDs "
             "    authenticating. This second source is critical because "
             "    PostHog covers product events but Datadog auth logs "
-            "    prove the seats are LOGGING IN — i.e. actually used, "
+            "    prove the seats are LOGGING IN - i.e. actually used, "
             "    not just provisioned-and-abandoned.",
             "  - Threshold: if at least 80% of billed seats show "
             "    active authentication in the disputed window, the seats "
@@ -1283,7 +1283,7 @@ V1R_NOTION_PAGES = [
             "    legitimately.",
 
             "",
-            "Section 2 — The FIGHT + reconciliation-call decision rule.",
+            "Section 2 - The FIGHT + reconciliation-call decision rule.",
             "Fight the chargeback AND offer a reconciliation call with "
             "the customer's CFO when:",
             "  (a) the signed addendum exists in CRM (per Section 1.1), AND",
@@ -1293,7 +1293,7 @@ V1R_NOTION_PAGES = [
             "      (per Section 1.3).",
 
             "The combination of these three signals indicates the "
-            "chargeback is a customer-side INTERNAL handoff failure — "
+            "chargeback is a customer-side INTERNAL handoff failure - "
             "almost always the COO or AE handled the expansion without "
             "looping in the CFO/AP team. The CFO sees an invoice that "
             "looks 67% larger than expected and files a chargeback "
@@ -1313,18 +1313,18 @@ V1R_NOTION_PAGES = [
             "days. Attach as PDF + cite raw IDs in the submission notes.",
 
             "",
-            "Section 3 — The REFUND decision rule.",
+            "Section 3 - The REFUND decision rule.",
             "Refund the chargeback when ANY of these are true:",
             "  - No signed addendum exists in either CRM, OR",
             "  - Actual seat usage is below 50% of billed seats (seats "
-            "    provisioned but abandoned — likely sales-led over-sell), OR",
+            "    provisioned but abandoned - likely sales-led over-sell), OR",
             "  - The customer has filed prior billing complaints in the "
             "    trailing 90 days that we failed to resolve.",
             "In all three cases the customer has a legitimate grievance. "
             "Refund the disputed period + adjust the contract.",
 
             "",
-            "Section 4 — The reconciliation call playbook.",
+            "Section 4 - The reconciliation call playbook.",
             "When fighting under Section 2, the AE (NOT the CFO of the "
             "customer or our billing team) initiates a reconciliation "
             "call. Script template:",
@@ -1341,7 +1341,7 @@ V1R_NOTION_PAGES = [
             "uncertainty about our own contract.",
 
             "",
-            "Section 5 — Edge cases.",
+            "Section 5 - Edge cases.",
             "Repeat seat-count disputes from the same customer in any "
             "12-month window: escalate to VP Customer Success and the "
             "Deal Desk lead regardless of Section 1-2 outcome. Two "
@@ -1389,12 +1389,12 @@ def notion_seed() -> list[tuple[str, str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 8. PostHog — April 2026 activity (24 distinct users active)
+# 8. PostHog - April 2026 activity (24 distinct users active)
 # ──────────────────────────────────────────────────────────────────────
 
 
 # 24 active users from @vermillion-design.test (the 25th seat is
-# provisioned-but-not-yet-active — a new hire). The mix reflects a
+# provisioned-but-not-yet-active - a new hire). The mix reflects a
 # real design agency: producers, designers, an AD, finance, ops.
 def _build_personas() -> list[dict]:
     """Build 24 distinct user personas tied to vermillion-design.test."""
@@ -1476,7 +1476,7 @@ def build_posthog_events(stripe_customer_id: str) -> list[dict]:
         "$lib": "manthan-v1r-patch",
     }
 
-    # 1) $identify per persona — establishes Person row.
+    # 1) $identify per persona - establishes Person row.
     for p in VERMILLION_POSTHOG_PERSONAS:
         events.append({
             "event": "$identify",
@@ -1506,7 +1506,7 @@ def build_posthog_events(stripe_customer_id: str) -> list[dict]:
             "timestamp": (APRIL_START - timedelta(days=1)).isoformat(),
         })
 
-    # 2) Logins — 3 to 6 per persona, ~24 personas x 4 avg = ~96 logins.
+    # 2) Logins - 3 to 6 per persona, ~24 personas x 4 avg = ~96 logins.
     for p in VERMILLION_POSTHOG_PERSONAS:
         n_logins = rng.randint(3, 6)
         for _ in range(n_logins):
@@ -1524,7 +1524,7 @@ def build_posthog_events(stripe_customer_id: str) -> list[dict]:
                 "timestamp": ts.isoformat(),
             })
 
-    # 3) Project-creation + file actions — design-agency critical path.
+    # 3) Project-creation + file actions - design-agency critical path.
     CRITICAL_ACTIONS = [
         ("create_project", "projects"),
         ("create_project", "projects"),
@@ -1600,7 +1600,7 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
     with httpx.Client(headers=POSTHOG_HEADERS, timeout=POSTHOG_TIMEOUT) as client:
         project_key = fetch_project_api_key(client)
         if not project_key:
-            log("  ! PostHog project key unavailable — skipping ingestion.")
+            log("  ! PostHog project key unavailable - skipping ingestion.")
             return out
         events = build_posthog_events(stripe_customer_id)
         log(f"  persons={len(VERMILLION_POSTHOG_PERSONAS)}  events={len(events)}")
@@ -1615,21 +1615,21 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 9. Sentry — ~10 baseline events tagged to Vermillion (no provisioning errors)
+# 9. Sentry - ~10 baseline events tagged to Vermillion (no provisioning errors)
 # ──────────────────────────────────────────────────────────────────────
 
 
 V1R_SENTRY_PROJECT_SLUG = "api-gateway"
 V1R_SENTRY_TEAM_SLUG = "platform"
 V1R_SENTRY_TITLE = (
-    "ValueError: optional file_metadata.tag missing on design upload — "
+    "ValueError: optional file_metadata.tag missing on design upload - "
     "backfilled with workspace default"
 )
 
 
 def sentry_seed(stripe_customer_id: str) -> int:
     """Ingest ~10 baseline error events tagged to Vermillion's tenant
-    across April 2026. Routine baseline noise — no seat-provisioning
+    across April 2026. Routine baseline noise - no seat-provisioning
     errors, which is itself evidence (no provisioning failures means
     the +10 seat expansion worked cleanly).
     """
@@ -1689,7 +1689,7 @@ def sentry_seed(stripe_customer_id: str) -> int:
                     "note": (
                         "Routine baseline error tagged to Vermillion's "
                         "tenant during April 2026 (the disputed-invoice "
-                        "month). Part of normal noise — no seat-"
+                        "month). Part of normal noise - no seat-"
                         "provisioning errors, no outage, no spike."
                     ),
                 },
@@ -1729,7 +1729,7 @@ def sentry_seed(stripe_customer_id: str) -> int:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 10. Datadog — auth API log monitor + 24-unique-user authentication event
+# 10. Datadog - auth API log monitor + 24-unique-user authentication event
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1784,7 +1784,7 @@ def v1r_datadog_monitor(stripe_customer_id: str) -> DDMonitorSpec:
 def v1r_datadog_event(stripe_customer_id: str) -> DDEventSpec:
     return DDEventSpec(
         title=(
-            f"April 2026 auth-usage summary — Vermillion Studios "
+            f"April 2026 auth-usage summary - Vermillion Studios "
             f"(workflow:V1R seat-count corroboration)"
         ),
         text=(
@@ -1852,7 +1852,7 @@ def datadog_seed(stripe_customer_id: str) -> tuple[int | None, int | None]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 11. PagerDuty — zero seat-provisioning incidents.
+# 11. PagerDuty - zero seat-provisioning incidents.
 #
 # Seed a LOW-urgency "April 2026 seat-provisioning summary" incident as
 # a queryable anchor that documents: zero P1/P2/P3 seat-provisioning
@@ -1862,11 +1862,11 @@ def datadog_seed(stripe_customer_id: str) -> tuple[int | None, int | None]:
 
 V1R_PD_SERVICE = "auth-api"
 V1R_PD_SERVICE_DESC = (
-    "Authentication API — handles login, SSO JIT provisioning, session "
+    "Authentication API - handles login, SSO JIT provisioning, session "
     "issuance, and workspace member seat resolution."
 )
 V1R_PD_TITLE = (
-    f"auth-api: April 2026 seat-provisioning summary — Vermillion Studios "
+    f"auth-api: April 2026 seat-provisioning summary - Vermillion Studios "
     f"(workflow:V1R seat-count corroboration)"
 )
 
@@ -1891,7 +1891,7 @@ def v1r_pd_body(stripe_customer_id: str) -> str:
         f"    been stable since.\n"
         f"  - Datadog auth-API monitor shows {VERMILLION_SEATS_USED} "
         f"    distinct users from @{VERMILLION_DOMAIN} authenticating in "
-        f"    the window — 96% of the 25 billed seats are actively used.\n"
+        f"    the window - 96% of the 25 billed seats are actively used.\n"
         f"  - One routine SEV-3 noise blip: 2026-04-19 (~2 min Okta SSO "
         f"    callback latency), affected ~0.4% of tenant logins, "
         f"    auto-recovered, no customer impact.\n\n"
@@ -1903,7 +1903,7 @@ def v1r_pd_body(stripe_customer_id: str) -> str:
         f"reconciliation call with CFO Marcus Webb per Seat Disputes "
         f"Playbook (SD-2026-V1-S2).\n\n"
         f"Cross-references: Salesforce Opportunity 'Vermillion Studios "
-        f"— Seat Expansion +10 (Pro Annual)', HubSpot note "
+        f"- Seat Expansion +10 (Pro Annual)', HubSpot note "
         f"[manthan_patch_v1_vermillion_seats], Datadog auth-API monitor "
         f"'auth.api distinct users (Vermillion Studios tenant)', PostHog "
         f"April activity ({VERMILLION_SEATS_USED} distinct users, ~96 "
@@ -1931,7 +1931,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
         if not ep_id:
             ep_id = pd_first_escalation_policy_id(client)
         if not ep_id:
-            log("  ! no escalation policy in PagerDuty — cannot seed")
+            log("  ! no escalation policy in PagerDuty - cannot seed")
             return None
 
         # 2. Service.
@@ -1983,7 +1983,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
 
 def main() -> int:
     log("=" * 72)
-    log("Manthan V1R patch — Vermillion Studios seat-count chargeback")
+    log("Manthan V1R patch - Vermillion Studios seat-count chargeback")
     log("=" * 72)
 
     c = vermillion_company()
@@ -1999,14 +1999,14 @@ def main() -> int:
     log(f"  reality : COO {COO_FULL_NAME} signed +10 addendum "
         f"{ADDENDUM_SIGNED_DATE}")
 
-    # 1. Stripe — required (drives the chargeback)
+    # 1. Stripe - required (drives the chargeback)
     cust = stripe_ensure_customer(c)
     price = stripe_find_pro_annual_price()
     sub = stripe_ensure_subscription(cust, price.id)
     ch, disp = stripe_create_disputed_charge_and_dispute(cust)
     stripe_customer_id = cust.id
 
-    # 2. Salesforce — best-effort
+    # 2. Salesforce - best-effort
     sf_account_id, sf_coo_contact_id, sf_opp_id = salesforce_seed(
         c, stripe_customer_id
     )

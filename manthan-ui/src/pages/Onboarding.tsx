@@ -57,7 +57,7 @@ function WorkspaceStep({ onNext }: { onNext: () => void }) {
           Name your workspace
         </h1>
         <p className="mt-1.5 text-sm text-white/45">
-          Each workspace is isolated — separate connections, policies, audit
+          Each workspace is isolated - separate connections, policies, audit
           log.
         </p>
       </header>
@@ -77,10 +77,10 @@ function WorkspaceStep({ onNext }: { onNext: () => void }) {
         <label className="block">
           <div className="text-sm font-medium mb-1.5">Region</div>
           <select className="w-full h-12 px-4 rounded-xl bg-white/[0.04] border border-white/10 text-white focus:outline-none">
-            <option>US East — N. Virginia</option>
-            <option>US West — Oregon</option>
-            <option>EU — Frankfurt</option>
-            <option>APAC — Singapore</option>
+            <option>US East - N. Virginia</option>
+            <option>US West - Oregon</option>
+            <option>EU - Frankfurt</option>
+            <option>APAC - Singapore</option>
           </select>
           <div className="text-[11.5px] text-white/40 mt-1.5">
             All your customer data + audit log stays in this region. EU AI Act
@@ -254,7 +254,7 @@ function PolicyStep({ onLaunch }: { onLaunch: () => void }) {
         <PolicyRow
           label="Working model"
           value="Anthropic Claude (your key)"
-          description="Bring your own key — your data stays out of vendor pools."
+          description="Bring your own key - your data stays out of vendor pools."
         />
       </div>
 

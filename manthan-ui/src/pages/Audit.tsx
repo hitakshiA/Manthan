@@ -1,5 +1,5 @@
 /**
- * Audit log — every approval, policy match, action.
+ * Audit log - every approval, policy match, action.
  *
  * Editorial direction: a day-grouped transcript that reads like a
  * print-period diary. Each day gets its own Spectral italic header
@@ -8,7 +8,7 @@
  * uppercase TYPE label + body sentence + right-edge case ref).
  *
  * The previous version was a single flat `divide-y` list of 200 rows
- * that read as terminal output — visually dense in the worst way,
+ * that read as terminal output - visually dense in the worst way,
  * with no temporal anchors. The day groupings restore the rhythm a
  * compliance auditor would actually want.
  */
@@ -129,7 +129,7 @@ export default function AuditPage() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// A day's worth of events — date header above, rows below with mono
+// A day's worth of events - date header above, rows below with mono
 // time-of-day prefix instead of a relative "Xh ago" suffix.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -143,7 +143,7 @@ function DayBlock({
   const dateLabel = humanizeDay(day);
   return (
     <div>
-      {/* Date header — Spectral italic + small count, like a diary entry */}
+      {/* Date header - Spectral italic + small count, like a diary entry */}
       <div
         className="flex items-baseline justify-between pb-2.5 mb-1 border-b"
         style={{ borderColor: "var(--color-rule-soft)" }}
@@ -192,7 +192,7 @@ function AuditRow({ event, first }: { event: ApiAuditEvent; first?: boolean }) {
             "72px 130px minmax(0, 1fr) minmax(0, auto)",
         }}
       >
-        {/* Mono wall-clock — anchors the row temporally */}
+        {/* Mono wall-clock - anchors the row temporally */}
         <span
           className="font-mono text-[11.5px] tabular-nums"
           style={{ color: "var(--color-ink-ghost)" }}
@@ -208,15 +208,15 @@ function AuditRow({ event, first }: { event: ApiAuditEvent; first?: boolean }) {
           {meta.label}
         </span>
 
-        {/* Body — actually readable size now (14.5px), one line */}
+        {/* Body - actually readable size now (14.5px), one line */}
         <span
           className="text-[14px] leading-[1.4] truncate"
           style={{ color: "var(--color-ink)" }}
         >
-          {event.summary || detail || "—"}
+          {event.summary || detail || "-"}
         </span>
 
-        {/* Right — case ref + customer + amount, mono / tabular */}
+        {/* Right - case ref + customer + amount, mono / tabular */}
         <span
           className="text-[11.5px] tabular-nums whitespace-nowrap text-right"
           style={{ color: "var(--color-ink-muted)" }}
@@ -266,7 +266,7 @@ function describeDetail(e: ApiAuditEvent): string {
     return `${(d.kind as string) || "action"} → ${(d.summary as string) || "ok"}`;
   }
   if (e.type === "action_failed") {
-    return `${(d.kind as string) || "action"} — ${(d.error as string) || "unknown"}`;
+    return `${(d.kind as string) || "action"} - ${(d.error as string) || "unknown"}`;
   }
   if (e.type === "agent_reply") {
     return String(d.text || "").slice(0, 140);
@@ -311,7 +311,7 @@ function FilterToken({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Time helpers — wall-clock + relative-day display.
+// Time helpers - wall-clock + relative-day display.
 // ──────────────────────────────────────────────────────────────────────
 
 function startOfDayKey(iso: string): string {
@@ -328,7 +328,7 @@ function humanizeDay(dayKey: string): string {
   yesterday.setDate(yesterday.getDate() - 1);
   if (day.getTime() === today.getTime()) return "Today";
   if (day.getTime() === yesterday.getTime()) return "Yesterday";
-  // Within the same year — drop the year.
+  // Within the same year - drop the year.
   const sameYear = day.getFullYear() === now.getFullYear();
   return day.toLocaleDateString(undefined, {
     month: "long",

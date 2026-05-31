@@ -25,7 +25,7 @@ def _rate_limit_key(request: Request) -> str:
     """Whitelisted IPs get unlimited; others get their real IP."""
     ip = get_real_ip(request)
     if ip in WHITELISTED_IPS:
-        # Return a key with effectively no limit — 1M/minute
+        # Return a key with effectively no limit - 1M/minute
         return "__whitelisted__"
     return ip
 

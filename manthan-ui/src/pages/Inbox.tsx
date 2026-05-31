@@ -1,5 +1,5 @@
 /**
- * Inbox — the operator's morning view, editorial-memo direction.
+ * Inbox - the operator's morning view, editorial-memo direction.
  *
  * The inbox is a stack of mini-memos. Each row is a compressed version of
  * the case workspace: HeaderStrip (case_id + customer + policy + status)
@@ -35,7 +35,7 @@ import { storyFor } from "@/lib/scenarioStory";
 import { ScenarioStory } from "@/components/app/ScenarioStory";
 
 // ──────────────────────────────────────────────────────────────────────
-// Status presentation — colors + labels for the right edge of the
+// Status presentation - colors + labels for the right edge of the
 // HeaderStrip. Match the WorkspaceMemo phase indicator palette.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export default function Inbox() {
 
   const sorted = useMemo(() => {
     if (!cases) return null;
-    // Inbox is the active desk only — resolved / errored / escalated
+    // Inbox is the active desk only - resolved / errored / escalated
     // cases live in /app/done. Without this filter, closed cases stay
     // listed at the bottom forever and the inbox never reaches "zero",
     // which defeats the whole "Inbox Zero" framing.
@@ -136,7 +136,7 @@ export default function Inbox() {
 
   const isEmpty = sorted !== null && sorted.length === 0;
 
-  // Empty state takes the full viewport on its own — no PageHeader above
+  // Empty state takes the full viewport on its own - no PageHeader above
   // (it would just duplicate the centered "Inbox zero." title), no outer
   // scroll. The state IS the page.
   if (isEmpty) {
@@ -216,7 +216,7 @@ export default function Inbox() {
 }
 
 /**
- * DemoScenariosStrip — the launcher rendered below the case list when
+ * DemoScenariosStrip - the launcher rendered below the case list when
  * the inbox already has cases. Compact resting state: a single quiet
  * "Launch a new case" button under a hairline. Clicking opens a
  * centered modal that surfaces the same three big trigger cards used
@@ -225,7 +225,7 @@ export default function Inbox() {
  *
  * The actual case fire still routes through `onCardFire`, so the
  * Aperture card opens its guided ScenarioStory just like on the empty
- * state — the picker just sits in front while the story takes over.
+ * state - the picker just sits in front while the story takes over.
  */
 function DemoScenariosStrip() {
   const { scenarios, firingId, onCardFire, storyOverlay } =
@@ -297,7 +297,7 @@ function DemoScenariosStrip() {
 }
 
 /**
- * LaunchPicker — centered modal that mirrors the empty-state hero:
+ * LaunchPicker - centered modal that mirrors the empty-state hero:
  * title + Geist Mono sub-eyebrow + three big trigger cards. Backdrop
  * blur dims the inbox underneath. Closes on backdrop click, ESC, or
  * the X button at top-right.
@@ -434,7 +434,7 @@ function LaunchPicker({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PageHeader — eyebrow + Spectral italic title + italic subtitle +
+// PageHeader - eyebrow + Spectral italic title + italic subtitle +
 // live pulse dot.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -527,7 +527,7 @@ function PageHeader({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// CaseRow — one mini-memo. Outer chrome matches the WorkspaceMemo:
+// CaseRow - one mini-memo. Outer chrome matches the WorkspaceMemo:
 // 1px hairline, 6px radius, oklch warm dark.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -837,7 +837,7 @@ function RowFooter({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Synthesizers — derive editorial copy from the raw API case row.
+// Synthesizers - derive editorial copy from the raw API case row.
 // ──────────────────────────────────────────────────────────────────────
 
 function synthesizeCaseLine(c: ApiCase): string {
@@ -857,7 +857,7 @@ function synthesizeCaseLine(c: ApiCase): string {
 
 function synthesizeDescription(c: ApiCase): string {
   if (c.status === "investigating") {
-    return "Manthan is mid-investigation — reading across the connected sources to write the brief.";
+    return "Manthan is mid-investigation - reading across the connected sources to write the brief.";
   }
   if (c.status === "acting") {
     return "Drafted actions are firing in sequence. Live receipts in the workspace.";
@@ -867,11 +867,11 @@ function synthesizeDescription(c: ApiCase): string {
   }
   if (c.status === "resolved") {
     return c.decision_action
-      ? `Resolved — ${humanizeAction(c.decision_action)} fired and the customer was notified.`
+      ? `Resolved - ${humanizeAction(c.decision_action)} fired and the customer was notified.`
       : "Resolved.";
   }
   if (c.status === "escalated") {
-    return "Escalated to a human — beyond Manthan’s policy envelope.";
+    return "Escalated to a human - beyond Manthan’s policy envelope.";
   }
   if (c.status === "errored") {
     return "Run errored mid-investigation; check the trace for the failure point.";
@@ -942,11 +942,11 @@ function humanCount(n: number): string {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Empty state — quiet editorial card with the demo-scenarios CTA.
+// Empty state - quiet editorial card with the demo-scenarios CTA.
 // ──────────────────────────────────────────────────────────────────────
 
 /**
- * Empty inbox — the morning-quiet state. When no cases have come in
+ * Empty inbox - the morning-quiet state. When no cases have come in
  * yet, we don't pile a CTA panel into the page; the desk sits empty,
  * the Manthan mark sits at center as the only sign of life, and a
  * Spectral italic line says what's true.
@@ -955,7 +955,7 @@ function humanCount(n: number): string {
  * so the operator can seed a case without hunting through the top bar.
  */
 /**
- * useDemoScenarios — fetch + fire helper shared between the empty-
+ * useDemoScenarios - fetch + fire helper shared between the empty-
  * inbox hero and the persistent strip on the filled inbox. Keeps the
  * scenarios cached for the page lifetime; fires by POST then routes
  * to the new case workspace.
@@ -977,7 +977,7 @@ function useDemoScenarios() {
         if (cancelled) return;
         setScenarios([]);
       });
-    // Fire-and-forget the /api/me fetch — used to route demo emails to
+    // Fire-and-forget the /api/me fetch - used to route demo emails to
     // the operator's own inbox instead of the env-level fallback. Demo
     // still works without it (falls back to MANTHAN_DEMO_EMAIL_OVERRIDE).
     getMe()
@@ -1014,7 +1014,7 @@ function useDemoScenarios() {
 }
 
 /**
- * useScenarioWithStory — wraps useDemoScenarios with the guided story
+ * useScenarioWithStory - wraps useDemoScenarios with the guided story
  * overlay. When a scenario has a registered story (currently just
  * "aperture"), clicking its card opens the ScenarioStory and the case
  * fires from the last slide's CTA. Other scenarios fire immediately.
@@ -1100,7 +1100,7 @@ function InboxEmptyState() {
     >
       {/* Hero: just the title + the prompt. No subtitle prose, no
           listening pill, no "sources live / agent idle" footer.
-          Density removed by request — only what's necessary. */}
+          Density removed by request - only what's necessary. */}
       <div className="w-full flex flex-col items-center text-center gap-7">
         <Insignia />
 
@@ -1173,7 +1173,7 @@ function InboxEmptyState() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// BigTriggerCard — empty-state hero card. Brand-tinted square, big
+// BigTriggerCard - empty-state hero card. Brand-tinted square, big
 // logo, big Spectral label underneath. Used only for the three trigger-
 // type cards on Inbox Zero; the bottom-strip DemoScenariosStrip still
 // uses the original compact ScenarioCard.
@@ -1272,7 +1272,7 @@ function BigTriggerCard({
 }
 
 /**
- * Insignia — the Manthan mark drawn LARGE. Three concentric radar arcs
+ * Insignia - the Manthan mark drawn LARGE. Three concentric radar arcs
  * emitting from an emerald core, with a slow halo pulse behind so the
  * empty state breathes instead of sitting frozen.
  */
@@ -1282,7 +1282,7 @@ function Insignia() {
       className="relative inline-flex items-center justify-center"
       style={{ width: 124, height: 124 }}
     >
-      {/* Halo wash — a soft radial behind the mark, brand-emerald tint. */}
+      {/* Halo wash - a soft radial behind the mark, brand-emerald tint. */}
       <div
         aria-hidden
         className="absolute inset-0"
@@ -1322,7 +1322,7 @@ function Insignia() {
           strokeWidth="2.2"
           strokeLinecap="round"
         />
-        {/* Emerald core — the steady center the radar emits from. */}
+        {/* Emerald core - the steady center the radar emits from. */}
         <circle
           cx="16"
           cy="16"

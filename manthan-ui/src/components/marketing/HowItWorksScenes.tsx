@@ -1,17 +1,17 @@
 /**
- * HowItWorksScenes — three animations invented specifically for Manthan.
+ * HowItWorksScenes - three animations invented specifically for Manthan.
  *
- *   01 · Watch       — a live pulse waveform scrolls left across the frame.
+ *   01 · Watch       - a live pulse waveform scrolls left across the frame.
  *                       4 source channels sit below; each spike fires from
  *                       its channel and a brief event-capture chip surfaces
  *                       above. Live monitoring made visual.
  *
- *   02 · Investigate — 4 evidence cards live in the corners with a source
+ *   02 · Investigate - 4 evidence cards live in the corners with a source
  *                       icon + one-line finding. On cycle, they fly inward,
  *                       rotating subtly, and stack at center as a single
  *                       BRIEF with [1][2][3][4] citations.
  *
- *   03 · Act         — a row of 4 toggles, each labeled with its destination.
+ *   03 · Act         - a row of 4 toggles, each labeled with its destination.
  *                       After an "approve" trigger they flip ON one by one,
  *                       glow emerald, and a 0/4 → 4/4 counter completes.
  *                       Auto-execute under thresholds, made literal.
@@ -57,7 +57,7 @@ function SceneFrame({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   01 · WATCH — live pulse waveform with source channels
+   01 · WATCH - live pulse waveform with source channels
    ═══════════════════════════════════════════════════════════════════════ */
 
 const WATCH_CHANNELS: { id: string; label: string }[] = [
@@ -156,7 +156,7 @@ export function WatchScene() {
       wave.setAttribute("d", d);
       glow.setAttribute("d", d);
 
-      // Sweeping playhead — continuously travels left → right then resets.
+      // Sweeping playhead - continuously travels left → right then resets.
       const sweepX = ((elapsed / 4200) % 1) * W;
       sweep.setAttribute("x1", String(sweepX));
       sweep.setAttribute("x2", String(sweepX));
@@ -178,7 +178,7 @@ export function WatchScene() {
         born: performance.now(),
       });
 
-      // Channel ripple — 3 concentric circles expanding outward like water
+      // Channel ripple - 3 concentric circles expanding outward like water
       // dropped in a lake. The ring SVG is intentionally oversized + parent
       // is overflow-visible, so the ripples can spread beyond the icon box.
       const rings = channelRingsRef.current[evt.srcIdx];
@@ -222,7 +222,7 @@ export function WatchScene() {
         );
       }
 
-      // Single-chip display — replace whatever's there. AnimatePresence
+      // Single-chip display - replace whatever's there. AnimatePresence
       // crossfades it in/out smoothly with no layout shifts.
       const key = ++calloutId.current;
       setCurrent({ key, srcIdx: evt.srcIdx, text: evt.text });
@@ -239,7 +239,7 @@ export function WatchScene() {
 
   return (
     <SceneFrame innerRef={containerRef}>
-      {/* Tiny "live" indicator dot, top-left — no text */}
+      {/* Tiny "live" indicator dot, top-left - no text */}
       <div
         className="absolute"
         style={{
@@ -254,7 +254,7 @@ export function WatchScene() {
         }}
       />
 
-      {/* Single event chip — slow fade in / dwell / slow fade out.
+      {/* Single event chip - slow fade in / dwell / slow fade out.
           No queue, no layout shifts, no bumping. */}
       <div
         className="absolute"
@@ -405,7 +405,7 @@ export function WatchScene() {
             className="flex flex-col items-center gap-1.5 relative"
             style={{ width: 44, overflow: "visible" }}
           >
-            {/* Lake-ripple — 3 concentric rings expanding outward.
+            {/* Lake-ripple - 3 concentric rings expanding outward.
                 Oversized SVG with overflow:visible so the rings spread
                 far beyond the icon container, like water on a pond. */}
             <svg
@@ -470,7 +470,7 @@ export function WatchScene() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   02 · INVESTIGATE — evidence cards collate at center as a brief
+   02 · INVESTIGATE - evidence cards collate at center as a brief
    ═══════════════════════════════════════════════════════════════════════ */
 
 const INVESTIGATE_CARDS: {
@@ -519,7 +519,7 @@ export function InvestigateScene() {
     gsap.set(brief, { opacity: 0, scale: 0.94 });
     gsap.set(check, { opacity: 0, scale: 0.5, rotation: -8 });
 
-    // Each card flies to center while shrinking + fading — it "dissolves
+    // Each card flies to center while shrinking + fading - it "dissolves
     // into" the brief instead of stacking visibly behind it.
     cards.forEach((el, i) => {
       tl.to(
@@ -577,7 +577,7 @@ export function InvestigateScene() {
 
   return (
     <SceneFrame innerRef={containerRef}>
-      {/* Evidence cards — start at corners, dissolve into the brief at center.
+      {/* Evidence cards - start at corners, dissolve into the brief at center.
           Narrower on mobile so they don't clip against the scene frame edges. */}
       <style>{`
         .investigate-card { width: 108px; padding: 6px 8px; }
@@ -674,7 +674,7 @@ export function InvestigateScene() {
         </div>
       </div>
 
-      {/* Success check — pops in after assembly */}
+      {/* Success check - pops in after assembly */}
       <div
         ref={checkRef}
         className="absolute inline-flex items-center justify-center"
@@ -698,7 +698,7 @@ export function InvestigateScene() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   03 · ACT — row of toggles flipping ON in cascade
+   03 · ACT - row of toggles flipping ON in cascade
    ═══════════════════════════════════════════════════════════════════════ */
 
 const ACT_TOGGLES: { id: string; action: string }[] = [
@@ -812,7 +812,7 @@ export function ActScene() {
         "<",
       );
 
-      // 4. Signal arrives — icon lights up
+      // 4. Signal arrives - icon lights up
       tl.to(
         iconWraps[i],
         {
@@ -954,7 +954,7 @@ export function ActScene() {
               </svg>
             </div>
 
-            {/* Destination icon — larger, glows when signal arrives */}
+            {/* Destination icon - larger, glows when signal arrives */}
             <div
               ref={(node) => {
                 iconWrapRefs.current[i] = node;

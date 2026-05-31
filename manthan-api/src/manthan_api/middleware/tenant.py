@@ -119,7 +119,7 @@ async def resolve_tenant(request: Request) -> TenantCtx:
                 )
             if row is None:
                 # Fallback: no dev_email provided (e.g. unauthenticated
-                # SSE during initial page load) — fall back to the
+                # SSE during initial page load) - fall back to the
                 # seeded oldest admin in the requested dev_slug org so
                 # the request still succeeds. Unauthenticated requests
                 # land in the shared seed org; once Clerk loads + the
@@ -162,7 +162,7 @@ async def resolve_tenant(request: Request) -> TenantCtx:
     # For now we raise a clear "not implemented" so the integration path is obvious.
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Clerk verification not wired yet — use X-Manthan-Dev-Org for local dev",
+        detail="Clerk verification not wired yet - use X-Manthan-Dev-Org for local dev",
     )
 
 

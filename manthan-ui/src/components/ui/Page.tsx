@@ -1,5 +1,5 @@
 /**
- * Page primitives — unify every dashboard route's header, section headers,
+ * Page primitives - unify every dashboard route's header, section headers,
  * and load/empty states so we stop reinventing them per page.
  *
  * Editorial direction: hairline rules over card chrome. The `PageHeader`
@@ -12,7 +12,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
 
 // ──────────────────────────────────────────────────────────────────────
-// PageHeader — title, optional sublabel and meta line, optional actions.
+// PageHeader - title, optional sublabel and meta line, optional actions.
 // Lives on a bottom hairline (no card). Replaces the per-page <motion.header>
 // + <h1> + <p> dance.
 // ──────────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ export function PageHeader({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PageBody — consistent outer padding + max-width + vertical rhythm.
+// PageBody - consistent outer padding + max-width + vertical rhythm.
 // Use this as the root wrapper for every page in /app/*.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export function PageBody({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Section — eyebrow + content. Replaces the inline "uppercase tracking
+// Section - eyebrow + content. Replaces the inline "uppercase tracking
 // text-white/45" pattern that was being copy-pasted across pages.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,7 @@ export function Section({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// LoadingRow — inline "…" loader. No spinning circle, no whole-page lock.
+// LoadingRow - inline "…" loader. No spinning circle, no whole-page lock.
 // Reads as text, doesn't shout.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -157,7 +157,7 @@ export function LoadingRow({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// EmptyRow — hairline-bordered empty state with a single line of useful
+// EmptyRow - hairline-bordered empty state with a single line of useful
 // copy. Replaces the "Inbox zero. Manthan is idle." card pattern.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -182,7 +182,7 @@ export function EmptyRow({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// ErrorRow — same shape as LoadingRow but in danger tone.
+// ErrorRow - same shape as LoadingRow but in danger tone.
 // ──────────────────────────────────────────────────────────────────────
 
 export function ErrorRow({

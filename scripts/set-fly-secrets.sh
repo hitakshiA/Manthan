@@ -20,7 +20,7 @@ trap "rm -f $TMP_ENV" EXIT
 cat agent/.env manthan-api/.env 2>/dev/null | grep -E '^[A-Z][A-Z0-9_]*=' | grep -v '^DATABASE_URL=' > "$TMP_ENV"
 
 echo "Setting Fly secrets for app: $APP_NAME"
-echo "(skipping DATABASE_URL — Fly Postgres attach sets it automatically)"
+echo "(skipping DATABASE_URL - Fly Postgres attach sets it automatically)"
 echo "---"
 grep -c '=' "$TMP_ENV" | awk '{print $1 " secrets to set"}'
 

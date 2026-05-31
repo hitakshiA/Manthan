@@ -1,13 +1,13 @@
 """SQL execution tool with read-only guardrails and scratchpad support.
 
-Exposes :func:`run_sql` — the agent-facing tool for querying a dataset.
+Exposes :func:`run_sql` - the agent-facing tool for querying a dataset.
 Allows ``SELECT``, ``WITH``, and a narrow set of DDL for scratchpad
 work: ``CREATE TEMP TABLE/VIEW`` and ``DROP TABLE/VIEW`` *only* when
 the target is a temporary object (exists in DuckDB's ``temp`` schema).
 Persistent Gold tables cannot be created or dropped from this surface.
 
 Agents use the temp table feature to build up intermediate results
-across many tool calls — e.g. materialise a subquery as a named
+across many tool calls - e.g. materialise a subquery as a named
 scratch table in one turn and JOIN against it in the next. Temp tables
 are per-connection in DuckDB and vanish when the connection closes.
 """
@@ -28,7 +28,7 @@ from src.core.exceptions import SqlValidationError, ToolError
 _DEFAULT_MAX_ROWS = 1000
 _DEFAULT_TIMEOUT_SECONDS = 30
 
-# Anchored regex for the statement shapes we allow. Order matters —
+# Anchored regex for the statement shapes we allow. Order matters -
 # the CREATE/DROP variants must be checked before a generic prefix match.
 _SELECT_RE = re.compile(r"^\s*SELECT\b", re.IGNORECASE)
 _WITH_RE = re.compile(r"^\s*WITH\b", re.IGNORECASE)
@@ -96,7 +96,7 @@ def run_sql(
     - ``WITH ... SELECT ...``
     - ``CREATE [OR REPLACE] TEMP[ORARY] TABLE|VIEW name AS SELECT ...``
     - ``CREATE [OR REPLACE] TEMP[ORARY] TABLE name (col ...)``
-    - ``DROP TABLE|VIEW [IF EXISTS] temp_name`` — only when ``temp_name``
+    - ``DROP TABLE|VIEW [IF EXISTS] temp_name`` - only when ``temp_name``
       exists in DuckDB's ``temp`` schema.
 
     Raises:
@@ -127,7 +127,7 @@ def run_sql(
             connection.execute(sql)
             column_names = []
             fetched = []
-        else:  # pragma: no cover — defensive, validator rejects anything else
+        else:  # pragma: no cover - defensive, validator rejects anything else
             raise SqlValidationError(f"Unsupported statement kind: {kind}")
     except duckdb.InterruptException as exc:
         raise ToolError(f"SQL execution exceeded {timeout_seconds}s timeout") from exc
@@ -184,7 +184,7 @@ def _validate_sql(
         _require_temp_object(connection, target)
         return "drop", None, target
 
-    # Anything else — rejected with an actionable hint.
+    # Anything else - rejected with an actionable hint.
     first_word = stripped.split(None, 1)[0].upper()
     raise SqlValidationError(
         f"Statement type {first_word!r} is not allowed. "
@@ -198,7 +198,7 @@ def _require_temp_object(connection: duckdb.DuckDBPyConnection, name: str) -> No
     """Raise unless ``name`` exists in DuckDB's ``temp`` database.
 
     DuckDB stores temporary tables and views in a catalog called
-    ``temp`` (not a schema called ``temp`` — the catalog contains a
+    ``temp`` (not a schema called ``temp`` - the catalog contains a
     ``main`` schema). The check below matches by ``database_name``.
     """
     row = connection.execute(

@@ -1,5 +1,5 @@
 /**
- * Auth shell — verbatim port of the Aurora Onboard prompt.
+ * Auth shell - verbatim port of the Aurora Onboard prompt.
  *
  *   main: flex min-h-screen w-full bg-black selection:bg-white/30 p-2
  *         transition-all duration-500. lg: h-screen overflow-hidden p-4
@@ -35,7 +35,7 @@ interface AuthShellProps {
 export function AuthShell({ children }: AuthShellProps) {
   return (
     <main className="flex min-h-screen w-full bg-black selection:bg-white/30 text-white p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4">
-      {/* LEFT — green-shifted video with the Manthan mark centered on top. */}
+      {/* LEFT - green-shifted video with the Manthan mark centered on top. */}
       <aside className="hidden lg:flex w-[52%] relative rounded-3xl overflow-hidden shadow-2xl h-full items-center justify-center">
         <video
           src={AURORA_VIDEO}

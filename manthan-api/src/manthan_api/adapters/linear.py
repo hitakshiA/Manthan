@@ -1,4 +1,4 @@
-"""Linear adapter — create a follow-up issue."""
+"""Linear adapter - create a follow-up issue."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def create_issue(payload: dict[str, Any], idempotency_key: str) -> ExecutionResu
                     "reason": "LINEAR_API_KEY not configured; demo-mode placeholder",
                 },
             )
-        raise AdapterError("LINEAR_API_KEY missing — add to .env to enable Linear writes")
+        raise AdapterError("LINEAR_API_KEY missing - add to .env to enable Linear writes")
 
     team_id = payload.get("team_id")
     description = payload.get("description", "")

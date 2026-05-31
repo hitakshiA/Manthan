@@ -1,10 +1,10 @@
-"""Real-Coral workflow scenarios — agent investigates LIVE source data.
+"""Real-Coral workflow scenarios - agent investigates LIVE source data.
 
 No DuckDB. No mock fallback. The agent runs against real Coral, which
 fronts real Stripe/HubSpot/Intercom/Zendesk/Notion/Slack/PagerDuty/
 Sentry/PostHog/Datadog.
 
-Each trigger is intentionally framed so the *easy* answer is wrong — the
+Each trigger is intentionally framed so the *easy* answer is wrong - the
 agent has to investigate the operational stack, Zendesk SLA history,
 PostHog usage signal, etc. to reach the right call. This is how we
 validate "real investigator" behavior without prompt prebaking.
@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from scenarios import Scenario
 
 # ──────────────────────────────────────────────────────────────────────
-# W1R — Daisy-chained chargebacks (Acme Genomics)
+# W1R - Daisy-chained chargebacks (Acme Genomics)
 # ──────────────────────────────────────────────────────────────────────
 
 W1R = Scenario(
@@ -30,13 +30,13 @@ W1R = Scenario(
     pattern_name="daisy_chained_chargebacks_real",
     trigger_text=(
         "Slack DM from @priya (CSM):\n"
-        "\"Heads up — Acme Genomics filed ANOTHER chargeback on their May "
+        "\"Heads up - Acme Genomics filed ANOTHER chargeback on their May "
         "renewal. This is the THIRD time. Same reason every time ('I "
-        "cancelled'). We've already lost the first two disputes — refunded "
+        "cancelled'). We've already lost the first two disputes - refunded "
         "them out of goodwill. But Intercom shows nothing formal and they "
         "keep using the product. AE wants to keep the logo. Need a brief "
         "for whether we fight this one or fold again.\"\n\n"
-        "Customer: Acme Genomics (ops@acme-genomics.test) — look up by email\n"
+        "Customer: Acme Genomics (ops@acme-genomics.test) - look up by email\n"
         "Open dispute: du_1TbcVrCNe0SBMhzIhLshYoas\n"
         "Disputed charge: ch_3TbcVoCNe0SBMhzI0Duojs4h ($4,200 May 2026 renewal)\n"
         "Evidence deadline: ~14 days from charge\n"
@@ -47,12 +47,12 @@ W1R = Scenario(
     expected_findings_keywords=[
         # Each keyword tests a distinct piece of the daisy-chain reasoning
         # that a real investigator's brief MUST contain. If the agent
-        # didn't articulate one of these, the brief is incomplete — even
+        # didn't articulate one of these, the brief is incomplete - even
         # if the decision is right.
-        # • "prior" — must acknowledge earlier dispute history
-        # • "no formal cancel" — must verify cancel absence specifically
-        # • "still active" — must verify continued use (not "cancelled")
-        # • "RD-2026" — must cite the authoritative SOP id (this is the
+        # • "prior" - must acknowledge earlier dispute history
+        # • "no formal cancel" - must verify cancel absence specifically
+        # • "still active" - must verify continued use (not "cancelled")
+        # • "RD-2026" - must cite the authoritative SOP id (this is the
         #   single best test of "did the agent actually read the policy")
         "prior",
         "no formal cancel",
@@ -60,7 +60,7 @@ W1R = Scenario(
         "RD-2026",
     ],
     must_not_findings_keywords=[
-        # Name-collision distractors only. "deprecated" removed — the
+        # Name-collision distractors only. "deprecated" removed - the
         # agent correctly distinguishes the CURRENT 2026 SOP from the
         # DEPRECATED 2024 SOP in its reasoning trace, and substring
         # match penalizes that distinguishing language. Real false-
@@ -79,7 +79,7 @@ W1R = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W2R — Failed-webhook ghost-paid (Northwind Logistics)
+# W2R - Failed-webhook ghost-paid (Northwind Logistics)
 # REWRITTEN: easy answer is "friendly fraud → fight" because Stripe +
 # the entitlement table both say the customer paid for Standard and is
 # on Standard. The agent must discover the webhook crash via Sentry +
@@ -91,20 +91,20 @@ W2R = Scenario(
     pattern_name="failed_webhook_ghost_real",
     trigger_text=(
         "Forwarded escalation from @marcus (AR collections lead):\n"
-        "\"Pinging you on Northwind Logistics — $9,000 chargeback on their "
+        "\"Pinging you on Northwind Logistics - $9,000 chargeback on their "
         "May 12 renewal. They're claiming they paid for an Enterprise tier "
         "upgrade they never received. But I pulled the Stripe charge AND "
-        "the entitlement table — they're still on Standard, which is what "
+        "the entitlement table - they're still on Standard, which is what "
         "their signed contract specifies. Their finance team won't return "
-        "calls. Smells like friendly fraud to me — feels like they renewed, "
+        "calls. Smells like friendly fraud to me - feels like they renewed, "
         "got buyer's remorse, and now want $9k back by claiming we didn't "
         "deliver. Big logo so I want to be careful but I think we have to "
         "fight. Sanity-check before I file evidence?\n\n"
-        "Side note — heard eng has been firefighting some platform stuff "
+        "Side note - heard eng has been firefighting some platform stuff "
         "lately, no idea if it matters here. VP Finance will read your "
         "brief, so make sure we're not missing anything. Board meeting "
         "tomorrow.\"\n\n"
-        "Customer: Northwind Logistics (ar@northwind-logi.test) — look up by email\n"
+        "Customer: Northwind Logistics (ar@northwind-logi.test) - look up by email\n"
         "Disputed charge: ch_3TbcVyCNe0SBMhzI1aB2tqAk ($9,000)\n"
         "Open dispute: du_1TbcW0CNe0SBMhzIJhFrvL5P\n"
     ),
@@ -127,7 +127,7 @@ W2R = Scenario(
         "concede the fight",
     ],
     notes=(
-        "Real Coral path. AR has framed this as friendly fraud — the easy "
+        "Real Coral path. AR has framed this as friendly fraud - the easy "
         "answer is FIGHT. Agent must overturn that by: (1) verifying Stripe "
         "charge succeeded ($9k captured), (2) querying Sentry for the "
         "billing-webhook-handler TypeError around May 12, (3) citing the "
@@ -135,14 +135,14 @@ W2R = Scenario(
         "(4) confirming the Datadog 'billing-webhook-handler error rate "
         "elevated' monitor fired May 12 10:00-11:30 UTC, (5) finding the "
         "Notion 'Vendor failure refund policy' SOP. Right move: refund full "
-        "+ apology. The customer wasn't lying — our webhook crashed and "
+        "+ apology. The customer wasn't lying - our webhook crashed and "
         "their entitlement never flipped."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W3R — Post-acquisition double-billing (Mockingbird Media)
+# W3R - Post-acquisition double-billing (Mockingbird Media)
 # ──────────────────────────────────────────────────────────────────────
 
 W3R = Scenario(
@@ -151,13 +151,13 @@ W3R = Scenario(
     trigger_text=(
         "Linear ticket from @gina (AR):\n"
         "\"Mockingbird Media filed a dispute on the May Stripe charge "
-        "($5,500). They claim they paid TWICE this month — once on the new "
+        "($5,500). They claim they paid TWICE this month - once on the new "
         "Stripe entity and once on the legacy entity we were supposed to "
         "retire post-acquisition. They want a refund and consolidation. "
         "The migration was supposed to terminate the legacy side end of "
         "March. Migration runbook says we always refund the legacy charge "
-        "in this case — but I can't tell which is which anymore. Help.\"\n\n"
-        "Customer: Mockingbird Media (finance@mockingbird-media.test) — look up by email\n"
+        "in this case - but I can't tell which is which anymore. Help.\"\n\n"
+        "Customer: Mockingbird Media (finance@mockingbird-media.test) - look up by email\n"
         "Stripe dispute: du_1TbcW9CNe0SBMhzIQGKO8iVw (reason: duplicate)\n"
         "Disputed charge: ch_3TbcW7CNe0SBMhzI0h1NcZkH ($5,500)\n"
     ),
@@ -188,7 +188,7 @@ W3R = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W4R — Zendesk SLA-breach refund (Helix Bio)
+# W4R - Zendesk SLA-breach refund (Helix Bio)
 # Zendesk is load-bearing. Easy answer = fight (charge is valid, services
 # delivered). Right answer = refund 1mo goodwill because an urgent ticket
 # sat unresponded for >72h. Agent must discover the open ticket and the
@@ -200,15 +200,15 @@ W4R = Scenario(
     pattern_name="zendesk_sla_breach_real",
     trigger_text=(
         "Slack DM from @jules (CS lead):\n"
-        "\"Need a recommendation by EOD on Helix Bio — their finance team "
+        "\"Need a recommendation by EOD on Helix Bio - their finance team "
         "emailed asking for a full refund on the May renewal. They say if "
         "we don't refund they'll chargeback. They've been pretty quiet for "
         "weeks and the contract is in force; the charge is clean per Stripe. "
-        "Honestly I'm tempted to fight — sounds like buyer's remorse. But "
+        "Honestly I'm tempted to fight - sounds like buyer's remorse. But "
         "I want a second pair of eyes before I respond. Big biotech logo "
         "and renewal is up in Q3.\"\n\n"
-        "Customer: Helix Bio (ap@helix-bio.test) — look up by email\n"
-        "No Stripe chargeback filed yet — refund request only.\n"
+        "Customer: Helix Bio (ap@helix-bio.test) - look up by email\n"
+        "No Stripe chargeback filed yet - refund request only.\n"
         "Threatened chargeback if we don't act by Friday.\n"
     ),
     dispute_header={},
@@ -226,18 +226,18 @@ W4R = Scenario(
         "no support history",
     ],
     notes=(
-        "Real Coral path. Zendesk is load-bearing — the agent must discover "
+        "Real Coral path. Zendesk is load-bearing - the agent must discover "
         "the urgent + open ticket aged ~8 days that has no first-responder "
         "comment, compute the SLA breach, then locate the Notion SOP that "
         "specifies 1-month goodwill refund for >72h first-response on "
         "urgent tickets. The CS lead has framed this as buyer's remorse / "
-        "fight-leaning — agent has to overturn that with Zendesk evidence."
+        "fight-leaning - agent has to overturn that with Zendesk evidence."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W5R — PostHog usage-disprove friendly fraud (Summit Payments)
+# W5R - PostHog usage-disprove friendly fraud (Summit Payments)
 # PostHog is load-bearing. Easy answer = refund (be nice to customer).
 # Right answer = fight because PostHog event volume disproves the
 # customer's "barely used it" claim. Agent must query usage by company.
@@ -248,15 +248,15 @@ W5R = Scenario(
     pattern_name="posthog_usage_fraud_real",
     trigger_text=(
         "Email forwarded by @priya (CSM):\n"
-        "\"Awkward situation — Summit Payments emailed asking for a full "
+        "\"Awkward situation - Summit Payments emailed asking for a full "
         "refund on the May renewal. Their finance person says they 'barely "
         "used the product over the last quarter' and feel the renewal was "
         "auto-charged without their finance team really seeing value. Their "
         "AE wants to keep them happy. Honestly my gut says concede and "
-        "refund — but engineering insists they've been using us heavily. "
+        "refund - but engineering insists they've been using us heavily. "
         "Can you settle this with a fact check before we respond?\"\n\n"
-        "Customer: Summit Payments (support@summit-payments.test) — look up by email\n"
-        "Refund requested for May renewal charge — identify in Stripe.\n"
+        "Customer: Summit Payments (support@summit-payments.test) - look up by email\n"
+        "Refund requested for May renewal charge - identify in Stripe.\n"
     ),
     dispute_header={},
     expected_decision="fight",
@@ -274,18 +274,18 @@ W5R = Scenario(
         "buyer's remorse",
     ],
     notes=(
-        "Real Coral path. PostHog is load-bearing — agent must query "
+        "Real Coral path. PostHog is load-bearing - agent must query "
         "posthog.events filtered by customer (company_slug='summit-payments' "
         "or domain match) for the last 60 days and count. If usage volume "
         "is substantial (40+ events across multiple persons), conclude "
         "FIGHT and cite usage as counter-evidence. The CSM framing is "
-        "refund-leaning — agent has to overturn with PostHog data."
+        "refund-leaning - agent has to overturn with PostHog data."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W6R — auth-svc outage refund (Cascade Cloud)
+# W6R - auth-svc outage refund (Cascade Cloud)
 # Sentry + PagerDuty + Datadog are ALL load-bearing. The customer claims
 # auth was broken; the agent must corroborate across three operational
 # sources to prove the outage was real (vs. exaggeration) and refund.
@@ -300,12 +300,12 @@ W6R = Scenario(
         "\"Cascade Cloud is asking for a full refund on their May charge. "
         "They claim their team 'couldn't reliably log in for half of May' "
         "and the product was effectively unusable. Our CS team hasn't heard "
-        "from them about this in weeks — this is the first I'm hearing of "
+        "from them about this in weeks - this is the first I'm hearing of "
         "it. Could be real, could be exaggeration. Eng would have flagged "
         "any auth outage that big, right? Need to know what to tell them "
         "by Friday. Lean to fight unless we have evidence otherwise.\"\n\n"
-        "Customer: Cascade Cloud (billing@cascade-cloud.test) — look up by email\n"
-        "Refund requested for May renewal — identify charge in Stripe.\n"
+        "Customer: Cascade Cloud (billing@cascade-cloud.test) - look up by email\n"
+        "Refund requested for May renewal - identify charge in Stripe.\n"
     ),
     dispute_header={},
     expected_decision="refund",
@@ -323,12 +323,12 @@ W6R = Scenario(
         "fight the refund",
     ],
     notes=(
-        "Real Coral path. THREE operational sources are load-bearing — "
+        "Real Coral path. THREE operational sources are load-bearing - "
         "agent must corroborate the customer's claim across Sentry "
         "(TokenIssuanceError on auth-svc tagged with cascade-cloud "
         "customer_id), PagerDuty (auth-service SEV-1 incident), and "
         "Datadog (auth-service error-rate monitor with workflow:W6 tag). "
-        "AR has framed this as 'probably exaggeration' — agent has to "
+        "AR has framed this as 'probably exaggeration' - agent has to "
         "overturn with multi-source corroboration. This is the test of "
         "cross-source citation discipline."
     ),
@@ -336,7 +336,7 @@ W6R = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Q1R — Q1 alleged-outage chargeback (Quill Logistics)
+# Q1R - Q1 alleged-outage chargeback (Quill Logistics)
 # Customer filed $9k chargeback claiming Q1 outage. Reality: NO outage,
 # and the customer was actively using the product during the alleged
 # window. Agent must FIGHT. Sentry, Datadog, PagerDuty corroborate
@@ -349,14 +349,14 @@ Q1R = Scenario(
     pattern_name="alleged_outage_fight_real",
     trigger_text=(
         "Slack DM from @amelia (CSM):\n"
-        "\"Heads up — Quill Logistics just filed a $9,000 chargeback on "
+        "\"Heads up - Quill Logistics just filed a $9,000 chargeback on "
         "their March renewal claiming 'service outage during Q1, we "
         "couldn't access the product.' That doesn't match anything I've "
-        "seen — they renewed normally, expanded usage in Q1, and I had a "
+        "seen - they renewed normally, expanded usage in Q1, and I had a "
         "downgrade convo with their VP Eng in April but that was about "
         "pricing, not outages. Stripe receipt is clean. Need a brief on "
         "whether we fight before evidence deadline.\"\n\n"
-        "Customer: Quill Logistics (ar@quill-logistics.test) — look up by email\n"
+        "Customer: Quill Logistics (ar@quill-logistics.test) - look up by email\n"
         "Disputed charge: Pro Annual renewal, $9,000, 2026-03-15\n"
         "Dispute reason: product_not_received (semantic: service_outage_claim)\n"
         "Disputed window: 2026-01-01 to 2026-03-31\n"
@@ -367,10 +367,10 @@ Q1R = Scenario(
     expected_findings_keywords=[
         # Each keyword tests a distinct piece of corroboration the brief
         # must contain to defend a FIGHT decision against an outage claim.
-        # • "no outage" / "uptime" — operational data must be cited
-        # • "posthog" / "active" / "usage" — usage signal must be cited
-        # • "sentry" / "datadog" / "pagerduty" — must name the ops stack
-        # • "no formal cancel" — customer never requested termination
+        # • "no outage" / "uptime" - operational data must be cited
+        # • "posthog" / "active" / "usage" - usage signal must be cited
+        # • "sentry" / "datadog" / "pagerduty" - must name the ops stack
+        # • "no formal cancel" - customer never requested termination
         "no outage",
         "posthog",
         "active",
@@ -400,13 +400,13 @@ Q1R = Scenario(
         "request in Q1, (7) find the Notion 'Chargeback Response "
         "Playbook v3' which codifies fighting outage-claim chargebacks "
         "when ops data is clean AND PostHog shows usage. The CSM framing "
-        "is fight-leaning correct — agent just has to corroborate it."
+        "is fight-leaning correct - agent just has to corroborate it."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# V1R — Seat-count chargeback (Vermillion Studios)
+# V1R - Seat-count chargeback (Vermillion Studios)
 # Customer (25-person design agency) filed a $4,500 chargeback claiming
 # "billed for 25 seats but we only have 15." Reality: their COO Sarah
 # Chen e-signed a +10-seat addendum on 2026-02-08, the team actually
@@ -422,11 +422,11 @@ V1R = Scenario(
     pattern_name="seat_count_dispute_fight_real",
     trigger_text=(
         "Slack DM from @priya (CSM):\n"
-        "\"Vermillion Studios just filed a chargeback for $4,500 — they're "
+        "\"Vermillion Studios just filed a chargeback for $4,500 - they're "
         "saying we billed them for 25 seats but they only have 15. Their "
         "CFO is the one who filed it. Look into it and recommend whether "
         "we fight or fold before the evidence deadline.\"\n\n"
-        "Customer: Vermillion Studios (finance@vermillion-design.test) — "
+        "Customer: Vermillion Studios (finance@vermillion-design.test) - "
         "look up by email\n"
         "Disputed charge: Pro Annual monthly seat invoice, $4,500 "
         "(25 seats x $180/mo), 2026-04-12\n"
@@ -439,10 +439,10 @@ V1R = Scenario(
     expected_amount_minor=450000,
     expected_findings_keywords=[
         # Each keyword tests a piece of the seat-dispute corroboration:
-        # • "addendum" / "signed" / "coo" — must cite the contract evidence
-        # • "posthog" / "active" / "users" — must cite usage signal
-        # • "no billing" / "no complaint" — must verify support absence
-        # • "reconciliation" — must propose the CFO call per playbook
+        # • "addendum" / "signed" / "coo" - must cite the contract evidence
+        # • "posthog" / "active" / "users" - must cite usage signal
+        # • "no billing" / "no complaint" - must verify support absence
+        # • "reconciliation" - must propose the CFO call per playbook
         "addendum",
         "coo",
         "posthog",
@@ -482,7 +482,7 @@ V1R = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# M1R — Maya Patel small autonomous duplicate-charge refund
+# M1R - Maya Patel small autonomous duplicate-charge refund
 # Solo designer ($89/mo Caldera Pro) emails support claiming "I was
 # charged twice on 2026-05-22, please refund the duplicate." Reality:
 # our Stripe webhook handler 500'd on the first delivery of the
@@ -514,10 +514,10 @@ M1R = Scenario(
     expected_findings_keywords=[
         # Each keyword tests a piece of the small-refund-auto autonomous
         # reasoning trace:
-        # • "webhook" / "retry" — must identify the root cause
-        # • "sentry" / "datadog" — must cite the corroborating ops sources
-        # • "good standing" / "no prior" — must verify policy precondition
-        # • "small-refund-auto" — must cite the autonomous policy id
+        # • "webhook" / "retry" - must identify the root cause
+        # • "sentry" / "datadog" - must cite the corroborating ops sources
+        # • "good standing" / "no prior" - must verify policy precondition
+        # • "small-refund-auto" - must cite the autonomous policy id
         "webhook",
         "retry",
         "sentry",
@@ -527,9 +527,9 @@ M1R = Scenario(
     ],
     must_not_findings_keywords=[
         # Easy-answer traps the agent must avoid:
-        # • "escalate" / "human" — policy is explicit: no human required
-        # • "fight" / "friendly fraud" — duplicate is OUR bug, not fraud
-        # • "chargeback" / "dispute" — Maya only emailed support; no
+        # • "escalate" / "human" - policy is explicit: no human required
+        # • "fight" / "friendly fraud" - duplicate is OUR bug, not fraud
+        # • "chargeback" / "dispute" - Maya only emailed support; no
         #   Stripe dispute exists yet, agent must not invent one
         "escalate",
         "ask human",
@@ -550,17 +550,17 @@ M1R = Scenario(
         "spike, already resolved), (4) verify Maya is in good standing "
         "via HubSpot NPS=9, zero Intercom/Zendesk tickets in 90 days, "
         "zero prior Stripe disputes, (5) match the Notion 'Small-refund "
-        "policy — duplicate charges under $200' SOP (small-refund-auto), "
+        "policy - duplicate charges under $200' SOP (small-refund-auto), "
         "(6) refund the duplicate charge via Stripe ($89 / 8900 minor "
         "USD), (7) reply to Maya in the same Gmail thread. NO human "
-        "review required — policy auto-fires. The agent should never "
+        "review required - policy auto-fires. The agent should never "
         "escalate this case."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W7R — documented-incident pro-rata partial credit (Aperture Analytics)
+# W7R - documented-incident pro-rata partial credit (Aperture Analytics)
 # Premium-tier customer was charged $8,400 for the April cycle. The
 # Premium-only Custom Reports service was DOWN for 48h mid-cycle
 # (Datadog monitor + Slack #engineering ack). Customer raised it live in
@@ -578,7 +578,7 @@ M1R = Scenario(
 #                 policy explicitly mandates pro-rata for documented
 #                 incidents on the affected tier.
 #
-# Right answer — derivable ONLY from cross-source synthesis:
+# Right answer - derivable ONLY from cross-source synthesis:
 #   refund 2/30 × $8,400 = $560 (pro-rata for the 2 degraded days)
 #   per Notion 'Documented Incident Pro-Rata Credit' policy.
 #
@@ -593,7 +593,7 @@ W7R = Scenario(
     pattern_name="documented_incident_prorata_real",
     trigger_text=(
         "Email forwarded by @sam (AR ops):\n"
-        "\"Pinging you on Aperture Analytics — they filed a Stripe dispute "
+        "\"Pinging you on Aperture Analytics - they filed a Stripe dispute "
         "on their April $8,400 charge yesterday claiming we delivered a "
         "degraded service. I checked their account and they actually "
         "downgraded themselves to Standard a week into the cycle, which "
@@ -603,7 +603,7 @@ W7R = Scenario(
         "$500 to keep the logo, but I'd rather have the data than just "
         "guess. Can you do a proper investigation before I respond? "
         "VP Finance reads the brief.\"\n\n"
-        "Customer: Aperture Analytics (billing@aperture-analytics.co) — "
+        "Customer: Aperture Analytics (billing@aperture-analytics.co) - "
         "look up by email\n"
         "Disputed charge: Premium Monthly April cycle, $8,400, captured "
         "2026-04-12 09:00 UTC\n"
@@ -618,7 +618,7 @@ W7R = Scenario(
         "`datadog.incidents` table is empty because Incident "
         "Management isn't enabled on this account).\n"
         " • Notion policy doc: query `notion.search` for "
-        "'pro-rata' or 'Pro-Rata Refund Credit Policy' — this is the "
+        "'pro-rata' or 'Pro-Rata Refund Credit Policy' - this is the "
         "SOP that governs partial-credit math for documented "
         "operational incidents.\n"
         " • Zendesk ticket: query `zendesk.tickets` joined to "
@@ -632,19 +632,19 @@ W7R = Scenario(
     # The case's disputed amount (NOT the expected refund). This value
     # populates cases.amount_minor on trigger and the partial-refund
     # detector compares decision_amount_minor against it. The expected
-    # refund amount is $560 (2/30 × $8,400 = 56000 minor) — kept in
+    # refund amount is $560 (2/30 × $8,400 = 56000 minor) - kept in
     # notes + expected_findings_keywords ("560", "two days") for the
     # bake-off harness to check, separately from the disputed total.
     expected_amount_minor=840000,
     expected_findings_keywords=[
         # Each keyword tests a specific evidence beat that the partial-
         # credit brief MUST contain:
-        # • "custom reports" — names the specific degraded feature
-        # • "datadog" — corroborates the incident with operational data
-        # • "two days" / "2 days" / "48" — quantifies the degradation
-        # • "pro-rata" / "prorata" — names the policy approach
-        # • "560" — verifies the agent landed on the right pro-rata math
-        # • "policy" — proves the agent found the Notion policy doc
+        # • "custom reports" - names the specific degraded feature
+        # • "datadog" - corroborates the incident with operational data
+        # • "two days" / "2 days" / "48" - quantifies the degradation
+        # • "pro-rata" / "prorata" - names the policy approach
+        # • "560" - verifies the agent landed on the right pro-rata math
+        # • "policy" - proves the agent found the Notion policy doc
         "custom reports",
         "datadog",
         "two days",

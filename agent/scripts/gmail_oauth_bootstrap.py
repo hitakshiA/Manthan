@@ -19,7 +19,7 @@ After this script runs successfully:
     GOOGLE_DRIVE_ACCESS_TOKEN=<same access token, dual scope>
     GOOGLE_DRIVE_REFRESH_TOKEN=<same refresh token>
 
-The access token expires every ~1 hour. Coral does NOT auto-refresh — the
+The access token expires every ~1 hour. Coral does NOT auto-refresh - the
 seeders refresh on demand using the refresh token. Run this script again
 if you ever need a fresh access token without doing the consent dance.
 """
@@ -49,7 +49,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive.metadata.readonly",
 ]
 
-# Local loopback port — must match a redirect URI configured on the
+# Local loopback port - must match a redirect URI configured on the
 # OAuth client in Google Cloud Console.
 CALLBACK_HOST = "127.0.0.1"
 CALLBACK_PORT = 8765
@@ -110,7 +110,7 @@ def _run_callback_server() -> http.server.HTTPServer:
 
 
 # ────────────────────────────────────────────────────────────────────────
-# .env writer — idempotent line replacement.
+# .env writer - idempotent line replacement.
 # ────────────────────────────────────────────────────────────────────────
 
 
@@ -161,7 +161,7 @@ def main() -> int:
                 "  https://console.cloud.google.com/apis/library/drive.googleapis.com\n\n"
                 f"And add this exact redirect URI to your OAuth client:\n"
                 f"  [bold]{REDIRECT_URI}[/bold]",
-                title="Gmail OAuth bootstrap — missing prerequisites",
+                title="Gmail OAuth bootstrap - missing prerequisites",
                 border_style="red",
             )
         )
@@ -205,7 +205,7 @@ def main() -> int:
         console.print(f"[red]OAuth error:[/red] {_result.error}")
         return 1
     if _result.state != state:
-        console.print("[red]State mismatch — possible CSRF, aborting.[/red]")
+        console.print("[red]State mismatch - possible CSRF, aborting.[/red]")
         return 1
     if not _result.code:
         console.print("[red]No authorization code received.[/red]")
@@ -259,7 +259,7 @@ def main() -> int:
             f"  granted scopes:     {granted}\n\n"
             "[dim]Gmail + Drive access tokens are short-lived (~1h). "
             "Seeders refresh on demand via the refresh token.[/dim]",
-            title="Gmail OAuth bootstrap — ok",
+            title="Gmail OAuth bootstrap - ok",
             border_style="green",
         )
     )

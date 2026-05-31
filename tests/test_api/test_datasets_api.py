@@ -129,7 +129,7 @@ def test_full_pipeline_upload_then_query(api_client: TestClient) -> None:
     assert summary["row_count"] == 10
     assert summary["status"] == "gold"
 
-    # 2. List datasets — should include the new one.
+    # 2. List datasets - should include the new one.
     listing = api_client.get("/datasets").json()
     assert any(d["dataset_id"] == dataset_id for d in listing)
 
@@ -147,7 +147,7 @@ def test_full_pipeline_upload_then_query(api_client: TestClient) -> None:
     assert any(c["name"] == "revenue" for c in schema["columns"])
     assert schema["verified_queries"]  # verified queries populated
 
-    # 5. Run a SQL query via the tools endpoint — use a verified query.
+    # 5. Run a SQL query via the tools endpoint - use a verified query.
     verified_sql = schema["verified_queries"][0]["sql"]
     sql_response = api_client.post(
         "/tools/sql",

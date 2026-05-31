@@ -1,7 +1,7 @@
 """Interactive clarification for low-confidence column classifications.
 
 When the LLM classifier isn't confident about a column's role, we ask
-the user a plain-English question with clear multiple-choice options —
+the user a plain-English question with clear multiple-choice options -
 no jargon, no code syntax, no "metric vs dimension" vocabulary.
 
 Each question is self-contained: a human-readable prompt, a list of
@@ -59,7 +59,7 @@ class ClarificationQuestion(BaseModel):
 
 
 class ClarificationAnswer(BaseModel):
-    """A user's response — just the chosen option's value."""
+    """A user's response - just the chosen option's value."""
 
     question_id: str
     column_name: str
@@ -165,14 +165,14 @@ def _build_question(
                 value="temporal",
             ),
             ClarificationOption(
-                label="No, it's just a reference date — not for trending",
+                label="No, it's just a reference date - not for trending",
                 value="dimension",
             ),
         ]
         recommended = "temporal"
 
     elif is_numeric and distinct <= 20:
-        # Numeric with few distinct values — could be a code/enum or a real metric
+        # Numeric with few distinct values - could be a code/enum or a real metric
         prompt = (
             f"'{name}' has numbers but only {distinct} different values "
             f"(like {sample_str}). Is this a code or category you'd "
@@ -180,39 +180,39 @@ def _build_question(
         )
         options = [
             ClarificationOption(
-                label=f"It's a category — I'd group or filter by '{name}'",
+                label=f"It's a category - I'd group or filter by '{name}'",
                 value="dimension",
             ),
             ClarificationOption(
-                label=f"It's a number — I'd sum or average '{name}'",
+                label=f"It's a number - I'd sum or average '{name}'",
                 value="metric",
                 aggregation="SUM",
             ),
             ClarificationOption(
-                label="It's an ID or code — not really useful for analysis",
+                label="It's an ID or code - not really useful for analysis",
                 value="identifier",
             ),
         ]
         recommended = classification.role
 
     elif is_numeric and classification.role == "auxiliary":
-        # Numeric column tagged as auxiliary — probably a mistake
+        # Numeric column tagged as auxiliary - probably a mistake
         prompt = (
             f"'{name}' contains numbers (like {sample_str}) but I'm "
             f"not sure if it's useful for analysis. What is it?"
         )
         options = [
             ClarificationOption(
-                label=f"It's a measure — I'd want to sum or average '{name}'",
+                label=f"It's a measure - I'd want to sum or average '{name}'",
                 value="metric",
                 aggregation="SUM",
             ),
             ClarificationOption(
-                label=f"It's a category code — I'd group by '{name}'",
+                label=f"It's a category code - I'd group by '{name}'",
                 value="dimension",
             ),
             ClarificationOption(
-                label="It's internal/technical — I can ignore it",
+                label="It's internal/technical - I can ignore it",
                 value="auxiliary",
             ),
         ]
@@ -235,14 +235,14 @@ def _build_question(
                 value="dimension",
             ),
             ClarificationOption(
-                label="It's an ID — just for looking up records",
+                label="It's an ID - just for looking up records",
                 value="identifier",
             ),
         ]
         recommended = classification.role
 
     elif distinct > total * 0.9:
-        # High-cardinality string — probably an identifier
+        # High-cardinality string - probably an identifier
         prompt = (
             f"'{name}' has {distinct:,} unique values out of {total:,} "
             f"rows (like {sample_str}). Is this an ID or key, or "
@@ -250,7 +250,7 @@ def _build_question(
         )
         options = [
             ClarificationOption(
-                label="It's an ID or key — just for looking up records",
+                label="It's an ID or key - just for looking up records",
                 value="identifier",
             ),
             ClarificationOption(
@@ -258,7 +258,7 @@ def _build_question(
                 value="dimension",
             ),
             ClarificationOption(
-                label="It's free text — not useful for grouping",
+                label="It's free text - not useful for grouping",
                 value="auxiliary",
             ),
         ]
@@ -280,7 +280,7 @@ def _build_question(
                 value="identifier",
             ),
             ClarificationOption(
-                label="It's not useful — skip it",
+                label="It's not useful - skip it",
                 value="auxiliary",
             ),
         ]

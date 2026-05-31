@@ -6,12 +6,12 @@ services + teams. The W2 signal is baked into:
   * a monitor named "billing-webhook-handler error rate elevated" that
     captures the 2026-05-12 10:00-11:30 UTC error spike (currently OK,
     but the message + tags + alert-history note tell the story);
-  * an event "Deploy billing-webhook v3.2.1 — hotfix for unhandled
+  * an event "Deploy billing-webhook v3.2.1 - hotfix for unhandled
     TypeError" dated 2026-05-12 11:45 UTC that resolves the crash.
 
 The agent investigating Northwind's ghost-paid dispute should be able to
 correlate the Stripe charge timestamp with the Datadog monitor's alert
-window and the recovery deploy event — vendor failure, not friendly
+window and the recovery deploy event - vendor failure, not friendly
 fraud.
 
 The script is idempotent: it searches Datadog by name/title before
@@ -67,7 +67,7 @@ TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W2 timing — the webhook crash window.
+# W2 timing - the webhook crash window.
 #
 # The narrative date for the W2 crash is **2026-05-12** (matches the
 # Stripe seeder's simulated_created_at and the seed_world fixtures).
@@ -78,13 +78,13 @@ TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 # the event title + text. The agent reads those, not date_happened.
 # ──────────────────────────────────────────────────────────────────────
 
-# Narrative dates — what the events SAY happened
+# Narrative dates - what the events SAY happened
 W2_CRASH_START_NARRATIVE = datetime(2026, 5, 12, 10, 0, 0, tzinfo=timezone.utc)
 W2_CRASH_END_NARRATIVE = datetime(2026, 5, 12, 11, 30, 0, tzinfo=timezone.utc)
 W2_DEPLOY_TIME_NARRATIVE = datetime(2026, 5, 12, 11, 45, 0, tzinfo=timezone.utc)
 W2_CHARGE_TIME_NARRATIVE = datetime(2026, 5, 12, 10, 23, 0, tzinfo=timezone.utc)
 
-# Posted timestamps — anchored to "now", clustered so the relative order
+# Posted timestamps - anchored to "now", clustered so the relative order
 # (pre-crash deploy → incident open → hotfix deploy → incident resolved)
 # is preserved. Each event's narrative date is in its title/text.
 _NOW = datetime.now(timezone.utc)
@@ -135,7 +135,7 @@ def _request(
 # Monitor catalog
 #
 # Each entry becomes a Datadog monitor. ``status`` is a hint for the
-# message field — we cannot directly set the runtime alert state via the
+# message field - we cannot directly set the runtime alert state via the
 # create API (Datadog evaluates the query). Instead we write the
 # narrative state into the message so search/list returns it, and we tag
 # the monitor with status:<x> so filtering by tag works.
@@ -150,7 +150,7 @@ class MonitorSpec:
     message: str
     tags: list[str]
     options: dict
-    note_state: str  # narrative — "Alert" / "Warn" / "OK"
+    note_state: str  # narrative - "Alert" / "Warn" / "OK"
 
 
 def _common_options(thresholds: dict, **extra) -> dict:
@@ -173,7 +173,7 @@ def _common_options(thresholds: dict, **extra) -> dict:
 
 
 def w2_webhook_monitor() -> MonitorSpec:
-    """THE W2 signal monitor — webhook handler 5xx error rate spike."""
+    """THE W2 signal monitor - webhook handler 5xx error rate spike."""
     crash_start_iso = W2_CRASH_START_NARRATIVE.isoformat()
     crash_end_iso = W2_CRASH_END_NARRATIVE.isoformat()
     deploy_iso = W2_DEPLOY_TIME_NARRATIVE.isoformat()
@@ -186,14 +186,14 @@ def w2_webhook_monitor() -> MonitorSpec:
         "object did not include the optional `entitlement_hint` "
         "field. Impact: invoice.payment_succeeded events for "
         "customers paying during this window were ACK'd to Stripe "
-        "but the internal entitlement table was never updated — "
+        "but the internal entitlement table was never updated - "
         "customers stayed on their previous tier despite a "
         "successful charge.\n\n"
         f"Resolved at {deploy_iso} by deploy of "
         "billing-webhook v3.2.1 (see related event 'Deploy "
-        "billing-webhook v3.2.1 — hotfix for unhandled "
+        "billing-webhook v3.2.1 - hotfix for unhandled "
         "TypeError'). Backfill of affected entitlements is "
-        "manual — see runbook 'WEBHOOK-CRASH-BACKFILL'.\n\n"
+        "manual - see runbook 'WEBHOOK-CRASH-BACKFILL'.\n\n"
         "Page @platform-oncall on re-trigger."
     )
     return MonitorSpec(
@@ -226,7 +226,7 @@ def all_monitors() -> list[MonitorSpec]:
     """The full monitor catalog. ~32 entries spanning many services."""
     out: list[MonitorSpec] = []
 
-    # W2 signal — first so it's prominent.
+    # W2 signal - first so it's prominent.
     out.append(w2_webhook_monitor())
 
     # API gateway latency (Warn now). Datadog requires critical
@@ -344,7 +344,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="Alert",
     ))
 
-    # Disk fill — current utilization (forecast needs longer than
+    # Disk fill - current utilization (forecast needs longer than
     # we have data for in test-seed, so use the current-value form).
     out.append(MonitorSpec(
         name="disk.utilization root partition",
@@ -461,7 +461,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="Warn",
     ))
 
-    # Webhook delivery success rate (general — not the W2 monitor) (OK)
+    # Webhook delivery success rate (general - not the W2 monitor) (OK)
     out.append(MonitorSpec(
         name="outbound webhook delivery success rate",
         type="query alert",
@@ -499,7 +499,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="OK",
     ))
 
-    # Security — failed-login burst (Track Logs is paywalled on this
+    # Security - failed-login burst (Track Logs is paywalled on this
     # org, so we use a metric alert on a counter the auth service
     # emits directly).
     out.append(MonitorSpec(
@@ -521,7 +521,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="OK",
     ))
 
-    # Disputes / chargebacks — metric form (same paywall reason).
+    # Disputes / chargebacks - metric form (same paywall reason).
     out.append(MonitorSpec(
         name="stripe webhook dispute.created burst",
         type="query alert",
@@ -540,7 +540,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="Warn",
     ))
 
-    # Service check — host agent up (OK). Host monitors require
+    # Service check - host agent up (OK). Host monitors require
     # notify_no_data=True per Datadog policy.
     out.append(MonitorSpec(
         name="datadog.agent up",
@@ -617,7 +617,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="OK",
     ))
 
-    # Background entitlement reconciliation success (Alert) — supports W2
+    # Background entitlement reconciliation success (Alert) - supports W2
     out.append(MonitorSpec(
         name="entitlement reconciler drift detected",
         type="query alert",
@@ -689,7 +689,7 @@ def all_monitors() -> list[MonitorSpec]:
         ),
         message=(
             "More than 3 main-branch pipeline failures in the last "
-            "hour. Possible bad merge — check #eng-builds."
+            "hour. Possible bad merge - check #eng-builds."
         ),
         tags=["env:ci", "team:devex", "service:ci-pipeline",
               "sev:3", "status:ok"],
@@ -735,7 +735,7 @@ def all_monitors() -> list[MonitorSpec]:
         note_state="OK",
     ))
 
-    # Stripe webhook signature failures (Warn) — adjacent to W2
+    # Stripe webhook signature failures (Warn) - adjacent to W2
     out.append(MonitorSpec(
         name="stripe-webhook-receiver signature verification failures",
         type="query alert",
@@ -800,7 +800,7 @@ def all_monitors() -> list[MonitorSpec]:
         ),
         message=(
             "Data export jobs running longer than 1h. Large "
-            "customers (e.g. Acme Genomics) request these — slow "
+            "customers (e.g. Acme Genomics) request these - slow "
             "exports cause CSM escalations."
         ),
         tags=["env:prod", "team:data", "service:data-export",
@@ -847,7 +847,7 @@ class EventSpec:
 
 def w2_deploy_event() -> EventSpec:
     return EventSpec(
-        title="Deploy billing-webhook v3.2.1 — hotfix for unhandled TypeError",
+        title="Deploy billing-webhook v3.2.1 - hotfix for unhandled TypeError",
         text=(
             f"Hotfix deployed at {W2_DEPLOY_TIME_NARRATIVE.isoformat()} by "
             "@platform-oncall. Resolves the error spike from "
@@ -893,7 +893,7 @@ def all_events() -> list[EventSpec]:
     Datadog rejects ``date_happened`` more than ~18h in the past, so
     each event is posted relative to "now" but its **narrative date**
     (the date the event purports to describe) is baked into the title
-    and text — exactly the pattern the Stripe seeder uses for
+    and text - exactly the pattern the Stripe seeder uses for
     ``metadata.simulated_created_at``.
 
     Hour-offsets below place the W2 sequence in a coherent local order:
@@ -913,7 +913,7 @@ def all_events() -> list[EventSpec]:
         title="Deploy billing-webhook v3.2.0",
         text=(
             "Routine deploy at 2026-05-10T17:00:00+00:00 (narrative "
-            "date — actual Datadog timestamp is recent due to "
+            "date - actual Datadog timestamp is recent due to "
             "ingest-window limits). Adds optional "
             "`entitlement_hint` field handling to "
             "invoice.payment_succeeded. No incidents reported at "
@@ -1027,7 +1027,7 @@ def all_events() -> list[EventSpec]:
             alert_type="info",
         ))
 
-    # ── Other incidents — unrelated noise ─────────────────────────
+    # ── Other incidents - unrelated noise ─────────────────────────
 
     out.append(EventSpec(
         title="INC-2026-04-30-search declared",
@@ -1173,7 +1173,7 @@ def all_events() -> list[EventSpec]:
             "succeeded but entitlement did not update should be "
             "FULL-REFUNDED + manually upgraded + sent the "
             "vendor-failure apology template. DO NOT contest a "
-            "chargeback in this scenario — it is a vendor failure, "
+            "chargeback in this scenario - it is a vendor failure, "
             "not friendly fraud."
         ),
         date_happened=_epoch(_hours_ago(2.5)),
@@ -1188,7 +1188,7 @@ def all_events() -> list[EventSpec]:
         text=(
             "Narrative date: 2026-05-19T14:00:00+00:00. "
             "Strict-mode entitlement validation on every API "
-            "request. Catches drift earlier — would have surfaced "
+            "request. Catches drift earlier - would have surfaced "
             "the 2026-05-12 webhook outage at first impacted "
             "request rather than at next reconciler tick."
         ),
@@ -1267,9 +1267,9 @@ def all_dashboards() -> list[dict]:
     """Each dashboard is a full create-payload dict."""
     out: list[dict] = []
 
-    # 1. Engineering — Reliability Overview
+    # 1. Engineering - Reliability Overview
     out.append({
-        "title": "Engineering — Reliability Overview",
+        "title": "Engineering - Reliability Overview",
         "description": (
             "Cross-service reliability snapshot: 5xx rate, p95 "
             "latency, deploy frequency, and outstanding incidents. "
@@ -1279,7 +1279,7 @@ def all_dashboards() -> list[dict]:
         "widgets": [
             _note(
                 "**Reliability overview.** Watch the 5xx rate "
-                "first — it's the leading indicator. p95 latency "
+                "first - it's the leading indicator. p95 latency "
                 "and queue depth are second."
             ),
             _timeseries(
@@ -1299,14 +1299,14 @@ def all_dashboards() -> list[dict]:
         "tags": ["team:platform"],
     })
 
-    # 2. Billing — Webhook health (THE W2 dashboard)
+    # 2. Billing - Webhook health (THE W2 dashboard)
     out.append({
-        "title": "Billing — Webhook health",
+        "title": "Billing - Webhook health",
         "description": (
             "Health of inbound and outbound webhook handlers. "
             "Cross-references entitlement drift and Stripe charge "
             "success. If 5xx rate and drift events spike together, "
-            "you have a vendor-failure / ghost-paid situation — "
+            "you have a vendor-failure / ghost-paid situation - "
             "see runbook WEBHOOK-CRASH-BACKFILL. Workflow: "
             "W2-northwind-webhook-ghost."
         ),
@@ -1336,9 +1336,9 @@ def all_dashboards() -> list[dict]:
         "tags": ["team:billing"],
     })
 
-    # 3. Platform — Latency
+    # 3. Platform - Latency
     out.append({
-        "title": "Platform — Latency",
+        "title": "Platform - Latency",
         "description": (
             "End-to-end latency budget by service. Stripe API "
             "calls, Postgres queries, Redis hits. Trace-derived."
@@ -1362,9 +1362,9 @@ def all_dashboards() -> list[dict]:
         "tags": ["team:platform"],
     })
 
-    # 4. Security — Auth health
+    # 4. Security - Auth health
     out.append({
-        "title": "Security — Auth health",
+        "title": "Security - Auth health",
         "description": (
             "Authentication and authorization health. Failed "
             "logins, token issuance latency, key rotation events."
@@ -1387,9 +1387,9 @@ def all_dashboards() -> list[dict]:
         "tags": ["team:auth", "team:security"],
     })
 
-    # 5. Billing — Disputes & Reconciliation
+    # 5. Billing - Disputes & Reconciliation
     out.append({
-        "title": "Billing — Disputes & Reconciliation",
+        "title": "Billing - Disputes & Reconciliation",
         "description": (
             "Stripe disputes received, reconciler drift events, "
             "and refund volume. Useful for billing-ops triage."
@@ -1613,7 +1613,7 @@ def main() -> int:
                 t for t in spec.tags
                 if t.startswith(("team:", "service:", "sev:", "status:"))
             )
-            mid_disp = mid if mid is not None else "—"
+            mid_disp = mid if mid is not None else "-"
             print(f"  [{action:7s}] id={mid_disp!s:>8s}  "
                   f"{spec.name}  [{tag_summary}]  ({spec.note_state})")
             if (spec.name == "billing-webhook-handler error rate elevated"
@@ -1633,7 +1633,7 @@ def main() -> int:
                 if t.startswith(("service:", "team:", "deploy",
                                  "incident", "workflow:"))
             )[:90]
-            eid_disp = eid if eid is not None else "—"
+            eid_disp = eid if eid is not None else "-"
             print(f"  [{action:7s}] id={eid_disp!s:>14s}  "
                   f"{spec.title[:60]}  [{tag_summary}]")
             if (spec.title.startswith(
@@ -1649,7 +1649,7 @@ def main() -> int:
             did, action = upsert_dashboard(client, payload)
             counts[f"dash_{action}"] = counts.get(
                 f"dash_{action}", 0) + 1
-            did_disp = did if did is not None else "—"
+            did_disp = did if did is not None else "-"
             print(f"  [{action:7s}] id={did_disp!s:>12s}  "
                   f"{payload['title']}")
             if action == "error":
@@ -1689,7 +1689,7 @@ def main() -> int:
           f"{W2_CRASH_START_NARRATIVE.isoformat()} → "
           f"{W2_CRASH_END_NARRATIVE.isoformat()}")
     print(f"  W2 deploy event id: {w2_event_id}")
-    print("    title       : Deploy billing-webhook v3.2.1 — "
+    print("    title       : Deploy billing-webhook v3.2.1 - "
           "hotfix for unhandled TypeError")
     print(f"    narrative time: {W2_DEPLOY_TIME_NARRATIVE.isoformat()}")
     print()

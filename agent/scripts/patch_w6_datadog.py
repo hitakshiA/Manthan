@@ -1,10 +1,10 @@
-"""Patch Datadog with W6 signal — cascade-cloud auth-svc outage.
+"""Patch Datadog with W6 signal - cascade-cloud auth-svc outage.
 
 Creates:
   * Monitor: "auth-service token issuance error rate elevated"
     tagged workflow:W6-cascade-auth, incident:INC-2026-05-08-authkms,
     service:auth-service, customer_id:cus_UankGYRlc7WiW1.
-  * Event: "Deploy auth-service v4.1.0 — rotated KMS signing key from
+  * Event: "Deploy auth-service v4.1.0 - rotated KMS signing key from
     auth-prod-2026q2 to auth-prod-2026q2-replacement"
     posted ~5 days ago, tagged service:auth-service +
     workflow:W6-cascade-auth.
@@ -51,13 +51,13 @@ from seed_datadog import (  # noqa: E402
 W6_CUSTOMER_ID = "cus_UankGYRlc7WiW1"          # Stripe id for Cascade Cloud
 W6_CUSTOMER_DOMAIN = "cascade-cloud.test"
 
-# Narrative outage timeline — baked into title/text/message because
+# Narrative outage timeline - baked into title/text/message because
 # Datadog rejects ``date_happened`` more than ~18h in the past.
 W6_OUTAGE_START_NARRATIVE = datetime(2026, 5, 8, 9, 0, 0, tzinfo=timezone.utc)
 W6_OUTAGE_END_NARRATIVE = datetime(2026, 5, 22, 16, 0, 0, tzinfo=timezone.utc)
 W6_DEPLOY_NARRATIVE = datetime(2026, 5, 22, 14, 30, 0, tzinfo=timezone.utc)
 
-# Posted timestamp — Datadog rejects ``date_happened`` > ~18h in the
+# Posted timestamp - Datadog rejects ``date_happened`` > ~18h in the
 # past (see seed_datadog.py note). The *narrative* deploy time is 5
 # days ago and is baked into the event title + text; the posted
 # date_happened is recent so the event is accepted.
@@ -70,7 +70,7 @@ _DEPLOY_HOURS_AGO = 4
 
 
 def w6_auth_monitor() -> MonitorSpec:
-    """W6 monitor — auth-service token issuance error rate elevated."""
+    """W6 monitor - auth-service token issuance error rate elevated."""
     start_iso = W6_OUTAGE_START_NARRATIVE.isoformat()
     end_iso = W6_OUTAGE_END_NARRATIVE.isoformat()
     deploy_iso = W6_DEPLOY_NARRATIVE.isoformat()
@@ -86,7 +86,7 @@ def w6_auth_monitor() -> MonitorSpec:
         "+ M2M clients hit 3-7% error rates in 5-40 minute bursts. "
         "Other tenants saw smaller fractions of the same errors.\n\n"
         f"Resolved at {deploy_iso} by deploy of auth-service v4.1.0 "
-        "(see related Datadog event: 'Deploy auth-service v4.1.0 — "
+        "(see related Datadog event: 'Deploy auth-service v4.1.0 - "
         "rotated KMS signing key from auth-prod-2026q2 to "
         "auth-prod-2026q2-replacement'). Linked PagerDuty incident "
         "and Sentry issue (TokenIssuanceError) carry the same "
@@ -124,10 +124,10 @@ def w6_auth_monitor() -> MonitorSpec:
 
 
 def w6_deploy_event() -> EventSpec:
-    """W6 deploy event — KMS signing key rotation hotfix."""
+    """W6 deploy event - KMS signing key rotation hotfix."""
     return EventSpec(
         title=(
-            "Deploy auth-service v4.1.0 — rotated KMS signing key from "
+            "Deploy auth-service v4.1.0 - rotated KMS signing key from "
             "auth-prod-2026q2 to auth-prod-2026q2-replacement"
         ),
         text=(
@@ -141,7 +141,7 @@ def w6_deploy_event() -> EventSpec:
             f"running from {W6_OUTAGE_START_NARRATIVE.isoformat()} "
             f"through {W6_OUTAGE_END_NARRATIVE.isoformat()} "
             f"(~15 days). Primary impact: customer {W6_CUSTOMER_ID} "
-            f"({W6_CUSTOMER_DOMAIN} — Cascade Cloud, Pro Annual). "
+            f"({W6_CUSTOMER_DOMAIN} - Cascade Cloud, Pro Annual). "
             "Their SSO + M2M clients hit intermittent 401s/503s during "
             "the affected window.\n\n"
             "Linked monitor: 'auth-service token issuance error rate "
@@ -177,14 +177,14 @@ def w6_deploy_event() -> EventSpec:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Verification — query back via the public API
+# Verification - query back via the public API
 # ──────────────────────────────────────────────────────────────────────
 
 
 def verify_monitor_by_tag(
     client: httpx.Client, tag: str
 ) -> tuple[int, list[dict]]:
-    """List monitors filtered by tag — confirm the W6 one is queryable.
+    """List monitors filtered by tag - confirm the W6 one is queryable.
 
     Returns (count, raw_items).
     """
@@ -204,7 +204,7 @@ def verify_monitor_by_tag(
 
 
 def main() -> int:
-    print("== Datadog W6 patch — cascade-cloud auth-svc outage ==")
+    print("== Datadog W6 patch - cascade-cloud auth-svc outage ==")
     print(f"  site             : {SITE}")
     print(f"  customer_id      : {W6_CUSTOMER_ID}")
     print(f"  customer_domain  : {W6_CUSTOMER_DOMAIN}")

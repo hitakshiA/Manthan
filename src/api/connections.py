@@ -3,18 +3,18 @@
 The credential vault holds one record per connection; this router
 exposes the minimal endpoints the frontend needs to list, create,
 update, and delete them. Plaintext secrets never cross the API
-boundary on reads — a ``ConnectionInfo`` only carries metadata.
+boundary on reads - a ``ConnectionInfo`` only carries metadata.
 
 Concrete source types:
 
-    * ``postgres`` / ``mysql`` / ``sqlite`` — ``secret = {connection_string}``
-    * ``snowflake`` — ``secret = {account, user, password, warehouse, database, role}``
-    * ``bigquery`` — ``secret = {project_id, service_account_json}``
-    * ``s3`` / ``gcs`` / ``azure`` — matches :func:`cloud_loader._install_secret`
-    * ``gsheet`` — ``secret = {refresh_token, access_token, client_id, client_secret}``
-    * ``saas-<provider>`` — free-form dict of API key / OAuth tokens
+    * ``postgres`` / ``mysql`` / ``sqlite`` - ``secret = {connection_string}``
+    * ``snowflake`` - ``secret = {account, user, password, warehouse, database, role}``
+    * ``bigquery`` - ``secret = {project_id, service_account_json}``
+    * ``s3`` / ``gcs`` / ``azure`` - matches :func:`cloud_loader._install_secret`
+    * ``gsheet`` - ``secret = {refresh_token, access_token, client_id, client_secret}``
+    * ``saas-<provider>`` - free-form dict of API key / OAuth tokens
 
-The agent never talks to this router directly — connections are a
+The agent never talks to this router directly - connections are a
 user-facing concept, managed through the Settings page.
 """
 

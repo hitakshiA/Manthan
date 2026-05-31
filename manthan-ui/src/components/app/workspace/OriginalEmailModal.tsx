@@ -1,5 +1,5 @@
 /**
- * OriginalEmailModal — for email-triggered cases.
+ * OriginalEmailModal - for email-triggered cases.
  *
  * The sketch annotation: "The Case Description should link to the
  * email it got and maybe can create new UI here ... [box with smaller
@@ -164,7 +164,7 @@ export function OriginalEmailModal({
                   className="text-[12.5px] italic"
                   style={{ color: "var(--color-ink-faint)" }}
                 >
-                  No original email — this case wasn&apos;t opened from
+                  No original email - this case wasn&apos;t opened from
                   email.
                 </p>
               )}

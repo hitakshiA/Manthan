@@ -201,7 +201,7 @@ def configured_sources(cfg: Config) -> list[str]:
     """Return the list of source names that have all required credentials.
 
     A source is "configured" when its minimum-required env vars are all
-    present. We don't try to ping the source — that's the seeder's job.
+    present. We don't try to ping the source - that's the seeder's job.
     """
     checks: dict[str, bool] = {
         # Payments

@@ -59,7 +59,7 @@ _BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 
 def get_llm_client_factory() -> LlmClientFactory:
-    """Default LLM client factory dependency — tests override this."""
+    """Default LLM client factory dependency - tests override this."""
     return LlmClient
 
 
@@ -249,7 +249,7 @@ async def connect_url(
 ) -> DatasetSummary:
     """Ingest a dataset from a URL (http, s3, gs, az://) via DuckDB httpfs.
 
-    The full normal pipeline runs after materialization — profiling,
+    The full normal pipeline runs after materialization - profiling,
     classification, Gold + summary tables, entity + DCD history.
     """
     from src.ingestion.loaders.cloud_loader import CloudLoadRequest, load_from_url
@@ -362,7 +362,7 @@ async def upload_dataset_async(
     #
     # Simpler approach: pre-generate the dataset_id, create the queue,
     # and run the full pipeline in background. The ingest_and_profile
-    # function assigns the real ID via registry.register() — but we
+    # function assigns the real ID via registry.register() - but we
     # don't know it upfront. Instead, let's just run it all in background
     # and have the queue keyed by a temporary ID that we'll remap.
     #
@@ -436,7 +436,7 @@ async def stream_pipeline_progress(
     """
     channel = state.dataset_progress_queues.get(dataset_id)
     if channel is None:
-        # Check if already completed — replay from progress list
+        # Check if already completed - replay from progress list
         progress = state.dataset_progress.get(dataset_id)
         if progress:
 
@@ -550,7 +550,7 @@ def get_dataset_schema(dataset_id: str, state: StateDep) -> SchemaSummary:
     if dcd is None:
         raise HTTPException(status_code=404, detail=f"Unknown dataset: {dataset_id}")
     # Discover ALL summary tables (not just hardcoded suffixes).
-    # Use the thread-safe helper — parallel browser schema calls land
+    # Use the thread-safe helper - parallel browser schema calls land
     # on different threads, and concurrent DuckDB access on one
     # connection segfaults the native engine.
     summary_tables: list[str] = []
@@ -602,7 +602,7 @@ async def refresh_dataset(
         7. Logs a dcd_history entry
 
     Stable identity across refresh is what makes governed metrics
-    load-bearing — the exec keeps saying "revenue" and Manthan keeps
+    load-bearing - the exec keeps saying "revenue" and Manthan keeps
     composing it the same way, even as the underlying data changes.
     """
     from src.core.dcd_history import log_dcd_change
@@ -732,7 +732,7 @@ async def refresh_dataset(
     )
 
     state.rebuild_entity_index()
-    # Intentionally return a compact dict — the DatasetEntry model has
+    # Intentionally return a compact dict - the DatasetEntry model has
     # optional load_result fields that Pydantic 2 serializes strictly,
     # which was 500'ing with datetime-on-datetime mismatches. The UI
     # only needs ``dataset_id`` + ``row_count`` here; the full schema
@@ -751,7 +751,7 @@ def _extract_column_refs(expression: str) -> list[str]:
     """Pull likely column references from a metric SQL expression.
 
     Used by the refresh path to decide whether a preserved metric
-    still makes sense against the new schema. Heuristic only — we
+    still makes sense against the new schema. Heuristic only - we
     look for bare identifiers and quoted identifiers inside the
     aggregation, ignoring SQL keywords.
     """

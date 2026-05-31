@@ -1,4 +1,4 @@
-# Manthan — Full stack: FastAPI backend + React frontend
+# Manthan - Full stack: FastAPI backend + React frontend
 #
 # Multi-stage build:
 #   Stage 1: Build the frontend (Node)

@@ -1,5 +1,5 @@
 /**
- * HeroShowcase — Manthan landing demo.
+ * HeroShowcase - Manthan landing demo.
  *
  * Aesthetic: Operations Memo (see .impeccable.md).
  *   - Three scenes, each with a DISTINCT layout grammar (not a templated
@@ -27,15 +27,15 @@ import {
 import { SourceIcon } from "@/components/ui/SourceIcon";
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SAMPLE DATA — 8 distinct cases covering Manthan's full range:
-     · 4821 TechCorp        — first-dispute chargeback, healthy account
-     · 4815 StartupY        — SLA refund (service downtime)
-     · 4810 AcmeInc         — enterprise invoice dispute, still investigating
-     · 4805 Loop & Co       — auto-executed refund (under threshold)
-     · 4798 ZenSaaS Studios — failed annual renewal (card expired)
-     · 4793 PlanetGrid      — trial-end refund, fraud-pattern risk
-     · 4781 Midcorp Systems — high-value card-expiry urgency
-     · 4774 Pulse Healthcare — fraud-signal chargeback, suspected stolen card
+   SAMPLE DATA - 8 distinct cases covering Manthan's full range:
+     · 4821 TechCorp        - first-dispute chargeback, healthy account
+     · 4815 StartupY        - SLA refund (service downtime)
+     · 4810 AcmeInc         - enterprise invoice dispute, still investigating
+     · 4805 Loop & Co       - auto-executed refund (under threshold)
+     · 4798 ZenSaaS Studios - failed annual renewal (card expired)
+     · 4793 PlanetGrid      - trial-end refund, fraud-pattern risk
+     · 4781 Midcorp Systems - high-value card-expiry urgency
+     · 4774 Pulse Healthcare - fraud-signal chargeback, suspected stolen card
    ═══════════════════════════════════════════════════════════════════════ */
 
 type Tone = "awaiting" | "drafted" | "investigating" | "executing" | "resolved";
@@ -85,7 +85,7 @@ interface CaseDetail {
 }
 
 const CASE_DETAILS: Record<string, CaseDetail> = {
-  /* ─── 4821 TechCorp — first-dispute chargeback, healthy account ───── */
+  /* ─── 4821 TechCorp - first-dispute chargeback, healthy account ───── */
   "4821": {
     headlineVerb: <>vs. a <span className="nums">$1,200</span> chargeback</>,
     routedNote: "Routed to your queue",
@@ -150,7 +150,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4815 StartupY — SLA refund (downtime) ───────────────────────── */
+  /* ─── 4815 StartupY - SLA refund (downtime) ───────────────────────── */
   "4815": {
     headlineVerb: <>owed an <Italic>SLA credit</Italic></>,
     routedNote: "Drafted · awaiting your nod",
@@ -213,7 +213,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4810 AcmeInc — enterprise invoice dispute, investigating ────── */
+  /* ─── 4810 AcmeInc - enterprise invoice dispute, investigating ────── */
   "4810": {
     headlineVerb: <>disputing <Italic>$3,400 of overages</Italic></>,
     routedNote: "Investigating · no actions drafted yet",
@@ -271,7 +271,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4805 Loop & Co — auto-executed (no human needed) ────────────── */
+  /* ─── 4805 Loop & Co - auto-executed (no human needed) ────────────── */
   "4805": {
     headlineVerb: <><Italic>auto-refunded.</Italic></>,
     routedNote: "Resolved by Manthan · no approval needed",
@@ -294,7 +294,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
       ["Plan",         <>Starter Monthly · <Money>$348</Money>/yr (corrected)</>],
       ["ARR",          <Strong>$348</Strong>],
       ["Account age",  <>9 days · <Muted>since 16 May 2026</Muted></>],
-      ["NPS",          <>— <Muted>(no survey yet)</Muted></>],
+      ["NPS",          <>- <Muted>(no survey yet)</Muted></>],
       ["CSM",          <Muted>none assigned (SMB tier)</Muted>],
       ["Approval",     <Strong style={{ color: "var(--color-accent)" }}>auto · policy:refunds.auto_under_500</Strong>],
     ],
@@ -336,7 +336,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4798 ZenSaaS Studios — failed annual renewal (dunning) ──────── */
+  /* ─── 4798 ZenSaaS Studios - failed annual renewal (dunning) ──────── */
   "4798": {
     headlineVerb: <>missed their <Italic>annual renewal</Italic></>,
     routedNote: "Drafted · awaiting your nod",
@@ -399,7 +399,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4793 PlanetGrid — trial-end refund, fraud-risk gate ─────────── */
+  /* ─── 4793 PlanetGrid - trial-end refund, fraud-risk gate ─────────── */
   "4793": {
     headlineVerb: <>flagged as <Italic>trial-end risk</Italic></>,
     routedNote: "High-risk · held for manual review",
@@ -461,7 +461,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4781 Midcorp Systems — high-value renewal failure ───────────── */
+  /* ─── 4781 Midcorp Systems - high-value renewal failure ───────────── */
   "4781": {
     headlineVerb: <><Italic>$4,200 renewal</Italic> at risk</>,
     routedNote: "Investigating · multi-channel recovery in flight",
@@ -522,7 +522,7 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
     ],
   },
 
-  /* ─── 4774 Pulse Healthcare — fraud signal chargeback ────────────── */
+  /* ─── 4774 Pulse Healthcare - fraud signal chargeback ────────────── */
   "4774": {
     headlineVerb: <>flagged for <Italic>possible card fraud</Italic></>,
     routedNote: "Awaiting your read · do not auto-accept",
@@ -585,8 +585,8 @@ const CASE_DETAILS: Record<string, CaseDetail> = {
 
 /* ─── Small typographic helpers for case content ──────────────────────── */
 
-// Money values — Geist with tabular-nums + medium weight + strong color.
-// We do NOT use mono here — terminal vibes ruin the editorial feel.
+// Money values - Geist with tabular-nums + medium weight + strong color.
+// We do NOT use mono here - terminal vibes ruin the editorial feel.
 function Money({ children }: { children: React.ReactNode }) {
   return (
     <span
@@ -600,7 +600,7 @@ function Money({ children }: { children: React.ReactNode }) {
     </span>
   );
 }
-// Code — used ONLY for actual identifiers / file paths / config keys
+// Code - used ONLY for actual identifiers / file paths / config keys
 // (e.g. ch_3MqXfL, refunds.yaml, refund.threshold). Stays mono.
 function Code({ children }: { children: React.ReactNode }) {
   return (
@@ -668,7 +668,7 @@ export function HeroShowcase({ blendBody = false }: { blendBody?: boolean }) {
 
   return (
     <div className="w-full font-sans">
-      {/* Window — fixed height, NO scroll.
+      {/* Window - fixed height, NO scroll.
           When `blendBody` is on (hero context), the scene body uses a
           semi-transparent dark surface + heavy backdrop-filter so the video
           behind shows through as a softly-blurred frosted glass texture.
@@ -684,12 +684,12 @@ export function HeroShowcase({ blendBody = false }: { blendBody?: boolean }) {
           height: 620,
         }}
       >
-        {/* Chrome — always opaque, never blended. */}
+        {/* Chrome - always opaque, never blended. */}
         <div style={{ background: "var(--color-surface)" }}>
           <WindowChrome scene={scene} />
         </div>
 
-        {/* Scene body — frosted-glass when blendBody is on, opaque otherwise.
+        {/* Scene body - frosted-glass when blendBody is on, opaque otherwise.
             Low-alpha bg + moderate blur so the video texture clearly reads
             through the panel without washing out the dashboard contents. */}
         <div
@@ -722,7 +722,7 @@ export function HeroShowcase({ blendBody = false }: { blendBody?: boolean }) {
         </div>
       </div>
 
-      {/* Scene tabs — placed BELOW the window */}
+      {/* Scene tabs - placed BELOW the window */}
       <SceneTabs scene={scene} setScene={setScene} />
     </div>
   );
@@ -821,7 +821,7 @@ function WindowChrome({ scene }: { scene: SceneId }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SCENE 1 — CASE WORKSPACE (long-form memo + sidebar)
+   SCENE 1 - CASE WORKSPACE (long-form memo + sidebar)
    ═══════════════════════════════════════════════════════════════════════ */
 
 type CaseStatus = "awaiting" | "approving" | "approved" | "held";
@@ -899,7 +899,7 @@ function CaseWorkspace() {
   );
 }
 
-/* Right rail — Account + Evidence + Policy reasoning, compact */
+/* Right rail - Account + Evidence + Policy reasoning, compact */
 function CaseRightRail({ caseNum }: { caseNum: string }) {
   const d = CASE_DETAILS[caseNum] ?? CASE_DETAILS[ACTIVE_CASE_NUM];
 
@@ -935,7 +935,7 @@ function CaseRightRail({ caseNum }: { caseNum: string }) {
 
         <Rule />
 
-        {/* Evidence — compact list */}
+        {/* Evidence - compact list */}
         <div>
           <div className="flex items-baseline justify-between">
             <Eyebrow>Evidence</Eyebrow>
@@ -979,7 +979,7 @@ function CaseRightRail({ caseNum }: { caseNum: string }) {
 
         <Rule />
 
-        {/* Policy reasoning — compact block */}
+        {/* Policy reasoning - compact block */}
         <div>
           <Eyebrow>Policy</Eyebrow>
           <p
@@ -994,7 +994,7 @@ function CaseRightRail({ caseNum }: { caseNum: string }) {
   );
 }
 
-/* sidebar — compact text list, no avatars, no cards */
+/* sidebar - compact text list, no avatars, no cards */
 function CaseSidebar({
   activeCaseNum,
   setActiveCaseNum,
@@ -1142,7 +1142,7 @@ function CaseSidebar({
   );
 }
 
-/* case header — compact, single row */
+/* case header - compact, single row */
 function CaseHeader({ status, caseNum }: { status: CaseStatus; caseNum: string }) {
   const c = CASES.find((x) => x.num === caseNum) ?? CASES[0];
   const d = CASE_DETAILS[caseNum] ?? CASE_DETAILS[ACTIVE_CASE_NUM];
@@ -1189,7 +1189,7 @@ function CaseHeader({ status, caseNum }: { status: CaseStatus; caseNum: string }
   );
 }
 
-/* TL;DR memo — paragraph from CASE_DETAILS */
+/* TL;DR memo - paragraph from CASE_DETAILS */
 function CaseTLDR({ caseNum }: { caseNum: string }) {
   const d = CASE_DETAILS[caseNum] ?? CASE_DETAILS[ACTIVE_CASE_NUM];
   return (
@@ -1202,7 +1202,7 @@ function CaseTLDR({ caseNum }: { caseNum: string }) {
   );
 }
 
-/* Drafted actions — pulled from CASE_DETAILS */
+/* Drafted actions - pulled from CASE_DETAILS */
 function CaseActions({
   caseNum,
   status,
@@ -1325,7 +1325,7 @@ function CaseActions({
   );
 }
 
-/* Footer action bar — minimal, no glassmorphism */
+/* Footer action bar - minimal, no glassmorphism */
 function CaseActionBar({
   caseNum,
   status,
@@ -1340,7 +1340,7 @@ function CaseActionBar({
   const c = CASES.find((x) => x.num === caseNum) ?? CASES[0];
   const d = CASE_DETAILS[caseNum] ?? CASE_DETAILS[ACTIVE_CASE_NUM];
 
-  // Auto-executed cases (Loop & Co) — show resolved-by-Manthan footer
+  // Auto-executed cases (Loop & Co) - show resolved-by-Manthan footer
   if (c.status === "executing") {
     return (
       <footer
@@ -1369,7 +1369,7 @@ function CaseActionBar({
     );
   }
 
-  // Investigating cases (AcmeInc, Midcorp) — no action button, show investigation status
+  // Investigating cases (AcmeInc, Midcorp) - no action button, show investigation status
   if (c.status === "investigating") {
     return (
       <footer
@@ -1437,7 +1437,7 @@ function CaseActionBar({
       </footer>
     );
   }
-  // Awaiting / Drafted — show approve action
+  // Awaiting / Drafted - show approve action
   const actionVerb = c.status === "drafted" ? "drafted, awaiting approval" : "ready to fire";
   return (
     <footer
@@ -1475,7 +1475,7 @@ function CaseActionBar({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SCENE 2 — APPROVAL LEDGER (ledger table, no card grid, no sub-tabs)
+   SCENE 2 - APPROVAL LEDGER (ledger table, no card grid, no sub-tabs)
    ═══════════════════════════════════════════════════════════════════════ */
 
 type SortKey = "ago" | "amount" | "customer";
@@ -1507,7 +1507,7 @@ function ApprovalLedger() {
       const mul = sort.dir === "asc" ? 1 : -1;
       if (sort.key === "amount") return (a.amount - b.amount) * mul;
       if (sort.key === "customer") return a.customer.localeCompare(b.customer) * mul;
-      // ago — newer (smaller) first when asc
+      // ago - newer (smaller) first when asc
       return a.ago.localeCompare(b.ago) * mul;
     });
     return rows;
@@ -2009,8 +2009,8 @@ function LedgerStats({ selectedCount, total }: { selectedCount: number; total: n
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SCENE 3 — POLICY (visual rule builder, NOT YAML)
-   Toggles, sliders, checkboxes — never code editing.
+   SCENE 3 - POLICY (visual rule builder, NOT YAML)
+   Toggles, sliders, checkboxes - never code editing.
    ═══════════════════════════════════════════════════════════════════════ */
 
 type PolicyFile = "refunds" | "chargebacks" | "dunning" | "renewals";
@@ -2184,7 +2184,7 @@ const POLICY_INITIAL: Record<PolicyFile, PolicyFileData> = {
 
 /**
  * Derive live impact stats from the current rule state of a policy file.
- * Numbers are heuristic — they react to slider + toggle + checkbox changes
+ * Numbers are heuristic - they react to slider + toggle + checkbox changes
  * in a plausible direction so the user can see their edits matter.
  */
 function computeImpact(
@@ -2209,7 +2209,7 @@ function computeImpact(
       if (!tog("enabled")) {
         return [
           { value: "0 / 47", label: "Auto-approves disabled" },
-          { value: "—",      label: "MTTR for this band" },
+          { value: "-",      label: "MTTR for this band" },
         ];
       }
       const max = slider("max-amount", 100);
@@ -2220,7 +2220,7 @@ function computeImpact(
       if (!ageOn) count += 3;
       if (!noDisputesOn) count += 2;
       count = Math.max(0, Math.min(count, 47));
-      const mttr = count > 0 ? "4h → 30s" : "—";
+      const mttr = count > 0 ? "4h → 30s" : "-";
       return [
         { value: `${count} / 47`, label: "Would auto-approve (last 30d)" },
         { value: mttr,             label: "MTTR for this band" },
@@ -2231,7 +2231,7 @@ function computeImpact(
       const noTickets = tog("no-tickets");
       const confirmFirst = tog("confirm-first");
       const winDays = slider("evidence-win", 7);
-      // If auto-accept on, we just eat losses — fraud routing = 0
+      // If auto-accept on, we just eat losses - fraud routing = 0
       const routed = autoAccept ? 0 : noTickets ? 8 : 4;
       // Net recovery: confirm-first + fraud routing wins back; auto-accept loses
       let recovery = autoAccept ? -8 : 0;

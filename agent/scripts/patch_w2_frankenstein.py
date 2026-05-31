@@ -1,4 +1,4 @@
-"""Patch W2 — "Frankenstein customer" for the Manthan v2 agent.
+"""Patch W2 - "Frankenstein customer" for the Manthan v2 agent.
 
 Saga Foods has fractured identity:
   * Stripe: 1 legit customer  (legit annual / standard sub)
@@ -7,7 +7,7 @@ Saga Foods has fractured identity:
   * HubSpot: 1 legit company "Saga Foods"
              + 1 DUPLICATE company "Saga Foods Inc" (this patch creates).
   * Salesforce: 1 account "Saga Foods" with the Closed-Won opportunity
-                (the ground truth — untouched by this patch).
+                (the ground truth - untouched by this patch).
 
 The Manthan v2 agent should reconcile Stripe + HubSpot against
 Salesforce-as-ground-truth and recommend refunding the $14,000 of
@@ -51,14 +51,14 @@ if not stripe.api_key or not stripe.api_key.startswith("sk_test_"):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Constants — orphan identity + amounts
+# Constants - orphan identity + amounts
 # ──────────────────────────────────────────────────────────────────────
 
-ORPHAN_NAME = "Saga Foods Inc"          # note the "Inc" — diff from legit
+ORPHAN_NAME = "Saga Foods Inc"          # note the "Inc" - diff from legit
 ORPHAN_EMAIL = "signup-noreply@saga-foods.test"
 ORPHAN_DESCRIPTION = (
     "Created via marketing landing page signup form. "
-    "Possible duplicate — investigate."
+    "Possible duplicate - investigate."
 )
 ORPHAN_METADATA: dict[str, str] = {
     "source": "marketing_form",
@@ -70,14 +70,14 @@ ORPHAN_METADATA: dict[str, str] = {
     "legit_stripe_customer_hint": "search name='Saga Foods' (no Inc)",
 }
 
-ORPHAN_PRODUCT_NAME = "Manthan Demo — Monthly Starter (orphan)"
+ORPHAN_PRODUCT_NAME = "Manthan Demo - Monthly Starter (orphan)"
 ORPHAN_PRICE_AMOUNT = 7_000_00  # $7,000 / month in minor units
 ORPHAN_PRICE_INTERVAL = "month"
 
 # Monthly orphan charge plan: (label, idem_suffix, sim_date).
 ORPHAN_CHARGE_PLAN = [
-    ("Monthly subscription — April 2026", "orphan-apr-2026", "2026-04-15"),
-    ("Monthly subscription — May 2026",   "orphan-may-2026", "2026-05-15"),
+    ("Monthly subscription - April 2026", "orphan-apr-2026", "2026-04-15"),
+    ("Monthly subscription - May 2026",   "orphan-may-2026", "2026-05-15"),
 ]
 
 ORPHAN_HUBSPOT_DOMAIN = "signup.saga-foods.test"
@@ -93,7 +93,7 @@ def log(msg: str = "") -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Stripe — orphan customer + product/price + subscription + charges
+# Stripe - orphan customer + product/price + subscription + charges
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -215,7 +215,7 @@ def ensure_orphan_product() -> stripe.Product:
         name=ORPHAN_PRODUCT_NAME,
         description=(
             "Auto-created via marketing signup form. Monthly Starter "
-            "tier. ORPHAN — does not match any Salesforce account."
+            "tier. ORPHAN - does not match any Salesforce account."
         ),
         metadata={
             "plan_key": "orphan_monthly_starter",
@@ -324,7 +324,7 @@ def ensure_orphan_subscription(
         msg = e.user_message or str(e)
         log(f"  [backdate-rejected] {msg[:160]}")
         note = (
-            "Stripe rejected backdate_start_date — created sub at current "
+            "Stripe rejected backdate_start_date - created sub at current "
             "wall-clock and supplemented with 2 manual PaymentIntent "
             "charges in metadata.simulated_created_at=Apr/May 2026."
         )
@@ -388,7 +388,7 @@ def ensure_orphan_charges(cust_id: str, pm_id: str) -> list[stripe.Charge]:
                 confirm=True,
                 customer=cust_id,
                 off_session=True,
-                description=f"Saga Foods Inc — {label}",
+                description=f"Saga Foods Inc - {label}",
                 metadata={
                     "workflow": "W2_frankenstein",
                     "orphan_charge_label": label,
@@ -420,7 +420,7 @@ def ensure_orphan_charges(cust_id: str, pm_id: str) -> list[stripe.Charge]:
         try:
             stripe.Charge.modify(
                 pi.latest_charge,
-                description=f"Saga Foods Inc — {label}",
+                description=f"Saga Foods Inc - {label}",
                 metadata={
                     "workflow": "W2_frankenstein",
                     "orphan_charge_label": label,
@@ -445,7 +445,7 @@ def ensure_orphan_charges(cust_id: str, pm_id: str) -> list[stripe.Charge]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# HubSpot — duplicate company + Note
+# HubSpot - duplicate company + Note
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -521,7 +521,7 @@ def hs_upsert_duplicate_company(
 
     description = (
         "Duplicate/orphan record created by misconfigured signup form. "
-        "Flagged for merge — DO NOT contact, primary record is the "
+        "Flagged for merge - DO NOT contact, primary record is the "
         "original Saga Foods company."
     )
     props: dict[str, str] = {
@@ -531,7 +531,7 @@ def hs_upsert_duplicate_company(
         "lifecyclestage": "other",
     }
     if legit_id:
-        # Best-effort custom hint — HubSpot may ignore unknown props
+        # Best-effort custom hint - HubSpot may ignore unknown props
         # (we'd see a 400 and retry without). Try it; tolerate failure.
         props["duplicate_of_company_id"] = legit_id
 
@@ -736,7 +736,7 @@ def verify_hubspot(
 
 def main() -> int:
     log("=" * 72)
-    log("Manthan patch_w2_frankenstein — Saga Foods orphan/duplicate seed")
+    log("Manthan patch_w2_frankenstein - Saga Foods orphan/duplicate seed")
     log("=" * 72)
 
     # ──────────────── 1. Stripe side ────────────────
@@ -772,7 +772,7 @@ def main() -> int:
         legit_hs_id = hs_find_legit_saga(client)
         if not legit_hs_id:
             log("  ! legit Saga Foods HubSpot company not found "
-                "— continuing without duplicate_of link")
+                "- continuing without duplicate_of link")
         else:
             log(f"  legit Saga Foods HubSpot id: {legit_hs_id}")
         time.sleep(REQ_SLEEP)

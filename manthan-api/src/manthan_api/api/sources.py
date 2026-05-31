@@ -1,4 +1,4 @@
-"""Sources — list connected data sources + their live state.
+"""Sources - list connected data sources + their live state.
 
 The 11 sources powering Manthan's cross-source investigation. Connection
 status comes from whether the relevant env credentials are present;
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api", tags=["sources"])
 logger = logging.getLogger("manthan_api.sources")
 
 
-# Source registry — id, display name, category, env vars that gate it.
+# Source registry - id, display name, category, env vars that gate it.
 # When ALL listed env vars are present, the source is "configured".
 SOURCE_REGISTRY: list[dict[str, Any]] = [
     {
@@ -169,7 +169,7 @@ async def list_sources(ctx: TenantCtx = Depends(get_ctx)) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Coral connection detail — per source: env vars (censored) + the
+# Coral connection detail - per source: env vars (censored) + the
 # qualified table names that Coral exposes for the agent's SQL queries.
 # ──────────────────────────────────────────────────────────────────────
 
@@ -293,7 +293,7 @@ async def get_source_coral_detail(
         "status": "connected" if all(os.environ.get(e) for e in src["envs"]) else "available",
         "env_vars": env_vars,
         "tables": tables,
-        # Coral itself — what's powering this connection.
+        # Coral itself - what's powering this connection.
         "coral": {
             "binary": "coral mcp-stdio",
             "transport": "MCP over stdio",

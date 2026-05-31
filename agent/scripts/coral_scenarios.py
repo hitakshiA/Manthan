@@ -1,4 +1,4 @@
-"""Coral-faithful scenarios — every row uses REAL Coral column names.
+"""Coral-faithful scenarios - every row uses REAL Coral column names.
 
 These scenarios are designed to be tested EXCLUSIVELY through the real
 Coral binary via MCP. No flat mock. No shortcuts.
@@ -16,11 +16,11 @@ Constraints we honor:
 DIFFERENT subset of 4-7 sources to exercise different source-selection
 patterns:
 
-  S01  Friendly fraud — stripe + intercom + zendesk + gmail + notion + salesforce
-  S02  SLA partial    — stripe + salesforce + pagerduty + datadog + notion + intercom
-  S03  AE promise     — stripe + salesforce + gmail + hubspot + notion
-  S04  VAT compliance — stripe + salesforce + hubspot + intercom + notion + sentry
-  S05  Migration orphan — stripe + salesforce + intercom + notion + zendesk
+  S01  Friendly fraud - stripe + intercom + zendesk + gmail + notion + salesforce
+  S02  SLA partial    - stripe + salesforce + pagerduty + datadog + notion + intercom
+  S03  AE promise     - stripe + salesforce + gmail + hubspot + notion
+  S04  VAT compliance - stripe + salesforce + hubspot + intercom + notion + sentry
+  S05  Migration orphan - stripe + salesforce + intercom + notion + zendesk
 """
 
 from __future__ import annotations
@@ -115,7 +115,7 @@ def _rand_ts_epoch(year: int = 2026, month: int | None = None) -> int:
 
 
 def _maybe_null(value: Any, p: float = 0.3) -> Any:
-    """Return value with probability (1-p), else None — for sparse fields."""
+    """Return value with probability (1-p), else None - for sparse fields."""
     return None if random.random() < p else value
 
 
@@ -152,7 +152,7 @@ def make_stripe_dispute(
         "object": "dispute",
         "reason": reason,
         "status": status,
-        # Convenience denorm column (NOT in real Stripe — kept as extra)
+        # Convenience denorm column (NOT in real Stripe - kept as extra)
         "customer": customer,
     }
 
@@ -301,7 +301,7 @@ def make_intercom_conversation(
         "source_author_email": source_author_email,
         "source_author_name": source_author_name or source_author_email.split("@")[0],
         "ai_agent_participated": False,
-        # Extra — agent reads this for content, real Coral would JOIN
+        # Extra - agent reads this for content, real Coral would JOIN
         "source_body_snippet": source_body_snippet,
     }
 
@@ -508,7 +508,7 @@ def make_notion_page(
         # `properties` is a real Coral col but normally a JSON blob; we
         # also surface title/body/status as queryable extras.
         "properties": f'{{"title": "{title}"}}',
-        # Extras — agents read these directly
+        # Extras - agents read these directly
         "title": title,
         "body": body,
         "status": status,
@@ -526,7 +526,7 @@ def make_gmail_thread(
     """Real gmail.threads row.
 
     Real gmail threads only expose 5 cols including a `snippet` (text preview).
-    For richer content we'd JOIN to gmail.messages — but real gmail.messages
+    For richer content we'd JOIN to gmail.messages - but real gmail.messages
     is also limited (4 cols). For test purposes we treat snippet as the
     content surface.
     """
@@ -619,7 +619,7 @@ def make_sentry_issue(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Noise generators — high-volume adversarial rows
+# Noise generators - high-volume adversarial rows
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -678,9 +678,9 @@ def noise_intercom_conversations(
         "Hi, I'd like to learn more about pricing.",
         "Can you walk me through how to set up the webhook?",
         "Need help inviting users.",
-        "We want to cancel our trial — please don't renew us.",
+        "We want to cancel our trial - please don't renew us.",
         "Looking at competing tools, considering moving.",
-        "Got an unexpected charge — can you help?",
+        "Got an unexpected charge - can you help?",
         "The dashboard is loading slowly.",
         "Do you support SAML?",
     ]
@@ -779,7 +779,7 @@ def noise_notion_pages(n: int, seed: int = 7) -> list[dict[str, Any]]:
     """Notion pages that look refund/policy related but aren't authoritative."""
     random.seed(seed)
     titles = [
-        "Refunds — DEPRECATED 2024 version",
+        "Refunds - DEPRECATED 2024 version",
         "Refunds customer-facing FAQ",
         "Onboarding for new finance hires",
         "Quarterly all-hands Q1 2026 notes (mentions refunds)",
@@ -799,7 +799,7 @@ def noise_notion_pages(n: int, seed: int = 7) -> list[dict[str, Any]]:
         "First-week reading.",
         "Pricing run-rate notes.",
         "Sales-stage objection handling.",
-        "When an ACTIVE customer wants to cancel — NOT for disputes.",
+        "When an ACTIVE customer wants to cancel - NOT for disputes.",
         "How to handle pager alerts. Unrelated to billing.",
     ]
     statuses = ["archived", "current", "draft", "current", "current"]
@@ -909,10 +909,10 @@ def noise_gmail_threads(n: int, seed: int = 11) -> list[dict[str, Any]]:
         "Welcome to the platform!",
         "Q3 forecast review next week",
         "Re: pricing question",
-        "Renewal reminder — 30 days",
+        "Renewal reminder - 30 days",
         "AR follow-up: invoice past due",
         "Please cancel my account",  # red-herring
-        "We're not renewing this year — cancellation effective",  # red-herring
+        "We're not renewing this year - cancellation effective",  # red-herring
         "Webinar invite",
         "Customer success quarterly review",
     ]

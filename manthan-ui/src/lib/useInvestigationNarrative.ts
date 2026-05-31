@@ -1,5 +1,5 @@
 /**
- * useInvestigationNarrative — polls /api/cases/:id/narrative every 6s
+ * useInvestigationNarrative - polls /api/cases/:id/narrative every 6s
  * while a case is investigating, returning a 2-paragraph live story
  * of what the agent has done + 3-5 interim findings derived from
  * tool_results. Stops polling once `isComplete` flips true.

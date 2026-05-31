@@ -1,4 +1,4 @@
-"""Schema summary tool — now with full Layer 1 intelligence.
+"""Schema summary tool - now with full Layer 1 intelligence.
 
 Exposes column statistics, cardinality, completeness, sample values,
 and aggregation rules alongside the basic schema. The frontend uses
@@ -19,7 +19,7 @@ from src.semantic.schema import DataContextDocument
 class SchemaSummaryColumn(BaseModel):
     """A single column with full Layer 1 intelligence.
 
-    ``label`` and ``synonyms`` are the exec-facing surface — the agent
+    ``label`` and ``synonyms`` are the exec-facing surface - the agent
     prompt renders ``label`` as the primary name and treats ``synonyms``
     as additional user-language the exec might use to refer to this
     field. ``pii`` flips on aggregate-only handling in the agent.
@@ -99,7 +99,7 @@ class SchemaSummary(BaseModel):
     summary_tables: list[str] = Field(
         default_factory=list,
         description=(
-            "Legacy flat list of physical rollup table names — kept "
+            "Legacy flat list of physical rollup table names - kept "
             "for backward compatibility. Use ``entity.rollups`` for "
             "new code; each rollup there carries its grain/dimensions."
         ),
@@ -149,7 +149,7 @@ def get_schema(
             ],
         )
     # Prefer rollup physical names from the entity (if present) over the
-    # ad-hoc list passed in — the entity is authoritative.
+    # ad-hoc list passed in - the entity is authoritative.
     if entity_payload is not None and not summary_tables:
         summary_tables = [r.physical_table for r in entity_payload.rollups]
     return SchemaSummary(

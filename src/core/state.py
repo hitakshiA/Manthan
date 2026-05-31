@@ -10,7 +10,7 @@ easy to override in tests using FastAPI's ``dependency_overrides``.
 On startup, :func:`get_state` calls :func:`rehydrate_datasets_from_disk`
 which walks ``data/ds_*`` directories, reads the persisted DCD YAML, and
 re-attaches the Gold parquet as a DuckDB view. This gives datasets
-survival across server restarts — an agent that uploaded yesterday can
+survival across server restarts - an agent that uploaded yesterday can
 continue querying today without re-ingesting.
 """
 
@@ -72,7 +72,7 @@ class AppState:
     agent_tasks: AgentTaskStore = field(default_factory=AgentTaskStore)
     ask_user: AskUserRegistry = field(default_factory=AskUserRegistry)
     subagents: SubagentStore = field(default_factory=SubagentStore)
-    # Phase 5 — envelope-encrypted credential store for Postgres /
+    # Phase 5 - envelope-encrypted credential store for Postgres /
     # Snowflake / BigQuery / GSheets / S3 connections. Created lazily
     # in :func:`get_state`; ``None`` until first use.
     credentials: Any = None  # CredentialVault, defer import to break cycle
@@ -80,7 +80,7 @@ class AppState:
     # handlers in a ThreadPoolExecutor, so concurrent schema / SQL
     # requests can segfault the native engine. This lock serializes
     # access to ``connection`` across threads. Hold it for the shortest
-    # time possible — short lookups only, never full agent turns.
+    # time possible - short lookups only, never full agent turns.
     connection_lock: threading.Lock = field(default_factory=threading.Lock)
 
     def close(self) -> None:
@@ -96,8 +96,8 @@ class AppState:
     ) -> duckdb.DuckDBPyConnection:
         """Thread-safe wrapper around ``self.connection.execute``.
 
-        Returns the same object as ``connection.execute`` would — the
-        relation object — but the DuckDB call itself is serialized.
+        Returns the same object as ``connection.execute`` would - the
+        relation object - but the DuckDB call itself is serialized.
         Callers should consume the relation (``.fetchall()`` /
         ``.fetchone()``) while still holding the lock when they expect
         to read results. Prefer :meth:`connection_fetchall` /
@@ -139,7 +139,7 @@ class AppState:
     def rebuild_entity_index(self) -> None:
         """Refresh ``entity_to_dataset`` from the current ``dcds`` map.
 
-        Cheap to call — just walks every DCD and records its entity
+        Cheap to call - just walks every DCD and records its entity
         slug. Called after ingest and after rehydration. Collisions
         (two datasets claim the same slug) resolve to the most recent
         ingest.
@@ -209,7 +209,7 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
             continue
         try:
             dcd = DataContextDocument.from_yaml(dcd_path.read_text())
-        except Exception as exc:  # pragma: no cover — defensive
+        except Exception as exc:  # pragma: no cover - defensive
             _logger.warning(
                 "state.rehydrate.bad_dcd",
                 ds_dir=str(ds_dir),
@@ -260,7 +260,7 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
                     f"CREATE OR REPLACE VIEW {quote_identifier(tname)} "
                     f"AS SELECT * FROM read_parquet('{escaped}')"
                 )
-        except duckdb.Error as exc:  # pragma: no cover — defensive
+        except duckdb.Error as exc:  # pragma: no cover - defensive
             _logger.warning(
                 "state.rehydrate.attach_failed",
                 ds_dir=str(ds_dir),
@@ -280,7 +280,7 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
                 column_count=len(dcd.dataset.columns),
                 raw_size_bytes=source.raw_size_bytes,
             )
-        except Exception as exc:  # pragma: no cover — defensive
+        except Exception as exc:  # pragma: no cover - defensive
             _logger.warning(
                 "state.rehydrate.bad_load_result",
                 ds_dir=str(ds_dir),
@@ -301,7 +301,7 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
             updated_at=now,
         )
         state.registry._entries[dcd.dataset.id] = entry
-        # Migrate legacy DCDs (v1.0 — no ``entity`` block) in-place.
+        # Migrate legacy DCDs (v1.0 - no ``entity`` block) in-place.
         # The primary parquet is the Gold table; the remaining parquets
         # are the rollups. We don't re-import the original filename's
         # stem (it isn't recoverable post-sanitization), so we pull it
@@ -329,7 +329,7 @@ def rehydrate_datasets_from_disk(state: AppState) -> int:
                 columns=list(dcd.dataset.columns),
             )
             # If the existing entity had a curated slug/name the user
-            # picked, preserve them — only the metrics are being seeded.
+            # picked, preserve them - only the metrics are being seeded.
             if dcd.dataset.entity is not None:
                 entity = entity.model_copy(
                     update={

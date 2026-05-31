@@ -8,13 +8,13 @@ in a narrative or tool preview.
 This module centralizes the masking logic so ingredient events
 (``tool_start``, ``tool_complete``, ``sql_result``) and any prompt
 post-processing can reach for one function. It's intentionally pure
-— build an :class:`AliasCatalog` once from the active entities, then
+- build an :class:`AliasCatalog` once from the active entities, then
 call :meth:`AliasCatalog.mask` on any text. No DuckDB, no network.
 
 The masker prefers the rollup slug when the physical name has a
 matching suffix (``..._by_status`` → ``orders.by_status``), and falls
 back to the entity slug alone (``gold_orders_16b49dbd39`` →
-``orders``). Unknown physical names are left untouched — we never
+``orders``). Unknown physical names are left untouched - we never
 rewrite text we don't recognize.
 """
 
@@ -56,7 +56,7 @@ class AliasCatalog:
     def mask(self, text: str) -> str:
         """Replace any physical table names in ``text`` with their display form.
 
-        Bare-identifier matches only — we do NOT rewrite inside string
+        Bare-identifier matches only - we do NOT rewrite inside string
         literals (DuckDB's ``read_parquet('gold_orders_...')`` calls),
         because those paths are real filesystem references the agent
         sometimes needs to preserve verbatim.
@@ -81,7 +81,7 @@ class AliasCatalog:
         escaped = [re.escape(n) for n in names]
         # Require word boundaries so we don't rewrite suffixes of other
         # identifiers by accident. The character class allows underscores
-        # and alphanumerics only — matching DuckDB's identifier rules.
+        # and alphanumerics only - matching DuckDB's identifier rules.
         self._pattern = re.compile(r"\b(?:" + "|".join(escaped) + r")\b")
         return self._pattern
 
@@ -90,7 +90,7 @@ def build_catalog_from_dcds(dcds: dict[str, DataContextDocument]) -> AliasCatalo
     """Build an :class:`AliasCatalog` from a dataset-id → DCD map.
 
     Callers: the agent loop does this once at ``session_start`` (cheap
-    — a few dozen regex atoms), passes the catalog into event factories
+    - a few dozen regex atoms), passes the catalog into event factories
     that render tool previews.
     """
     catalog = AliasCatalog()

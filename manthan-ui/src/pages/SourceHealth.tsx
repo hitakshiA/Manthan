@@ -1,8 +1,8 @@
 /**
- * SourceHealth — uptime ledger for every connected source.
+ * SourceHealth - uptime ledger for every connected source.
  *
  * Editorial form: one row per source on a hairline. The "health" indicator
- * is a single colored dot in the gutter — no chips, no card boxes. Last
+ * is a single colored dot in the gutter - no chips, no card boxes. Last
  * query time + query volume live as tabular numerals on the right.
  */
 

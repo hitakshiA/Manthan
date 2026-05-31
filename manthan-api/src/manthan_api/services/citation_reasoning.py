@@ -12,7 +12,7 @@ so a chip clicked twice doesn't pay the LLM cost twice.
 
 System prompt is tight: 2-3 plain-English sentences, no jargon, written
 for a Director of Revenue Accounting. The prettifier already uses this
-voice — we share the editorial direction.
+voice - we share the editorial direction.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ SYSTEM_PROMPT = """You explain why ONE source record matters to a billing-disput
 
 Write 2-3 short sentences (max ~50 words total). Plain English. No quotes. No emoji. No markdown. No bullet points. No trailing meta-commentary. Just the explanation.
 
-Avoid the words: schema, table, column, query, SQL, API, endpoint, JSON, payload, row, record (use "entry" or just name the thing — "the charge", "the ticket", "the contract"), field (say "the email", "the date", etc).
+Avoid the words: schema, table, column, query, SQL, API, endpoint, JSON, payload, row, record (use "entry" or just name the thing - "the charge", "the ticket", "the contract"), field (say "the email", "the date", etc).
 
 Lead with what this entry IS in their world ("This is the original charge…", "This is the support ticket where…"), then say what it tells us about THE CASE ("It shows the customer agreed to the renewal in writing on May 3."). Close with what it means for the decision when relevant ("Strong evidence for fighting the chargeback.")."""
 
@@ -102,11 +102,11 @@ async def get_or_generate_reasoning(
             cached=True,
         )
 
-    # 2. Cache miss — gather context, call LLM.
+    # 2. Cache miss - gather context, call LLM.
     context = await _build_context(org_id, case_id, source, table, ref, field_key)
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        # No key wired — synthesise a deterministic fallback so the UI
+        # No key wired - synthesise a deterministic fallback so the UI
         # doesn't break in local dev. We don't cache the fallback.
         return _fallback(source, table, ref, field, context, model=None)
 
@@ -228,7 +228,7 @@ async def _build_context(
         if case_row is None:
             return {"finding_texts": [], "tldr": None}
 
-        # The brief TLDR (if any) — drops the postmortem summary in.
+        # The brief TLDR (if any) - drops the postmortem summary in.
         brief_row = await conn.fetchrow(
             """
             SELECT data FROM events
@@ -305,11 +305,11 @@ def _build_prompt(
     amt = ctx.get("amount_minor")
     amt_str = (
         f"${(amt or 0) / 100:,.0f} {(ctx.get('currency') or 'usd').upper()}"
-        if amt else "—"
+        if amt else "-"
     )
     decision = ctx.get("decision_action") or "(pending)"
     conf = ctx.get("decision_confidence")
-    conf_str = f"{int(conf * 100)}%" if conf is not None else "—"
+    conf_str = f"{int(conf * 100)}%" if conf is not None else "-"
     findings = ctx.get("finding_texts") or []
     finding_block = (
         "\n".join(f"  - {t}" for t in findings[:6])

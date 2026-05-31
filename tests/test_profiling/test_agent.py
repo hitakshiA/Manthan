@@ -98,7 +98,7 @@ async def test_profile_dataset_runs_end_to_end(
 async def test_profile_dataset_surfaces_warnings_when_classifier_is_wrong(
     raw_sales_connection: duckdb.DuckDBPyConnection,
 ) -> None:
-    # Classify region (VARCHAR) as a metric — should produce warnings.
+    # Classify region (VARCHAR) as a metric - should produce warnings.
     bogus = json.dumps(
         {
             "classifications": [

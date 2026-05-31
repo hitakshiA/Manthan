@@ -1,4 +1,4 @@
-"""Pydantic models — request/response schemas for the API.
+"""Pydantic models - request/response schemas for the API.
 
 Mirror the DB schema where useful but stay separate so the API surface can
 evolve independently of the storage layer.

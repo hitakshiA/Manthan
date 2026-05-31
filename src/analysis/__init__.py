@@ -1,4 +1,4 @@
-"""Analysis agent layer — placeholder for the downstream "talk to data" agents.
+"""Analysis agent layer - placeholder for the downstream "talk to data" agents.
 
 The data layer's contract is to make these agents trivial to build. Concrete
 analysis agents are intentionally out of scope for the initial data-layer

@@ -85,7 +85,7 @@ def test_drop_session_wakes_waiters() -> None:
 
     thread = threading.Thread(target=_drop)
     thread.start()
-    # wait for event set — the question is gone, so re-reading would KeyError
+    # wait for event set - the question is gone, so re-reading would KeyError
     event = q._event
     assert event.wait(timeout=2.0)
     thread.join()

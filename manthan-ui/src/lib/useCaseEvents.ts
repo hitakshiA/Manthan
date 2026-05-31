@@ -1,5 +1,5 @@
 /**
- * useCaseEvents — subscribe to the live event stream for a case.
+ * useCaseEvents - subscribe to the live event stream for a case.
  *
  * Uses Server-Sent Events. Re-connects on disconnect. Replays past events
  * on initial subscribe (the server emits them first), then live-tails.

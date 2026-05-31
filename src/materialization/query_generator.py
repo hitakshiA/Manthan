@@ -32,7 +32,7 @@ def generate_verified_queries(
     """Return a set of verified question-SQL pairs for ``gold_table``.
 
     Each returned query uses quoted identifiers so arbitrary column
-    names work. The SQL targets ``gold_table`` directly — it is the
+    names work. The SQL targets ``gold_table`` directly - it is the
     caller's responsibility to ensure the table exists.
 
     When ``connection`` is provided, metric columns whose actual Gold

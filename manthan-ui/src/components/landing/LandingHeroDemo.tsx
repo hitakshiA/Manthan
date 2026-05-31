@@ -1,5 +1,5 @@
 /**
- * LandingHeroDemo — hero showcase, editorial-print direction.
+ * LandingHeroDemo - hero showcase, editorial-print direction.
  *
  * Design intent (per .impeccable.md):
  *   - Editorial precision: closer to a Wall Street research note than to
@@ -10,13 +10,13 @@
  *   - No Mac browser chrome. No pill badges. No carousel dots. No left-
  *     stripe accents. No tilted stamps. No "LIVE" pulse.
  *
- * Continuous frame across phases — only the canvas swaps:
+ * Continuous frame across phases - only the canvas swaps:
  *
  *   ┌─────────────────────────────────────────────┐
  *   │  CASE NWL-19284 · NORTHWIND LOGISTICS  LIVE │   header strip
  *   │  ─────────────────────────────────────────  │   hairline
  *   │                                             │
- *   │            [phase canvas — swaps]           │
+ *   │            [phase canvas - swaps]           │
  *   │                                             │
  *   │  ─────────────────────────────────────────  │   hairline
  *   │  14:21:09 UTC · STEP 3 OF 6                 │   status strip
@@ -32,7 +32,7 @@ import { Link } from "react-router-dom";
 import { SourceIcon } from "@/components/ui/SourceIcon";
 
 // ──────────────────────────────────────────────────────────────────────
-// The case — written to feel like one a real Director would respect.
+// The case - written to feel like one a real Director would respect.
 // Every finding cites a specific source + ref.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ const CASE = {
     "Across eleven sources we found nineteen months of healthy usage, the " +
     "original contract signed in writing, eight closed support tickets with " +
     "an NPS of nine, and zero unfulfillment events.",
-  recommendation: "Recommend fight — the evidence is overwhelmingly on our side.",
+  recommendation: "Recommend fight - the evidence is overwhelmingly on our side.",
 } as const;
 
 interface SourceStop {
@@ -159,7 +159,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 };
 
 /**
- * Playback state machine —
+ * Playback state machine -
  *
  *   "idle"     · default. Poster frame visible. Play button overlaid.
  *                Loops do NOT start until the visitor opts in.
@@ -167,7 +167,7 @@ const PHASE_LABEL: Record<Phase, string> = {
  *   "finished" · run completed. Poster restored with a Replay button.
  *
  * The poster frame is the Brief canvas captured at its settled moment
- * (just before the Approve button pulse) — it's the densest, most
+ * (just before the Approve button pulse) - it's the densest, most
  * "filled-out dashboard" view in the loop and reads as proof at a
  * glance: customer, verdict, postmortem, drafted actions, citations.
  */
@@ -176,7 +176,7 @@ const PHASE_LABEL: Record<Phase, string> = {
  * demo no longer plays through automatically. It auto-advances trigger
  * → investigating → brief, then PAUSES at "awaiting-approval" and
  * waits for the visitor to click the green Approve · Execute button.
- * That click is the moment of agency — they nod, and only then do the
+ * That click is the moment of agency - they nod, and only then do the
  * actions fire.
  *
  *   idle               · poster + play button
@@ -210,7 +210,7 @@ export function LandingHeroDemo() {
   // so the wall-clock stamp doesn't drift while the poster is visible.
   const runStartRef = useRef<number | null>(null);
 
-  // Phase machine — only runs during the two auto-advancing segments.
+  // Phase machine - only runs during the two auto-advancing segments.
   // Pauses entirely when off-screen, when waiting for approval, when
   // finished, or when idle.
   useEffect(() => {
@@ -266,7 +266,7 @@ export function LandingHeroDemo() {
     setPlayback("playing-post");
   }
 
-  // Wall-clock stamp — anchored to "now" while playing, frozen on the
+  // Wall-clock stamp - anchored to "now" while playing, frozen on the
   // poster so the stamp reads as a fixed timestamp before the visitor
   // clicks play. Gives the poster a real "Bloomberg Terminal at rest"
   // feel rather than a ticking-but-not-doing-anything one.
@@ -297,7 +297,7 @@ export function LandingHeroDemo() {
 
   // The frame is frosted glass at rest (idle / finished) so the flora
   // hero video shows through. During any active segment of the run
-  // — pre-approve, awaiting-approval, or post-approve — it solidifies
+  // - pre-approve, awaiting-approval, or post-approve - it solidifies
   // so the dashboard reads crisply without the video distracting.
   const glassActive = playback === "idle" || playback === "finished";
   // Show the live canvas content (vs the minimal poster) whenever the
@@ -324,26 +324,26 @@ export function LandingHeroDemo() {
         boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
         aspectRatio: "16 / 10",
         color: "rgba(255,255,255,0.92)",
-        // Frosted-glass treatment — softens the flora video underneath
+        // Frosted-glass treatment - softens the flora video underneath
         // so the dashboard content stays legible without hiding the
         // background context entirely.
         backdropFilter: "blur(22px) saturate(1.15)",
         WebkitBackdropFilter: "blur(22px) saturate(1.15)",
       }}
     >
-      {/* ── HEADER STRIP — persists across every phase. ── */}
+      {/* ── HEADER STRIP - persists across every phase. ── */}
       <HeaderStrip
         phase={renderedPhase}
         idle={playback === "idle"}
         awaitingApproval={playback === "awaiting-approval"}
       />
 
-      {/* ── CANVAS — the only thing that swaps phase to phase ── */}
+      {/* ── CANVAS - the only thing that swaps phase to phase ── */}
       <div
         className="relative"
         style={{ height: "calc(100% - 72px)" }} // header 36 + status 36
       >
-        {/* Content wrapper — fades to translucent when playback is at
+        {/* Content wrapper - fades to translucent when playback is at
              rest (idle / finished). The chrome strips above and below
              stay fully opaque, so only the dashboard *content* dims,
              leaving the play button as the obvious focal point. */}
@@ -389,14 +389,14 @@ export function LandingHeroDemo() {
               </motion.div>
             ) : null}
             {/* playback === "finished" renders no canvas content at all
-                — just the glass background showing the flora video
+                - just the glass background showing the flora video
                 through. The FinishedOverlay below sits on that clean
                 surface as the sole focal point. */}
           </AnimatePresence>
         </motion.div>
 
-        {/* ── PLAY OVERLAY (idle) — sleek play button on the poster.
-             ── FINISHED OVERLAY (finished) — "Try it on your stack"
+        {/* ── PLAY OVERLAY (idle) - sleek play button on the poster.
+             ── FINISHED OVERLAY (finished) - "Try it on your stack"
                 CTA that routes the visitor to /signup (or /app if
                 already signed in). A small inline replay link below
                 lets them watch the run again without dominating the
@@ -411,7 +411,7 @@ export function LandingHeroDemo() {
         </AnimatePresence>
       </div>
 
-      {/* ── STATUS STRIP — time + progress. ── */}
+      {/* ── STATUS STRIP - time + progress. ── */}
       <StatusStrip
         phase={renderedPhase}
         elapsed={renderedElapsed}
@@ -431,7 +431,7 @@ export function LandingHeroDemo() {
  * so it visually belongs to the dashboard, not the page chrome.
  */
 /**
- * Finished overlay — shown after the case resolves. Replaces the old
+ * Finished overlay - shown after the case resolves. Replaces the old
  * "Replay" button. Reads as a confident invitation rather than a "watch
  * it again" loop: "Try it on your stack" with the iridescent pill from
  * the landing hero, routing to /signup. A quiet inline "Watch again"
@@ -486,11 +486,11 @@ function FinishedOverlay({ onReplay }: { onReplay: () => void }) {
         See it land a real verdict in minutes.
       </p>
 
-      {/* End-of-run CTA — intentionally a different shape from the
+      {/* End-of-run CTA - intentionally a different shape from the
            iridescent hero pill. The hero pill is the playful "watch the
            magic" invitation; this is the grounded "now commit" button.
            Cream-white surface, dark ink, hairline ring, restrained
-           drop shadow — reads as the confident close of an editorial
+           drop shadow - reads as the confident close of an editorial
            memo, not a marketing flourish. */}
       <Link
         to="/signup"
@@ -555,12 +555,12 @@ function PlayOverlay({
       style={{
         // No scrim, no blur. The dashboard content underneath is
         // already dimmed by the wrapper, so this overlay can stay
-        // fully transparent — the glyph + captions read sharp and
+        // fully transparent - the glyph + captions read sharp and
         // confident against the translucent content behind.
         background: "transparent",
       }}
     >
-      {/* Glyph — single bright button, no pulse rings, no hover
+      {/* Glyph - single bright button, no pulse rings, no hover
            breathing. A quiet inner-shadow brightens on hover via
            CSS for tactile feedback; the icon itself stays put. */}
       <span
@@ -632,7 +632,7 @@ function pad(n: number): string {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Header — case identifier + phase label, separated by a hairline.
+// Header - case identifier + phase label, separated by a hairline.
 // No browser-chrome dots. Just typography.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -650,14 +650,14 @@ function HeaderStrip({
       className="relative flex items-center pl-4 pr-7"
       style={{
         height: 36,
-        // Always-opaque chrome — keeps the traffic-light strip readable
+        // Always-opaque chrome - keeps the traffic-light strip readable
         // regardless of whether the rest of the frame is in glass mode.
         background: "oklch(0.135 0.006 75)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         zIndex: 5,
       }}
     >
-      {/* Mac-style window controls — kept restrained: 11px dots, brand
+      {/* Mac-style window controls - kept restrained: 11px dots, brand
           hexes muted a touch for the warm-dark canvas. */}
       <div
         className="flex items-center mr-5"
@@ -735,7 +735,7 @@ function HeaderStrip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Status strip at the bottom — time, step, simple progress.
+// Status strip at the bottom - time, step, simple progress.
 // ──────────────────────────────────────────────────────────────────────
 
 function StatusStrip({
@@ -810,17 +810,17 @@ function StatusStrip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Phase 1 — TRIGGER. Teletype-style intake: a webhook lands,
+// Phase 1 - TRIGGER. Teletype-style intake: a webhook lands,
 // the case opens. No card-with-left-stripe.
 // ──────────────────────────────────────────────────────────────────────
 
 /**
- * Poster — the at-rest frame visitors see before clicking play.
+ * Poster - the at-rest frame visitors see before clicking play.
  *
  * Deliberately minimal: just the brief eyebrow + the case title in
  * Spectral italic on the left, the suggested-actions column reduced
  * to source bylines on the right, and the action bar at the bottom.
- * No TLDR body copy, no postmortem detail, no citation chips — those
+ * No TLDR body copy, no postmortem detail, no citation chips - those
  * would compete with the play button for attention. The empty space
  * is the point.
  */
@@ -832,7 +832,7 @@ function PosterCanvas() {
         gridTemplateColumns: "minmax(0, 1.35fr) minmax(0, 1fr)",
       }}
     >
-      {/* LEFT — title only */}
+      {/* LEFT - title only */}
       <div className="px-12 pt-8 pb-5 flex flex-col">
         <Eyebrow>Brief</Eyebrow>
         <h2
@@ -856,7 +856,7 @@ function PosterCanvas() {
         </h2>
       </div>
 
-      {/* RIGHT — action bylines only, no targets, no mono lines */}
+      {/* RIGHT - action bylines only, no targets, no mono lines */}
       <div
         className="pt-8 pb-3 pl-9 pr-12 flex flex-col"
         style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
@@ -900,7 +900,7 @@ function PosterCanvas() {
           ))}
         </ol>
 
-        {/* Action bar — same shape as the live Brief, but no pulse. */}
+        {/* Action bar - same shape as the live Brief, but no pulse. */}
         <div
           className="mt-3 pt-3 flex items-center justify-between gap-3"
           style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
@@ -938,7 +938,7 @@ function PosterCanvas() {
 }
 
 function TriggerCanvas({ elapsed }: { elapsed: number }) {
-  // Two lines reveal in sequence — the second after ~2s.
+  // Two lines reveal in sequence - the second after ~2s.
   const openedShown = elapsed > 1.9;
   return (
     <div className="h-full flex flex-col items-start justify-center px-12 max-w-[640px] mx-auto">
@@ -960,7 +960,7 @@ function TriggerCanvas({ elapsed }: { elapsed: number }) {
         A new dispute landed.
       </motion.h2>
 
-      {/* Webhook line — no card, no left-stripe. Just typography. */}
+      {/* Webhook line - no card, no left-stripe. Just typography. */}
       <motion.div
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1022,7 +1022,7 @@ function TriggerCanvas({ elapsed }: { elapsed: number }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Phase 2 — INVESTIGATING.
+// Phase 2 - INVESTIGATING.
 // Typographic "Manthan is asking *Source* …" statement that morphs
 // as the agent moves through sources. Findings accumulate below as
 // editorial marginalia (NOT terminal output).
@@ -1041,7 +1041,7 @@ function InvestigatingCanvas({ elapsed }: { elapsed: number }) {
   const findingRevealAt = per - 1.0;
   const showFinding = local > findingRevealAt;
 
-  // Findings list — all stops up to (and including, when revealed) current.
+  // Findings list - all stops up to (and including, when revealed) current.
   const findings = useMemo(() => {
     const upTo = idx + (showFinding ? 1 : 0);
     return STOPS.slice(0, upTo);
@@ -1055,7 +1055,7 @@ function InvestigatingCanvas({ elapsed }: { elapsed: number }) {
         columnGap: 0,
       }}
     >
-      {/* LEFT — the typographic statement, single subject swapping in/out */}
+      {/* LEFT - the typographic statement, single subject swapping in/out */}
       <div className="px-12 pt-8 pb-6 flex flex-col">
         <Eyebrow>Investigating</Eyebrow>
 
@@ -1110,7 +1110,7 @@ function InvestigatingCanvas({ elapsed }: { elapsed: number }) {
           </AnimatePresence>
         </div>
 
-        {/* Hero brand glyph — uses the empty space below the question.
+        {/* Hero brand glyph - uses the empty space below the question.
             ~96px square so it reads as a hero element, tinted so
             dark-on-dark logos (Notion, PostHog) resolve to the ink
             token while colourful brands (Stripe, HubSpot, Intercom)
@@ -1168,7 +1168,7 @@ function InvestigatingCanvas({ elapsed }: { elapsed: number }) {
         </div>
       </div>
 
-      {/* RIGHT — findings column. Editorial marginalia, not terminal. */}
+      {/* RIGHT - findings column. Editorial marginalia, not terminal. */}
       <div
         className="pt-8 pb-6 pl-9 pr-12 flex flex-col"
         style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
@@ -1215,7 +1215,7 @@ function InvestigatingCanvas({ elapsed }: { elapsed: number }) {
 }
 
 /**
- * Source word — used as the byline in marginalia rows AND in the
+ * Source word - used as the byline in marginalia rows AND in the
  * trigger eyebrow. Small uppercase Geist with the source icon as a
  * baseline-aligned glyph. Replaces the bordered pill chips of the
  * old version.
@@ -1243,7 +1243,7 @@ function SourceWord({ src, label }: { src: string; label: string }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Phase 3 — BRIEF. Editorial postmortem with workspace-style citation chips.
+// Phase 3 - BRIEF. Editorial postmortem with workspace-style citation chips.
 // Single column on the left, drafted actions on the right.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -1258,7 +1258,7 @@ function BriefCanvas({
 }) {
   // While the brief is auto-advancing, the button gives a soft pulse
   // after a 2.4-s settling beat. Once we're waiting on the visitor it
-  // becomes a stronger pulse to draw the eye — and clickable.
+  // becomes a stronger pulse to draw the eye - and clickable.
   const settled = elapsed > 2.4;
   const pulse = settled || awaitingApproval;
   // Tracks the brief "Firing…" moment between click and the post-approve
@@ -1286,7 +1286,7 @@ function BriefCanvas({
         gridTemplateColumns: "minmax(0, 1.35fr) minmax(0, 1fr)",
       }}
     >
-      {/* LEFT — Brief postmortem */}
+      {/* LEFT - Brief postmortem */}
       <div className="px-12 pt-8 pb-5 overflow-hidden flex flex-col">
         <Eyebrow>Brief</Eyebrow>
 
@@ -1358,7 +1358,7 @@ function BriefCanvas({
         </ol>
       </div>
 
-      {/* RIGHT — Suggested actions + the action bar */}
+      {/* RIGHT - Suggested actions + the action bar */}
       <div
         className="pt-8 pb-5 pl-9 pr-12 flex flex-col"
         style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
@@ -1411,7 +1411,7 @@ function BriefCanvas({
           ))}
         </ol>
 
-        {/* Action bar — quiet text verbs + the primary approve button */}
+        {/* Action bar - quiet text verbs + the primary approve button */}
         <div
           className="mt-3 pt-3 flex items-center justify-between gap-3"
           style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
@@ -1485,7 +1485,7 @@ function BriefCanvas({
 }
 
 /**
- * Citation chip — matches the workspace one. [icon][n]↗ with a 1px
+ * Citation chip - matches the workspace one. [icon][n]↗ with a 1px
  * hairline, accent-green hover. Lives at the end of finding paragraphs.
  */
 function CiteChip({
@@ -1522,7 +1522,7 @@ function CiteChip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Phase 4 — APPROVING.
+// Phase 4 - APPROVING.
 // Centered typographic statement per action. No carousel dots.
 // Step indicator lives in the bottom status strip (Action 02 of 03).
 // ──────────────────────────────────────────────────────────────────────
@@ -1620,7 +1620,7 @@ function ApprovingCanvas({ elapsed }: { elapsed: number }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Phase 5 — CLOSED. Editorial closing statement + receipts.
+// Phase 5 - CLOSED. Editorial closing statement + receipts.
 // "Now try on your stack →" as a quiet inline link, not iridescent pill.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -1660,7 +1660,7 @@ function ClosedCanvas() {
           The reply to Northwind&apos;s finance contact is in their inbox.
         </p>
 
-        {/* The Landing CTA — quiet inline link with a hairline-arrow,
+        {/* The Landing CTA - quiet inline link with a hairline-arrow,
             NOT another iridescent pill. The page header already has
             those if visitors want to sign up. */}
         <Link
@@ -1722,7 +1722,7 @@ function ClosedCanvas() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Eyebrow — uppercase letterspaced section label, the only place we
+// Eyebrow - uppercase letterspaced section label, the only place we
 // use ALL CAPS. Defaults to ink-faint; accent variant for the accent
 // green moment.
 // ──────────────────────────────────────────────────────────────────────

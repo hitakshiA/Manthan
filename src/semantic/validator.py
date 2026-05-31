@@ -32,7 +32,7 @@ Design notes:
     * Failure mode is "fail loud": the validator returns a clear,
       actionable error message the agent can use to self-repair.
     * Unknown tables (e.g. ``information_schema.columns`` for DESCRIBE)
-      pass through — we only constrain references to entity-scoped
+      pass through - we only constrain references to entity-scoped
       physical tables.
 """
 
@@ -88,7 +88,7 @@ class ValidationResult:
 
 @dataclass(slots=True)
 class EntityCatalog:
-    """Slim view of one entity — everything the validator needs, nothing more.
+    """Slim view of one entity - everything the validator needs, nothing more.
 
     Built on-demand from a DCD so the validator doesn't hold a
     reference to the full AppState.
@@ -112,7 +112,7 @@ class EntityCatalog:
         }
         # Rollups inherit columns from the primary but also add
         # materialized fields (pct_of_total, record_count). We
-        # accept these liberally — no DESCRIBE of each rollup is
+        # accept these liberally - no DESCRIBE of each rollup is
         # necessary because the validator's column check is a
         # soft match (the warning path, not the error path).
         _rollup_extras = {"pct_of_total", "record_count", "period"}
@@ -142,7 +142,7 @@ def validate_sql(
     tables (e.g. from :meth:`AppState.gold_table_names`) so multi-dataset
     joins don't trip the unknown-table check.
 
-    Parser failures are NOT treated as validation errors — DuckDB has
+    Parser failures are NOT treated as validation errors - DuckDB has
     dialect quirks (e.g. the ``PIVOT``, ``USING SAMPLE``, ``DESCRIBE``,
     ``SHOW TABLES`` commands) that sqlglot may not handle perfectly.
     When parsing fails we return ``ok=True`` with no issues; the
@@ -185,11 +185,11 @@ def _check_tables(
         if not name:
             continue
         # Strip schema prefix if schema is a system one (information_schema,
-        # pg_catalog) — DESCRIBE / SHOW TABLES flow through here.
+        # pg_catalog) - DESCRIBE / SHOW TABLES flow through here.
         schema = (tbl.db or "").lower()
         if schema in _SYSTEM_TABLES or name in _SYSTEM_TABLES:
             continue
-        # Bare identifier check — accept by lowercase match. Every
+        # Bare identifier check - accept by lowercase match. Every
         # legitimate table in the workspace is either the active
         # entity's, one of the known raw_/gold_ names that callers
         # passed in via ``extra_known_tables``, or a system table. If
@@ -256,7 +256,7 @@ def _check_metric_filters(
     present in the WHERE clause when the query aggregates the metric's
     expression AND aliases the result with the metric's slug/label.
 
-    Heuristic match on the expression — we normalize whitespace and
+    Heuristic match on the expression - we normalize whitespace and
     compare lowercase. Strict SQL-AST matching is overkill for the
     coverage we need.
     """
@@ -283,7 +283,7 @@ def _check_metric_filters(
         where = stmt.find(exp.Where)
         where_text = where.sql(dialect="duckdb").lower() if where else ""
         filter_text = metric.filter.lower()
-        # Extremely loose containment — good enough to catch the common
+        # Extremely loose containment - good enough to catch the common
         # silent-drop ("WHERE status='delivered'" vs missing WHERE). If
         # the exec gets smarter filters later (IN-lists, date windows),
         # we'll harden this.

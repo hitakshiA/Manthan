@@ -231,7 +231,7 @@ def audit_trail(plan_id: str, state: StateDep) -> dict[str, Any]:
     restarts, but the audit trail is SQLite-backed (see
     :class:`src.core.plans.PlanStore._audit_path`) and survives. We
     serve whatever audit rows exist for ``plan_id`` without gating on
-    the in-memory Plan object — an agent that ran a plan yesterday and
+    the in-memory Plan object - an agent that ran a plan yesterday and
     comes back today after a restart can still ask "what did I do?".
     If no audit rows exist for this plan_id, return 404.
     """

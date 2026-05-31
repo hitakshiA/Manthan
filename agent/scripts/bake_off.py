@@ -13,7 +13,7 @@ Run:
     .venv/bin/python scripts/bake_off.py
 
 Expected wall-clock: ~15-30 minutes total (sequential). Errors per model
-are caught and reported — a failing model doesn't stop the bake-off.
+are caught and reported - a failing model doesn't stop the bake-off.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ console = Console()
 
 # Best-effort pricing per million tokens (input, output). Update as
 # OpenRouter publishes accurate numbers. USD estimate in the result is
-# illustrative — what matters for the bake-off is the relative numbers.
+# illustrative - what matters for the bake-off is the relative numbers.
 MODEL_RATES: dict[str, tuple[float, float]] = {
     "deepseek/deepseek-v4-pro:exacto":     (1.50, 3.00),
     "minimax/minimax-m2.7:exacto":         (0.80, 2.40),
@@ -144,7 +144,7 @@ async def run_one(model: str) -> RunResult:
 
     # Sum token usage from agent_thought events (the loop charges Budget
     # on every LLM call). We don't currently log token counts per event,
-    # so this is a placeholder — Budget would have charged them. For the
+    # so this is a placeholder - Budget would have charged them. For the
     # bake-off the wall-clock + concluded outcome is the primary signal.
     # When we add Postgres-backed events with token columns, this
     # tightens up.
@@ -178,7 +178,7 @@ async def run_one(model: str) -> RunResult:
 
 def print_summary(results: list[RunResult]) -> None:
     """Print the comparison table + a written recommendation."""
-    tbl = Table(title="Manthan model bake-off — TechCorp $1,200 chargeback", show_lines=True)
+    tbl = Table(title="Manthan model bake-off - TechCorp $1,200 chargeback", show_lines=True)
     tbl.add_column("Model", style="cyan", overflow="fold")
     tbl.add_column("Concl?", justify="center")
     tbl.add_column("Action")

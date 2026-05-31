@@ -1,10 +1,10 @@
--- Auth signups — dedup table for the Clerk user.created webhook.
+-- Auth signups - dedup table for the Clerk user.created webhook.
 --
 -- When Clerk fires `user.created`, we send a Manthan-branded MVP
 -- welcome email via Resend. This table is the idempotency guard so a
 -- redelivered webhook doesn't double-send.
 --
--- We DO NOT use this as the source of truth for "who's logged in" —
+-- We DO NOT use this as the source of truth for "who's logged in" -
 -- that's still Clerk. This is just (a) dedup, (b) audit trail for
 -- "who got the welcome email and when".
 

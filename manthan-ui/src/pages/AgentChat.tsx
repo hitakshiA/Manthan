@@ -1,9 +1,9 @@
 /**
- * AgentChat — talk to Manthan across all cases.
+ * AgentChat - talk to Manthan across all cases.
  *
  * Editorial form: a single column of typeset paragraphs, not chat
  * bubbles. The agent's reply is set in Spectral, the operator's prompt
- * in Geist — same way you'd typeset an interview transcript.
+ * in Geist - same way you'd typeset an interview transcript.
  */
 
 import { useEffect, useRef, useState } from "react";

@@ -38,7 +38,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-# scripts/ isn't a package — bolt it onto sys.path so we can import scenarios.py
+# scripts/ isn't a package - bolt it onto sys.path so we can import scenarios.py
 sys.path.insert(0, str(Path(__file__).parent))
 
 from brutal_scenarios import SCENARIOS_BRUTAL
@@ -156,11 +156,11 @@ async def run_one(scenario: Scenario, cfg) -> ScenarioResult:
     result = ScenarioResult(scenario=scenario)
     duck_con = None
     if scenario.duckdb_world is not None:
-        # Brutal-data path — build the per-scenario in-memory DB.
+        # Brutal-data path - build the per-scenario in-memory DB.
         duck_con = build_world(scenario.duckdb_world)
         tokens = set_scenario_world(duckdb_con=duck_con)
     else:
-        # Flat-bundle path — legacy
+        # Flat-bundle path - legacy
         tokens = set_scenario_world(
             header=scenario.dispute_header,
             facts=scenario.world,
@@ -207,7 +207,7 @@ async def run_one(scenario: Scenario, cfg) -> ScenarioResult:
 
 
 def _is_cross_source(query: str) -> bool:
-    # Lazy — count distinct <source>.<table> refs known to Coral
+    # Lazy - count distinct <source>.<table> refs known to Coral
     known = {
         "stripe", "salesforce", "hubspot", "intercom", "zendesk", "slack",
         "notion", "posthog", "gmail", "pagerduty", "statusgator", "datadog",
@@ -459,7 +459,7 @@ async def _run_battery(
                 )
                 findings_path.parent.mkdir(parents=True, exist_ok=True)
                 with findings_path.open("w") as f:
-                    f.write(f"# {scenario.case_id} — findings dump\n")
+                    f.write(f"# {scenario.case_id} - findings dump\n")
                     f.write(f"# decision: {r.decision_action} "
                             f"amount: {r.decision_amount_minor} "
                             f"conf: {r.decision_confidence}\n\n")

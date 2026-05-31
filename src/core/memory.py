@@ -4,17 +4,17 @@ Layer 2 agents accumulate knowledge across conversations: the business's
 definition of 'active user', a user's preferred currency formatting, a
 known data-quality caveat, a follow-up analysis from last week. That
 knowledge has to survive server restarts so that a follow-up
-conversation picks up where the previous one left off — otherwise every
+conversation picks up where the previous one left off - otherwise every
 interaction starts cold.
 
 The store is a small SQLite database at
 ``{data_directory}/agent_memory.db``. Entries are keyed by a
 ``(scope_type, scope_id, key)`` triple. Scope types:
 
-- ``dataset`` — notes attached to a specific ``ds_*`` id
-- ``user`` — preferences for a specific user (opaque id)
-- ``global`` — facts that apply to the whole deployment
-- ``session`` — ephemeral memory for a single conversation that should
+- ``dataset`` - notes attached to a specific ``ds_*`` id
+- ``user`` - preferences for a specific user (opaque id)
+- ``global`` - facts that apply to the whole deployment
+- ``session`` - ephemeral memory for a single conversation that should
   outlive individual tool calls but not individual sessions; wiped on
   explicit drop
 

@@ -2,25 +2,25 @@
 
 Three templates share one editorial direction (warm-dark hero band with
 Manthan wordmark, Spectral display fallback, accent stripe, hairline
-footer — same tokens the webui uses):
+footer - same tokens the webui uses):
 
-  • render_ack_email()         — "Got your message, investigating"
+  • render_ack_email()         - "Got your message, investigating"
                                   sent immediately on case_opened from email
-  • render_resolution_email()  — "Here's what we did" — sent after the
+  • render_resolution_email()  - "Here's what we did" - sent after the
                                   operator approves the agent's actions
-  • render_action_email()      — generic mid-case agent-drafted message
+  • render_action_email()      - generic mid-case agent-drafted message
                                   (e.g. "Can you confirm the date you
                                   saw the duplicate charge?")
 
 Design discipline:
-  - Inline CSS only (no <style> blocks) — most clients strip them.
+  - Inline CSS only (no <style> blocks) - most clients strip them.
   - System font stack; Spectral as the editorial accent where supported.
-  - Single accent color (#3a8a55 — accent token equivalent in OKLCH).
+  - Single accent color (#3a8a55 - accent token equivalent in OKLCH).
   - Max-width 560px so it reads well on phones AND in a wide preview.
   - All copy goes through `_escape()` to prevent XSS via Stripe dispute
     IDs / customer names containing accidental HTML.
   - No internal-policy strings, no agent-only fields. The caller decides
-    what to include — these helpers JUST style.
+    what to include - these helpers JUST style.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from typing import Sequence
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Editorial tokens — kept in sync with manthan-ui globals.css
+# Editorial tokens - kept in sync with manthan-ui globals.css
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -85,7 +85,7 @@ def render_ack_email(
     name = (customer_name or "").strip() or _name_from_email(customer_email)
     intro = (
         f"Thanks for writing in. I'm <strong>Manthan</strong>, the AI working "
-        "alongside the billing team here — I've taken your message into our "
+        "alongside the billing team here - I've taken your message into our "
         f"system as case <strong>{_e(case_short_id)}</strong> and started "
         "looking into it."
     )
@@ -108,15 +108,15 @@ def render_ack_email(
         _paragraph(intro),
         _detail_table(detail_rows),
         _paragraph(
-            f"{eta}. If you have anything else to add to the case — receipts, "
-            "screenshots, anything — just reply to this email and it'll attach "
+            f"{eta}. If you have anything else to add to the case - receipts, "
+            "screenshots, anything - just reply to this email and it'll attach "
             "to the same case automatically."
         ),
-        _signoff("— Manthan"),
+        _signoff("- Manthan"),
     ]
 
     html_body = _shell(
-        preheader=f"Got your message — investigating · {case_short_id}",
+        preheader=f"Got your message - investigating · {case_short_id}",
         hero_eyebrow="Case opened",
         hero_title=f"We're on it.",
         content_html="".join(body_blocks),
@@ -137,12 +137,12 @@ def render_resolution_email(
     signed_by: str | None = None,
     subject_override: str | None = None,
 ) -> tuple[str, str]:
-    """Outbound resolution email — the "here's what we did" message.
+    """Outbound resolution email - the "here's what we did" message.
 
     `headline` should be ONE plain-English sentence the customer reads
     first ("We've refunded the duplicate $89 charge."). `body_paragraphs`
     is a short list of 1-3 paragraphs giving context. Never include
-    internal policy IDs, agent-only fields, or run metadata — those are
+    internal policy IDs, agent-only fields, or run metadata - those are
     filtered out at the agent prompt layer, but defend in depth: callers
     must hand us copy that's customer-safe.
 
@@ -167,8 +167,8 @@ def render_resolution_email(
 
     body_html.append(
         _paragraph(
-            "If anything's off — or if there's something else we should "
-            "have caught — just reply to this email and it'll route back "
+            "If anything's off - or if there's something else we should "
+            "have caught - just reply to this email and it'll route back "
             "to the same case.",
             color=PALETTE["ink_muted"],
             font_size=13,
@@ -176,7 +176,7 @@ def render_resolution_email(
     )
 
     signer = signed_by or "Manthan, on behalf of the billing team"
-    body_html.append(_signoff(f"— {_e(signer)}"))
+    body_html.append(_signoff(f"- {_e(signer)}"))
 
     html_body = _shell(
         preheader=_preheader_from(headline),
@@ -203,7 +203,7 @@ def render_action_email(
     signed_by: str | None = None,
     subject_override: str | None = None,
 ) -> tuple[str, str]:
-    """Generic mid-investigation email — when the agent decides it needs
+    """Generic mid-investigation email - when the agent decides it needs
     something from the customer (e.g. "could you confirm the date of the
     duplicate charge?").
 
@@ -249,7 +249,7 @@ def render_action_email(
     )
 
     signer = signed_by or "Manthan"
-    body_html.append(_signoff(f"— {_e(signer)}"))
+    body_html.append(_signoff(f"- {_e(signer)}"))
 
     html_body = _shell(
         preheader=_preheader_from(headline),
@@ -418,9 +418,9 @@ def render_welcome_email(
     demo_url: str,
     founder_email: str = "akash@miny-labs.com",
 ) -> tuple[str, str]:
-    """The MVP welcome email — fired on `user.created` from Clerk.
+    """The MVP welcome email - fired on `user.created` from Clerk.
 
-    Direction: borrow the *landing-page hero* feel — warm-near-black
+    Direction: borrow the *landing-page hero* feel - warm-near-black
     expanse, the concentric-arcs Manthan glyph at hero size, the
     "Beta · Manthan v1 …" pill, BIG Spectral italic display headline
     with generous silence, iridescent CTA, editorial italic voice. Then
@@ -436,20 +436,20 @@ def render_welcome_email(
     #    one paragraph at a time. ──
 
     content = "".join([
-        # Personal greeting — quiet, no eyebrow.
+        # Personal greeting - quiet, no eyebrow.
         _paragraph(
             f"Hi {_e(name)},",
             font_size=14,
             color=PALETTE["ink_muted"],
         ),
-        # Lead — italic display, a memo lede.
+        # Lead - italic display, a memo lede.
         f'<p style="margin:6px 0 22px 0;font-family:{FONT_DISPLAY};font-style:italic;'
         f'font-size:19px;line-height:1.45;color:{PALETTE["ink_strong"]};'
         f'letter-spacing:-0.005em;">'
         "Thanks for trying Manthan while it&rsquo;s still raw."
         "</p>",
         _paragraph(
-            "We&rsquo;re in <strong>MVP phase</strong> — a few things are "
+            "We&rsquo;re in <strong>MVP phase</strong> - a few things are "
             "intentional, and a few will get sharper over the coming weeks. "
             "What&rsquo;s already there is a real agent, joining real billing "
             "data across eleven connected sources, drafting actions you can "
@@ -461,7 +461,7 @@ def render_welcome_email(
         _editorial_eyebrow("What's already in the demo"),
 
         # Three beats, but rendered as connected paragraphs with thin
-        # accent rules — less bullet-list, more memo.
+        # accent rules - less bullet-list, more memo.
         _editorial_beats([
             (
                 "01",
@@ -473,7 +473,7 @@ def render_welcome_email(
             (
                 "02",
                 "Three pre-baked scenarios",
-                "to fire from the top right — Quill Logistics chargeback, "
+                "to fire from the top right - Quill Logistics chargeback, "
                 "Vermillion seat dispute, Maya autonomous duplicate. Each "
                 "one is a real case the agent investigates from scratch.",
             ),
@@ -481,17 +481,17 @@ def render_welcome_email(
                 "03",
                 "Every claim is citable",
                 "every action is reversible, every reply is in your "
-                "voice — never policy-leaky, never agent jargon.",
+                "voice - never policy-leaky, never agent jargon.",
             ),
         ]),
 
         _hairline(),
 
-        # The ask — quiet but unambiguous. Note: this mailbox doesn't
+        # The ask - quiet but unambiguous. Note: this mailbox doesn't
         # accept inbound; route them to the founder directly.
         _editorial_eyebrow("If you want priority access"),
         _paragraph(
-            "When we ship v1 you&rsquo;ll get first pick — but I&rsquo;d "
+            "When we ship v1 you&rsquo;ll get first pick - but I&rsquo;d "
             "love to talk before then. Write me directly at "
             f'<a href="mailto:{_e(founder_email)}" '
             f'style="color:{PALETTE["accent"]};text-decoration:underline;font-weight:500;">'
@@ -500,7 +500,7 @@ def render_welcome_email(
             font_size=14.5,
         ),
 
-        # Iridescent CTA — the landing-page pill, ported to email.
+        # Iridescent CTA - the landing-page pill, ported to email.
         _iridescent_button(href=demo_url, label="Open the demo"),
 
         # Closer
@@ -520,12 +520,12 @@ def render_welcome_email(
 
     html_body = _welcome_shell(
         preheader=(
-            "You're in early. Manthan is in MVP — here's what's in the "
+            "You're in early. Manthan is in MVP - here's what's in the "
             "demo and how to lock in priority access."
         ),
         content_html=content,
     )
-    subj = "You're in early — welcome to Manthan"
+    subj = "You're in early - welcome to Manthan"
     return subj, html_body
 
 
@@ -537,7 +537,7 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
     paper-cream body with hairline dividers."""
     year = datetime.utcnow().year
 
-    # Inline SVG glyph — same shape as components/Logo.tsx but rendered
+    # Inline SVG glyph - same shape as components/Logo.tsx but rendered
     # at hero size for the bigger band. Three right-facing concentric
     # arcs + emerald core. Stroke colours hard-coded for email-client
     # compatibility (var() not honored in most clients).
@@ -557,7 +557,7 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
 
     # The "Beta · Manthan v1 · now accepting design partners" pill from
     # the landing hero, translated to email-safe inline HTML. No
-    # backdrop-filter (not supported in mail) — just a subtle ink-on-ink
+    # backdrop-filter (not supported in mail) - just a subtle ink-on-ink
     # surface with a 1px hairline.
     beta_pill = (
         '<table role="presentation" cellpadding="0" cellspacing="0" '
@@ -596,7 +596,7 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
       <td align="center" style="padding:44px 16px 28px 16px;">
         <table role="presentation" width="620" border="0" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#ffffff;border:1px solid {PALETTE['rule']};border-radius:10px;overflow:hidden;">
 
-          <!-- ── Hero band — landing-feel: warm near-black, generous silence, big glyph, Spectral italic ── -->
+          <!-- ── Hero band - landing-feel: warm near-black, generous silence, big glyph, Spectral italic ── -->
           <tr>
             <td align="center" style="background:{PALETTE['bg_hero']};padding:56px 32px 60px 32px;color:#efece4;">
               <!-- Glyph -->
@@ -605,11 +605,11 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
               <div style="margin-bottom:28px;">
                 {beta_pill}
               </div>
-              <!-- Big display headline — Spectral italic, dramatic -->
+              <!-- Big display headline - Spectral italic, dramatic -->
               <div style="font-family:{FONT_DISPLAY};font-style:italic;font-size:38px;line-height:1.04;letter-spacing:-0.014em;color:#efece4;">
                 You&rsquo;re in early.
               </div>
-              <!-- Subtitle — quieter italic Spectral, breathing room -->
+              <!-- Subtitle - quieter italic Spectral, breathing room -->
               <div style="font-family:{FONT_DISPLAY};font-style:italic;font-size:15px;line-height:1.52;color:#a8a294;margin-top:14px;max-width:420px;margin-left:auto;margin-right:auto;">
                 The operations layer for revenue disputes.<br/>
                 With a human in the loop.
@@ -617,19 +617,19 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
             </td>
           </tr>
 
-          <!-- Accent stripe — landing's emerald hairline beneath the hero -->
+          <!-- Accent stripe - landing's emerald hairline beneath the hero -->
           <tr>
             <td style="height:3px;background:{PALETTE['accent']};line-height:3px;font-size:0;">&nbsp;</td>
           </tr>
 
-          <!-- ── Body — paper cream, generous padding, editorial rhythm ── -->
+          <!-- ── Body - paper cream, generous padding, editorial rhythm ── -->
           <tr>
             <td style="padding:38px 40px 16px 40px;font-size:14.5px;line-height:1.62;color:{PALETTE['ink_strong']};">
               {content_html}
             </td>
           </tr>
 
-          <!-- ── Footer — italic Spectral brand line, year, small print ── -->
+          <!-- ── Footer - italic Spectral brand line, year, small print ── -->
           <tr>
             <td style="border-top:1px solid {PALETTE['rule']};padding:22px 40px 26px 40px;font-size:11.5px;color:{PALETTE['ink_faint']};">
               <div style="font-family:{FONT_DISPLAY};font-style:italic;font-size:14px;color:{PALETTE['ink_muted']};margin-bottom:6px;">
@@ -651,7 +651,7 @@ def _welcome_shell(*, preheader: str, content_html: str) -> str:
 
 
 def _editorial_beats(beats: list[tuple[str, str, str]]) -> str:
-    """Numbered editorial beats — `(numeral, headline, body)` — separated
+    """Numbered editorial beats - `(numeral, headline, body)` - separated
     by silence, not bullets. Each row has a mono numeral on the left,
     italic Spectral headline next to it, then a flowing body underneath.
 
@@ -690,7 +690,7 @@ def _editorial_beats(beats: list[tuple[str, str, str]]) -> str:
 
 
 def _editorial_eyebrow(text: str) -> str:
-    """Small uppercase section label — same eyebrow treatment the webui
+    """Small uppercase section label - same eyebrow treatment the webui
     uses across the workspace."""
     return (
         '<div style="font-size:11px;font-weight:500;letter-spacing:0.14em;'
@@ -700,7 +700,7 @@ def _editorial_eyebrow(text: str) -> str:
 
 
 def _hairline() -> str:
-    """Editorial section divider — full-width 1px rule, generous margin
+    """Editorial section divider - full-width 1px rule, generous margin
     on both sides. Replaces the bullet/spacer patterns of generic emails."""
     return (
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
@@ -714,7 +714,7 @@ def _iridescent_button(*, href: str, label: str) -> str:
     Same pink → lavender → ice-blue → mint gradient and inner-glow shadow.
     Most modern clients (Apple Mail, Gmail web/iOS/Android, Outlook 2019+)
     honour linear-gradient on `background` and box-shadow on inline links.
-    Outlook 2007/2013 fall back to a flat-cream button — still legible.
+    Outlook 2007/2013 fall back to a flat-cream button - still legible.
     """
     iridescent = (
         "linear-gradient(95deg, #f5c0d5 0%, #d8c0e8 30%, "
@@ -740,7 +740,7 @@ def _iridescent_button(*, href: str, label: str) -> str:
 
 
 def _founder_signoff(*, name: str, role: str, email: str) -> str:
-    """Personal sign-off — name in big Spectral italic, role and email
+    """Personal sign-off - name in big Spectral italic, role and email
     below in muted body type, with the accent emerald core glyph to the
     left mimicking the Manthan mark."""
     return f"""\
@@ -751,7 +751,7 @@ def _founder_signoff(*, name: str, role: str, email: str) -> str:
     </td>
     <td style="vertical-align:middle;">
       <div style="font-family:{FONT_DISPLAY};font-style:italic;font-size:17px;color:{PALETTE['ink_strong']};letter-spacing:-0.004em;">
-        — {_e(name)}
+        - {_e(name)}
       </div>
       <div style="font-size:12px;color:{PALETTE['ink_faint']};margin-top:3px;">
         {_e(role)} ·
@@ -766,7 +766,7 @@ def _founder_signoff(*, name: str, role: str, email: str) -> str:
 
 
 def render_plain_text_fallback(html_body: str) -> str:
-    """Very crude HTML→text — Resend takes the html field and most clients
+    """Very crude HTML→text - Resend takes the html field and most clients
     show that; we still provide a text fallback for accessibility and
     spam-filter friendliness. Strips tags, collapses whitespace."""
     text = re.sub(r"<style[^>]*>.*?</style>", "", html_body, flags=re.S | re.I)

@@ -1,5 +1,5 @@
 /**
- * Contact — direct lines to the Manthan team.
+ * Contact - direct lines to the Manthan team.
  * Three columns: design partners / sales / security & legal.
  * Plus the founder's socials at the bottom.
  */

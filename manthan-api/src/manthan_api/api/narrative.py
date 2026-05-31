@@ -10,7 +10,7 @@ to a fast model in ONE call, and returns:
     Accounting.
   - `findings`: 3-5 interim facts the agent has surfaced so far,
     derived from tool_results. These are NOT formally committed
-    `record_finding` events — they're a live read of what's emerging,
+    `record_finding` events - they're a live read of what's emerging,
     shown next to the placeholder so the operator sees signal early.
 
 Why one big LLM call instead of per-event prettifier rows: the prose
@@ -22,7 +22,7 @@ records." The per-event prettifier still runs alongside for the Coral
 trace surface.
 
 Model: inception/mercury-2 by default (set via MANTHAN_NARRATIVE_MODEL).
-Mercury is a reasoning model — we suppress its reasoning trace and
+Mercury is a reasoning model - we suppress its reasoning trace and
 raise the token budget so it has room to think internally then write.
 """
 
@@ -48,7 +48,7 @@ router = APIRouter(prefix="/api/cases", tags=["narrative"])
 # Default to gemini-3.1-flash-lite for the narrative call. Mercury was
 # the first pick (per user) but it's a reasoning model and even with
 # `reasoning.exclude=true` it spends the FULL token budget on internal
-# reasoning before writing — at the larger context this endpoint feeds
+# reasoning before writing - at the larger context this endpoint feeds
 # it, mercury hits finish_reason=length with empty content. The
 # prettifier (small, single-event prompts) tolerates this with a 256
 # budget; this endpoint sends 25-event windows and needs a model that
@@ -63,12 +63,12 @@ _cache: dict[tuple[str, int], dict[str, Any]] = {}
 
 SYSTEM_PROMPT = """You write LIVE narratives of a billing-ops AI agent's investigation, for a Director of Revenue Accounting.
 
-You are given the last N steps of the agent's activity — `tool_call`, `tool_result`, `reflexion`, `case_opened`, `investigation_started`. Write TWO outputs and return them as STRICT JSON:
+You are given the last N steps of the agent's activity - `tool_call`, `tool_result`, `reflexion`, `case_opened`, `investigation_started`. Write TWO outputs and return them as STRICT JSON:
 
 {
-  "narrative": "<2 short paragraphs, max ~60 words total, plain English, no engineering jargon — no schemas/tables/queries/SQL/SELECT/JOIN/joins/columns. Describe what the agent did first, what it's doing now. Past then present.>",
+  "narrative": "<2 short paragraphs, max ~60 words total, plain English, no engineering jargon - no schemas/tables/queries/SQL/SELECT/JOIN/joins/columns. Describe what the agent did first, what it's doing now. Past then present.>",
   "findings": [
-    "<one concrete fact the agent has surfaced from a tool_result — customer name, charge amount, dispute reason, related record, etc.>",
+    "<one concrete fact the agent has surfaced from a tool_result - customer name, charge amount, dispute reason, related record, etc.>",
     "<another fact>",
     ...
   ]
@@ -79,8 +79,8 @@ Findings rules:
 - Each ≤ 18 words
 - Specific (use real ids and numbers when present)
 - Don't repeat
-- Don't include the case opening event ("Stripe chargeback opened…") — that's already shown elsewhere
-- Don't speculate — only state what tool_results clearly show
+- Don't include the case opening event ("Stripe chargeback opened…") - that's already shown elsewhere
+- Don't speculate - only state what tool_results clearly show
 
 Narrative rules:
 - Two paragraphs, separated by \\n\\n
@@ -142,7 +142,7 @@ async def get_narrative(
     max_seq = events[0]["seq"]
     cache_key = (str(case_id), max_seq)
 
-    # Cache hit — same window, return what we already generated.
+    # Cache hit - same window, return what we already generated.
     if cache_key in _cache:
         cached = _cache[cache_key]
         return NarrativeResponse(
@@ -258,14 +258,14 @@ async def get_narrative(
         narrative = content
 
     if not narrative:
-        narrative = "The agent is mid-step — checking sources right now."
+        narrative = "The agent is mid-step - checking sources right now."
 
     result = {
         "narrative": narrative,
         "findings": findings,
         "events_processed": len(lines),
     }
-    # Cache (small bounded LRU — keep only most recent 32 entries).
+    # Cache (small bounded LRU - keep only most recent 32 entries).
     if len(_cache) > 32:
         # Drop the oldest 8 entries.
         for k in list(_cache.keys())[:8]:

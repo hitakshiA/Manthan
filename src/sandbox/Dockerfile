@@ -1,4 +1,4 @@
-# Manthan Python sandbox image — SPEC §4.3
+# Manthan Python sandbox image - SPEC §4.3
 #
 # Runs user/agent-generated Python code against mounted Parquet datasets
 # with no network access and bounded resources. Built on python:3.13-slim

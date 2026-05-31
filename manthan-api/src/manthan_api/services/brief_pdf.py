@@ -1,4 +1,4 @@
-"""Brief PDF generator — render a case brief as a polished one-page PDF.
+"""Brief PDF generator - render a case brief as a polished one-page PDF.
 
 Used by the Slack bot's "asky PDF" attachment: when Manthan posts a brief
 card in Slack, it also uploads a PDF brief that operators can download
@@ -42,7 +42,7 @@ from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 from manthan_api.db import get_pool
 
 
-# Color palette — calibrated to match the marketing site's "Operations Memo"
+# Color palette - calibrated to match the marketing site's "Operations Memo"
 # theme. Ink black, warm paper, accent blue.
 INK = colors.HexColor("#1a1a1a")
 INK_MUTED = colors.HexColor("#4a4a4a")
@@ -209,7 +209,7 @@ def _render_pdf_bytes(
         rightMargin=0.6 * inch,
         topMargin=0.6 * inch,
         bottomMargin=0.6 * inch,
-        title=f"Manthan brief — {short_id}",
+        title=f"Manthan brief - {short_id}",
         author="Manthan",
     )
     styles = _styles()
@@ -226,7 +226,7 @@ def _render_pdf_bytes(
 
     # TL;DR
     story.append(Paragraph("TL;DR", styles["section_title"]))
-    story.append(Paragraph(_escape(tldr) or "<i>—</i>", styles["tldr"]))
+    story.append(Paragraph(_escape(tldr) or "<i>-</i>", styles["tldr"]))
 
     # Findings
     if findings:
@@ -316,7 +316,7 @@ def _decision_badge(action: str, confidence: float, styles):
         "PENDING": INK_GHOST,
     }
     fill = color_map.get(action_label, INK_MUTED)
-    conf_pct = f"{int(confidence * 100)}%" if confidence else "—"
+    conf_pct = f"{int(confidence * 100)}%" if confidence else "-"
     badge = Table(
         [[Paragraph(
             f'<font color="white"><b>{action_label}</b></font>'
@@ -342,11 +342,11 @@ def _findings_table(findings: list[dict], styles) -> Table:
     rows = [["#", "Finding", "Conf", "Source"]]
     for f in findings:
         cite = (f.get("citations") or [{}])[0] if f.get("citations") else {}
-        src = (cite.get("source") or "—") if isinstance(cite, dict) else "—"
+        src = (cite.get("source") or "-") if isinstance(cite, dict) else "-"
         rows.append([
             str(f["seq"]),
             Paragraph(_escape(f["text"]), styles["finding_text"]),
-            f"{int(f['confidence'] * 100)}%" if f["confidence"] else "—",
+            f"{int(f['confidence'] * 100)}%" if f["confidence"] else "-",
             src,
         ])
     tbl = Table(
@@ -386,7 +386,7 @@ def _actions_table(actions: list[dict], styles) -> Table:
             or payload.get("subject")
             or payload.get("text")
             or (payload.get("charge") and f"charge {payload['charge']}")
-            or "—"
+            or "-"
         )
         rows.append([
             a["type"],

@@ -1,9 +1,9 @@
-# semantic/ — Data Context Document + Render Spec
+# semantic/ - Data Context Document + Render Spec
 
 This module defines the two key contracts in Manthan:
 
-1. **DCD (Data Context Document)** — the semantic layer between raw data and the agent
-2. **Render Spec** — the visualization contract between the agent and the frontend
+1. **DCD (Data Context Document)** - the semantic layer between raw data and the agent
+2. **Render Spec** - the visualization contract between the agent and the frontend
 
 ## Data Context Document
 

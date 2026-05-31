@@ -1,4 +1,4 @@
-# Manthan demo — runbook
+# Manthan demo - runbook
 
 Step-by-step for presenting the 3 scenarios. Each scenario is pre-seeded
 across all 11 sources; you just fire the trigger and Manthan does the rest.
@@ -29,11 +29,11 @@ open http://localhost:5173/                          # marketing landing
 
 ---
 
-## Scenario A — Quill Logistics $9k chargeback (Segment 3, centerpiece)
+## Scenario A - Quill Logistics $9k chargeback (Segment 3, centerpiece)
 
-**Story you tell:** *"Quill's CFO filed a $9,000 Stripe chargeback claiming our service was down during Q1. An AR analyst would probably refund — $9k against $40k ARR isn't worth the fight. But we don't know if there was actually an outage. The agent has to cross-check 11 systems to find out."*
+**Story you tell:** *"Quill's CFO filed a $9,000 Stripe chargeback claiming our service was down during Q1. An AR analyst would probably refund - $9k against $40k ARR isn't worth the fight. But we don't know if there was actually an outage. The agent has to cross-check 11 systems to find out."*
 
-**Trigger** (one of two — use whichever works in your demo env):
+**Trigger** (one of two - use whichever works in your demo env):
 
 ```bash
 # Option A: synthetic demo trigger (always works)
@@ -62,7 +62,7 @@ stripe trigger charge.dispute.created \
 
 ---
 
-## Scenario B — Vermillion Studios $4.5k seat dispute (Segment 4, Slack)
+## Scenario B - Vermillion Studios $4.5k seat dispute (Segment 4, Slack)
 
 **Story you tell:** *"Vermillion's CFO filed a $4,500 chargeback claiming we billed for 25 seats but they only have 15. Probably a billing error. But did their own COO sign a 25-seat addendum that the CFO forgot about? Let's see what Manthan finds."*
 
@@ -79,11 +79,11 @@ curl -X POST http://127.0.0.1:8765/api/demo/trigger/vermillion \
 ```
 
 **What happens:**
-1. Bot replies in thread: ":hourglass: On it — opening case `VRM-XXXXXX`. I'll post the brief here when done."
+1. Bot replies in thread: ":hourglass: On it - opening case `VRM-XXXXXX`. I'll post the brief here when done."
 2. ~45 sec later: bot posts the brief card in the thread with TLDR + decision + "Approve & Execute" / "Hold" buttons
 3. **PDF brief auto-uploads** to the same thread (Segment 4's "asky PDF")
 4. You click "Approve & Execute" → modal asks for signature
-5. Type: "Approved — fight but offer the call. — Mark, RevOps"
+5. Type: "Approved - fight but offer the call. - Mark, RevOps"
 6. Submit → action fires (Stripe dispute evidence + email to Brightwell CFO)
 7. Bot replies in thread confirming: ":white_check_mark: Approved by Mark · executing 2 actions"
 
@@ -93,16 +93,16 @@ curl -X POST http://127.0.0.1:8765/api/demo/trigger/vermillion \
 
 ---
 
-## Scenario C — Maya Patel $89 duplicate (Segment 5, autonomous)
+## Scenario C - Maya Patel $89 duplicate (Segment 5, autonomous)
 
-**Story you tell:** *"This one's small. Maya emailed support saying she was charged twice. If we ignore her, she'll dispute it. But this is exactly what policy should auto-resolve — duplicate charge under $200 from a customer in good standing. The agent will find the root cause, refund her, and reply, all without a human."*
+**Story you tell:** *"This one's small. Maya emailed support saying she was charged twice. If we ignore her, she'll dispute it. But this is exactly what policy should auto-resolve - duplicate charge under $200 from a customer in good standing. The agent will find the root cause, refund her, and reply, all without a human."*
 
 **Trigger:**
 
 ```bash
-# Option A: real Gmail (most dramatic — viewer sees the thread)
+# Option A: real Gmail (most dramatic - viewer sees the thread)
 # From hitakshi220@gmail.com, send to support@demo.manthan.quest:
-#   Subject: Charged twice for Caldera Pro — please refund
+#   Subject: Charged twice for Caldera Pro - please refund
 #   Body: Hi, I was charged $89 twice on 2026-05-22 for my Caldera Pro
 #         subscription. Please refund the duplicate. Thanks, Maya
 
@@ -116,7 +116,7 @@ curl -X POST http://127.0.0.1:8765/api/demo/trigger/maya \
 2. Investigation runs across 11 sources
 3. Agent finds: 2 charges 4min apart + Sentry error + Datadog webhook retry + PagerDuty incident → confirms duplicate caused by OUR webhook bug
 4. Brief drops: decision=`refund`, amount=$89
-5. **Policy engine fires** — "small-refund-auto" matches → mode=`auto`
+5. **Policy engine fires** - "small-refund-auto" matches → mode=`auto`
 6. Case status flips directly to `acting` (no `awaiting_approval` step)
 7. Actor executes: Stripe refund $89 + Resend email reply to Maya
 
@@ -145,8 +145,8 @@ Wipes cases/events/findings/actions/policy_matches. Keeps org, members, policy r
 
 After Scenario C completes, switch to the closing slide. Three talking points:
 
-1. **Easy integration of years of data** — point at the Sources page (11 logos, all "connected", lived-in last-sync times). Coral fronts the breadth.
-2. **Agent budget + speed** — point at the trace (60 seconds for what an analyst takes 2-3 hours).
-3. **Not possible without long horizon** — emphasize that the agent had to chain queries across systems, hold context, decide when to act vs. ask. The cross-source join is the moat.
+1. **Easy integration of years of data** - point at the Sources page (11 logos, all "connected", lived-in last-sync times). Coral fronts the breadth.
+2. **Agent budget + speed** - point at the trace (60 seconds for what an analyst takes 2-3 hours).
+3. **Not possible without long horizon** - emphasize that the agent had to chain queries across systems, hold context, decide when to act vs. ask. The cross-source join is the moat.
 
-Then: "Try it yourself — demo.manthan.quest. Same data you just saw, persistent until your next reset."
+Then: "Try it yourself - demo.manthan.quest. Same data you just saw, persistent until your next reset."

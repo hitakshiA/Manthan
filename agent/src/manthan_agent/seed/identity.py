@@ -4,7 +4,7 @@ The same `slug` resolves to the same identifiable company in Stripe
 metadata, HubSpot company records, Slack channel names, Intercom contact
 attributes, Notion page titles, etc. The seeders embed
 `manthan:<slug>` in whatever metadata field the source provides so
-re-running a seeder is idempotent — the seeder finds the existing record
+re-running a seeder is idempotent - the seeder finds the existing record
 by marker rather than creating a duplicate.
 
 Slugs are kebab-case and stable across runs. Don't rename them once a

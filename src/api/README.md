@@ -1,4 +1,4 @@
-# api/ — FastAPI HTTP Endpoints
+# api/ - FastAPI HTTP Endpoints
 
 13 routers exposing the full Manthan API surface. All mounted in `src/main.py`.
 

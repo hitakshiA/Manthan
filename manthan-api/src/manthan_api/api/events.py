@@ -1,4 +1,4 @@
-"""Event timeline endpoints — list + SSE stream.
+"""Event timeline endpoints - list + SSE stream.
 
 The timeline is the canonical view of "what the agent is doing right now."
 The investigation worker writes events to PG; this endpoint replays the

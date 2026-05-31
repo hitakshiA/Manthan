@@ -1,4 +1,4 @@
-"""Approve / hold / chat — the HITL surface endpoints."""
+"""Approve / hold / chat - the HITL surface endpoints."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/cases", tags=["actions"])
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases/{id}/approve  — flip drafted actions to approved
+# POST /api/cases/{id}/approve  - flip drafted actions to approved
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -102,7 +102,7 @@ async def approve_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases/{id}/hold  — pause actions, agent will not execute
+# POST /api/cases/{id}/hold  - pause actions, agent will not execute
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -130,7 +130,7 @@ async def hold_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases/{id}/deny  — reject the agent's recommendation
+# POST /api/cases/{id}/deny  - reject the agent's recommendation
 # (operator decides NOT to fire the drafted actions). Captures the
 # reason for the audit trail.
 # ──────────────────────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ async def deny_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases/{id}/escalate  — escalate to a human team for review
+# POST /api/cases/{id}/escalate  - escalate to a human team for review
 # beyond Manthan. Marks the case escalated; does not fire actions.
 # ──────────────────────────────────────────────────────────────────────
 
@@ -192,7 +192,7 @@ async def escalate_case(
     body: EscalatePayload,
     ctx: TenantCtx = Depends(get_ctx),
 ) -> None:
-    """Hand the case off — Manthan is no longer the owner."""
+    """Hand the case off - Manthan is no longer the owner."""
     async with get_conn() as conn:
         thread_id = await conn.fetchval(
             "SELECT thread_id FROM cases WHERE org_id=$1 AND id=$2",
@@ -215,7 +215,7 @@ async def escalate_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases/{id}/chat  — user follows up with the agent
+# POST /api/cases/{id}/chat  - user follows up with the agent
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -259,7 +259,7 @@ async def chat_with_agent(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /api/cases/{id}/actions  — list drafted + executed actions
+# GET /api/cases/{id}/actions  - list drafted + executed actions
 # ──────────────────────────────────────────────────────────────────────
 
 

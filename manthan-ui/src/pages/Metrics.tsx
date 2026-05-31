@@ -1,8 +1,8 @@
 /**
- * Metrics — daily timeseries of case flow + recovered $$.
+ * Metrics - daily timeseries of case flow + recovered $$.
  *
  * Editorial form: KPIs are tabular numerals on a single hairline row
- * (no card-per-KPI grid). Sparklines are quiet — 1px stroke, no fill.
+ * (no card-per-KPI grid). Sparklines are quiet - 1px stroke, no fill.
  * Bar charts use the surface tone, not rainbow legends.
  */
 
@@ -123,7 +123,7 @@ export default function Metrics() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// KPI — label + tabular numeral + 1px sparkline.
+// KPI - label + tabular numeral + 1px sparkline.
 // ──────────────────────────────────────────────────────────────────────
 
 function KPI({
@@ -186,7 +186,7 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// StackedBarChart — pure CSS, hover tooltip via title attr.
+// StackedBarChart - pure CSS, hover tooltip via title attr.
 // ──────────────────────────────────────────────────────────────────────
 
 function StackedBarChart({

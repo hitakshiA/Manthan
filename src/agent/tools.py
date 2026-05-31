@@ -1,7 +1,7 @@
 """Tool definitions + execution router for the agent loop.
 
 Each tool maps to a Layer 1 HTTP endpoint. Tool descriptions encode
-behavioral rules — the LLM reads them at every decision point.
+behavioral rules - the LLM reads them at every decision point.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                 "DESCRIBE, SHOW TABLES, CREATE TEMP TABLE, DROP TEMP. "
                 "NOTE: temp tables here are NOT visible in run_python. "
                 "If a NAMED business metric covers your question "
-                "(revenue, AOV, margin, churn, retention — anything "
+                "(revenue, AOV, margin, churn, retention - anything "
                 "listed in the Entity's 'Governed metrics' section), "
                 "PREFER compute_metric so the declared filter and "
                 "aggregation semantics are applied deterministically."
@@ -188,7 +188,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "session_id": {"type": "string"},
                     "prompt": {
                         "type": "string",
-                        "description": "Plain-English question (short — the UI shows interpretation/why separately)",
+                        "description": "Plain-English question (short - the UI shows interpretation/why separately)",
                     },
                     "options": {
                         "type": "array",
@@ -201,7 +201,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     },
                     "why_this_matters": {
                         "type": "string",
-                        "description": "One sentence: why the clarification matters — what flips downstream.",
+                        "description": "One sentence: why the clarification matters - what flips downstream.",
                     },
                     "ambiguity_type": {
                         "type": "string",
@@ -333,7 +333,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         "function": {
             "name": "emit_visual",
             "description": (
-                "Show an inline visual in the conversation — a small HTML "
+                "Show an inline visual in the conversation - a small HTML "
                 "snippet (NOT a full document) rendered directly in the chat. "
                 "Use for quick visuals during exploration. Types:\n"
                 "- stat_card: Single KPI (value + label + delta)\n"
@@ -523,7 +523,7 @@ class ToolRouter:
             r = await self.client.post("/ask_user", json=body)
             r.raise_for_status()
             q = r.json()
-            # Wait up to 30s — if no answer, return timeout so the
+            # Wait up to 30s - if no answer, return timeout so the
             # agent proceeds with its best judgment
             r2 = await self.client.post(
                 f"/ask_user/{q['id']}/wait",

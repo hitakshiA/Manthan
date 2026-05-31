@@ -5,7 +5,7 @@ Takes a :class:`LoadResult` (Bronze metadata) and a
 produces a fully-populated :class:`DataContextDocument` ready for
 materialization, pruning, and serving to analysis agents.
 
-The generator is deterministic. It does no LLM calls of its own — all
+The generator is deterministic. It does no LLM calls of its own - all
 semantic content already lives in the profiling result.
 """
 
@@ -224,7 +224,7 @@ def _build_agent_instructions(columns: list[DcdColumn]) -> list[str]:
 
     The key rule: never enumerate individual values of ``identifier``
     columns when answering questions. Aggregate or count them instead.
-    This replaces the old PII-based output filtering — the role
+    This replaces the old PII-based output filtering - the role
     classification is the enforcement mechanism.
     """
     instructions: list[str] = []
@@ -274,7 +274,7 @@ def _rollup_from_physical_name(gold_table: str, physical_name: str) -> DcdRollup
         * ``{gold_table}_{grain}`` for a time rollup (``daily``, ``monthly``)
         * ``{gold_table}_by_{dimension}`` for a per-dimension breakdown
 
-    This helper is deterministic — it matches the naming rules in
+    This helper is deterministic - it matches the naming rules in
     ``src/materialization/summarizer.py`` so the entity's rollup index
     stays in sync with what was actually materialized.
     """
@@ -298,7 +298,7 @@ def _rollup_from_physical_name(gold_table: str, physical_name: str) -> DcdRollup
             grain=None,
             dimensions=[dimension],
         )
-    # Unknown pattern — surface it as an opaque rollup the agent can
+    # Unknown pattern - surface it as an opaque rollup the agent can
     # query but not reason about.
     return DcdRollup(
         slug=suffix or physical_name,
@@ -311,8 +311,8 @@ def _rollup_from_physical_name(gold_table: str, physical_name: str) -> DcdRollup
 def _entity_slug_from_stem(stem: str) -> str:
     """Derive a stable, URL-safe entity slug from a sanitized filename stem.
 
-    Collisions across datasets are acceptable at the slug level — the
-    :class:`AppState` resolver disambiguates via ``dataset_id`` — but the
+    Collisions across datasets are acceptable at the slug level - the
+    :class:`AppState` resolver disambiguates via ``dataset_id`` - but the
     slug should still be short, lowercase, and idiomatic because it
     ends up in every agent prompt and user-facing artifact.
     """
@@ -344,7 +344,7 @@ def build_entity(
     ``metrics`` is auto-seeded from every column classified as a
     metric (role == ``metric``) so the exec-facing audit trail has
     governed definitions to cite from the moment a dataset finishes
-    profiling — without waiting for an LLM proposal pass.
+    profiling - without waiting for an LLM proposal pass.
 
     Args:
         stem: Sanitized filename stem (e.g. ``orders``, ``startup_funding``).
@@ -376,7 +376,7 @@ def _seed_metrics_from_columns(columns: list[DcdColumn]) -> list[DcdMetric]:
 
     Every column with ``role == "metric"`` becomes one governed metric
     using its declared aggregation as the expression. This gives the
-    exec-audit surface something to cite — when they click a number,
+    exec-audit surface something to cite - when they click a number,
     the drawer shows the metric definition even before a human curator
     polishes it. The seeded metrics are explicitly marked
     ``additive`` / ``ratio_unsafe`` / ``non_additive`` based on the
@@ -387,7 +387,7 @@ def _seed_metrics_from_columns(columns: list[DcdColumn]) -> list[DcdMetric]:
     if not metric_cols:
         return []
 
-    # Every non-metric, non-auxiliary column is a safe slicer — whitelisting
+    # Every non-metric, non-auxiliary column is a safe slicer - whitelisting
     # them means the validator won't reject sensible exec questions
     # ("revenue by status") on a seeded metric.
     valid_dims = [
@@ -429,7 +429,7 @@ def _metric_expression_for_column(
     name = col.name
     quoted = f'"{name}"'
     unit: str | None = None
-    # Unit detection — look at column name for common markers. Kept
+    # Unit detection - look at column name for common markers. Kept
     # conservative: a false positive ("total_usd" on something that
     # isn't dollars) is more painful than a missing unit.
     lower = name.lower()
@@ -456,7 +456,7 @@ def _metric_expression_for_column(
         return f"MIN({quoted})", "non_additive", unit
     if agg == "MAX":
         return f"MAX({quoted})", "non_additive", unit
-    # Unknown / none — default to SUM as the most common and audit-safe.
+    # Unknown / none - default to SUM as the most common and audit-safe.
     return f"SUM({quoted})", "additive", unit
 
 
@@ -548,7 +548,7 @@ def build_dcd_table_from_profile(
 
     Used by :func:`src.api.pipeline.ingest_multi_file_and_profile` to
     attach additional (non-primary) tables to the DCD. Only the
-    per-column shape + description is surfaced — Gold summary tables
+    per-column shape + description is surfaced - Gold summary tables
     and verified queries still target the primary table only.
     """
     columns = _build_columns(

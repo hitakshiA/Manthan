@@ -6,7 +6,7 @@ Defines the :class:`Loader` Protocol every concrete loader implements, the
 column name would otherwise be interpolated into SQL.
 
 Loaders are intentionally decoupled from the :mod:`src.ingestion.gateway`
-dispatcher — a loader only needs to answer "can I handle this path?" and
+dispatcher - a loader only needs to answer "can I handle this path?" and
 "load this path into this DuckDB connection as this table". The gateway
 handles routing and the registry assigns dataset identifiers.
 """
@@ -71,12 +71,12 @@ def sanitize_for_identifier(name: str) -> str:
     """Convert an arbitrary column name into a safe SQL identifier token.
 
     Real-world column names routinely contain characters the SQL grammar
-    won't accept as bare identifiers — dots (``MS.SubClass``), dashes
+    won't accept as bare identifiers - dots (``MS.SubClass``), dashes
     (``user-id``), spaces (``Order Date``), or leading digits
     (``2024_revenue``). Most places in this codebase correctly wrap user
     column references in :func:`quote_identifier` double-quotes so they
-    survive verbatim. But a few places — summary table names, enum type
-    names, query aliases — compose synthetic SQL identifiers from the
+    survive verbatim. But a few places - summary table names, enum type
+    names, query aliases - compose synthetic SQL identifiers from the
     column name, and those fail :func:`validate_identifier`.
 
     This helper sanitizes the column name into a token that will pass

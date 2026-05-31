@@ -1,4 +1,4 @@
-"""Slack inbound endpoints — Events API + Interactive (Block Kit buttons + modals).
+"""Slack inbound endpoints - Events API + Interactive (Block Kit buttons + modals).
 
 Two POST routes:
 
@@ -64,7 +64,7 @@ def _verify_slack_signature(body: bytes, headers: dict[str, str]) -> bool:
     if not secret:
         # In dev with no secret, skip verification but log warning.
         if settings.is_dev:
-            logger.warning("SLACK_SIGNING_SECRET unset — skipping signature check (dev only)")
+            logger.warning("SLACK_SIGNING_SECRET unset - skipping signature check (dev only)")
             return True
         return False
 
@@ -141,7 +141,7 @@ async def slack_events(
     if await _is_duplicate_event(org_id, event_id):
         return {"ok": True, "deduplicated": True, "event_id": event_id}
 
-    # Slack uses "bot_message" subtype for messages posted by our bot — ignore.
+    # Slack uses "bot_message" subtype for messages posted by our bot - ignore.
     if event_subtype == "bot_message" or event.get("bot_id"):
         return {"ok": True, "ignored": True, "reason": "bot_message"}
 
@@ -348,7 +348,7 @@ async def slack_interactive(
             return {"ok": True}
 
         if action_id == "manthan_view":
-            return {"ok": True}  # link click — no server action needed
+            return {"ok": True}  # link click - no server action needed
 
     # Modal submission (signature submit).
     if ptype == "view_submission":
@@ -552,7 +552,7 @@ async def _do_approve_with_signature(
                 channel_id=t["channel"],
                 thread_ts=t["ts"],
                 text=(
-                    f":white_check_mark: Signed by *{full_name}* — _{role}_.\n"
+                    f":white_check_mark: Signed by *{full_name}* - _{role}_.\n"
                     f"Executing {len(approved)} action(s). I'll post the "
                     "final receipts here when they land."
                 ),

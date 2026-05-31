@@ -1,6 +1,6 @@
-# manthan-ui/ — Layer 3: React Workspace
+# manthan-ui/ - Layer 3: React Workspace
 
-The frontend that renders Manthan's agent output as interactive dashboards, paginated reports, and KPI cards. Not a chatbot — a workspace.
+The frontend that renders Manthan's agent output as interactive dashboards, paginated reports, and KPI cards. Not a chatbot - a workspace.
 
 ## Stack
 

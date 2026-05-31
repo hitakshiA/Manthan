@@ -7,7 +7,7 @@ database directly from C++; no Python driver is required.
 The loader accepts a connection string and a fully-qualified source
 table identifier (``table`` or ``schema.table``) and copies the rows
 into a destination DuckDB table. The connection string is never
-persisted — it lives only for the duration of the ``ATTACH`` call.
+persisted - it lives only for the duration of the ``ATTACH`` call.
 """
 
 from __future__ import annotations
@@ -150,7 +150,7 @@ def _escape_sql_string(text: str) -> str:
 
 # DuckDB's mysql_scanner extension accepts a very specific set of
 # parameter names. Users often paste libpq-style names because the
-# Postgres form is what they see elsewhere — we translate so either
+# Postgres form is what they see elsewhere - we translate so either
 # flavor works.
 _MYSQL_PARAM_ALIASES = {
     "password": "passwd",
@@ -167,7 +167,7 @@ def _normalize_mysql_conn_string(conn: str) -> str:
     passes through untouched. Whitespace-separated ``key=value``
     tokens, like the rest of DuckDB's scanner syntax.
 
-    Also drops empty-value parameters — DuckDB's mysql extension
+    Also drops empty-value parameters - DuckDB's mysql extension
     rejects ``passwd=`` (empty), which is a common gotcha when the
     MySQL role has no password (like the Rfam public reader).
     """

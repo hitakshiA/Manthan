@@ -1,7 +1,7 @@
 """On-demand, streaming audit description for a cited number.
 
 Every numeric_claim event already carries a regex-built ``description``
-— enough for 80% of drawer opens. But the whole point of the audit
+- enough for 80% of drawer opens. But the whole point of the audit
 drawer is to let an analyst or exec **trace a number back to its
 semantic contract**, not just read a tidy summary. So when the drawer
 opens we fire a focused LLM call that reads the full DCD metric
@@ -62,7 +62,7 @@ class ClaimDescribeRequest(BaseModel):
     current_description: str | None = Field(
         default=None,
         description=(
-            "The best description we have right now — usually the "
+            "The best description we have right now - usually the "
             "regex-generated one. The LLM treats it as a starting "
             "point and may refine / expand it."
         ),
@@ -77,11 +77,11 @@ class ClaimDescribeResponse(BaseModel):
 
 
 SYSTEM_PROMPT = """\
-Write a 3-sentence business-English audit sentence for a cited number — the sentence an analyst needs to defend the number in a board meeting.
+Write a 3-sentence business-English audit sentence for a cited number - the sentence an analyst needs to defend the number in a board meeting.
 
-Name the metric or column (using the DCD label, never the physical dotted name). State how it's derived — for a governed metric, quote its contract filter in backticks; for raw SQL, describe the expression in plain English. Weave in the run-level filters and dimensions with their values in backticks. Close by citing the evidence: "calculated from N of M rows from the {dataset} (from `filename`, ingested DD Mon YYYY)" when those fields are provided, plus any quality caveat that matters.
+Name the metric or column (using the DCD label, never the physical dotted name). State how it's derived - for a governed metric, quote its contract filter in backticks; for raw SQL, describe the expression in plain English. Weave in the run-level filters and dimensions with their values in backticks. Close by citing the evidence: "calculated from N of M rows from the {dataset} (from `filename`, ingested DD Mon YYYY)" when those fields are provided, plus any quality caveat that matters.
 
-Use backticks for slugs, identifiers, and filter predicates — the drawer renders them as chips. Never use physical table names. Never invent facts. Output only the finished 3-sentence audit paragraph as flowing prose — no preamble, no headers, no numbered steps, no bullet list, no "Draft:" or "Sentence N:" labels.
+Use backticks for slugs, identifiers, and filter predicates - the drawer renders them as chips. Never use physical table names. Never invent facts. Output only the finished 3-sentence audit paragraph as flowing prose - no preamble, no headers, no numbered steps, no bullet list, no "Draft:" or "Sentence N:" labels.
 """
 
 
@@ -98,13 +98,13 @@ def _find_metric(dcd: DataContextDocument, metric_ref: str | None) -> DcdMetric 
 def _referenced_columns(sql: str | None, dcd: DataContextDocument | None) -> list[Any]:
     """Best-effort match of DCD columns appearing in the SQL.
 
-    We don't need to parse SQL properly — we just need the columns
+    We don't need to parse SQL properly - we just need the columns
     the LLM should cite so it can say "Sum of the Debt at end of
     fiscal year field" instead of generic "a column". A column is
     considered referenced if its raw name (or any of its synonyms)
     occurs as a substring of the SQL, case-insensitive. False
     positives on generic words are bounded by DCD columns being
-    domain-specific, and rare false matches don't hurt — the LLM
+    domain-specific, and rare false matches don't hurt - the LLM
     cites the ones that make sense contextually.
     """
     if not sql or not dcd:
@@ -210,11 +210,11 @@ def _build_user_prompt(
         lines.append("")
         lines.append("=== GOVERNED METRIC CONTRACT ===")
         lines.append(
-            "(none — this number was not produced via a named governed metric; "
+            "(none - this number was not produced via a named governed metric; "
             "describe the expression in plain English)"
         )
 
-    # Source columns actually touched by the SQL — give the LLM the
+    # Source columns actually touched by the SQL - give the LLM the
     # business labels so it can name columns in prose instead of
     # saying "a column". Each entry carries role + completeness so
     # the prompt can flag "not 100% populated" when relevant.
@@ -231,13 +231,13 @@ def _build_user_prompt(
             if col.completeness is not None and col.completeness < 1.0:
                 parts.append(
                     f"  completeness: {col.completeness * 100:.1f}% "
-                    f"(NOT fully populated — flag in audit if relevant)"
+                    f"(NOT fully populated - flag in audit if relevant)"
                 )
             if col.aggregation:
                 parts.append(f"  typical aggregation: {col.aggregation}")
             lines.extend(parts)
 
-    # Dataset scope — the denominator for "of N rows" framing, plus
+    # Dataset scope - the denominator for "of N rows" framing, plus
     # source provenance for the audit footer.
     if dcd:
         ds = dcd.dataset
@@ -261,7 +261,7 @@ def _build_user_prompt(
         if ds.quality and ds.quality.overall_score < 0.9:
             lines.append(
                 f"Overall quality score: {ds.quality.overall_score:.2f} "
-                f"(below 0.9 — consider flagging)"
+                f"(below 0.9 - consider flagging)"
             )
 
     lines.append("")
@@ -328,14 +328,14 @@ def _salvage_reasoning(reasoning: str) -> str:
     combine sentences 2 and 3") with draft answers (often quoted).
     Strategy, in order:
       1. If the trace contains quoted spans, return the longest one
-         from the tail — those are typically the model's final draft.
+         from the tail - those are typically the model's final draft.
       2. Otherwise, walk paragraphs from last to first and pick the
          first one that looks like prose (doesn't open with a meta
          prefix, isn't bulleted, contains a period).
     """
     import re
 
-    # Look for paired-quote draft candidates — straight or curly.
+    # Look for paired-quote draft candidates - straight or curly.
     quote_candidates = re.findall(r'"([^"]{40,})"', reasoning)
     quote_candidates += re.findall(r"“([^”]{40,})”", reasoning)
     if quote_candidates:
@@ -351,7 +351,7 @@ def _salvage_reasoning(reasoning: str) -> str:
         if "." not in p:
             continue
         return p
-    # Last resort — take the final paragraph even if it looks metaish.
+    # Last resort - take the final paragraph even if it looks metaish.
     return paras[-1] if paras else ""
 
 
@@ -418,7 +418,7 @@ _DRAFT_LEAK_MARKERS = (
 def _looks_like_draft_leak(text: str) -> bool:
     """Return True if the model emitted its internal planning/drafting
     trace as content instead of a polished audit sentence. Happens
-    with reasoning-heavy models like GLM :exacto — they translate
+    with reasoning-heavy models like GLM :exacto - they translate
     any structured prompt into step-by-step drafting that leaks into
     the content channel. We detect it and either extract the clean
     paragraph buried inside or fall back to the regex summary."""
@@ -427,7 +427,7 @@ def _looks_like_draft_leak(text: str) -> bool:
     low = text.lower()
     hits = sum(1 for m in _DRAFT_LEAK_MARKERS if m in low)
     # Two+ draft markers, OR presence of "draft:" anywhere (most
-    # damning — model literally labeled a draft attempt), OR a
+    # damning - model literally labeled a draft attempt), OR a
     # heavily indented bullet structure ("    *   *") which is
     # typical of drafting/outline mode.
     if hits >= 2:
@@ -441,7 +441,7 @@ def _extract_polished_paragraph(text: str) -> str:
     """Rescue attempt when the stream contains drafting.
 
     Scan the response for the longest paragraph that looks like
-    flowing audit prose — no bullet markers at the start, at least
+    flowing audit prose - no bullet markers at the start, at least
     two sentence-enders, no drafting labels, ≥120 chars. When the
     model drafts step-by-step it often buries a clean "Polished
     prose" paragraph inside the trash; we surface that instead of
@@ -460,7 +460,7 @@ def _extract_polished_paragraph(text: str) -> str:
         low = p.lower()
         if any(m in low for m in _DRAFT_LEAK_MARKERS):
             continue
-        # Must look like prose — at least two sentence enders.
+        # Must look like prose - at least two sentence enders.
         if p.count(". ") + p.count(".\n") < 2:
             continue
         candidates.append(p)
@@ -566,7 +566,7 @@ async def _stream_description(
                     delta = choices[0].get("delta") or {}
                     piece = delta.get("content")
                     if piece:
-                        # Mask physical names on the fly — catches
+                        # Mask physical names on the fly - catches
                         # anything the model inlined before we can
                         # do a whole-text pass.
                         masked_piece = catalog.mask(piece) if catalog else piece
@@ -599,7 +599,7 @@ async def _stream_description(
         # content stream. The reasoning trace typically contains
         # meta-commentary ("Let's combine...", "Okay, now...") followed
         # by one or more DRAFT paragraphs (often quoted). We extract the
-        # last draft — preferring quoted content — and salvage that.
+        # last draft - preferring quoted content - and salvage that.
         if not description and reasoning_accum.strip():
             salvaged = _salvage_reasoning(reasoning_accum)
             if salvaged:
@@ -612,7 +612,7 @@ async def _stream_description(
             yield _sse({"error": "empty content"})
             return
 
-        # Final leak check — catches drafting that crept in below
+        # Final leak check - catches drafting that crept in below
         # the 120-char early-detection threshold (the first chars
         # were clean, later ones weren't). When we find one, try
         # to rescue the polished paragraph hiding inside the trash

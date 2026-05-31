@@ -1,5 +1,5 @@
 /**
- * Packs — domain packs that bundle triggers + sources + policy + actions
+ * Packs - domain packs that bundle triggers + sources + policy + actions
  * for a specific revenue workflow.
  *
  * Editorial form: a typeset table of contents. Each row in the pack is a
@@ -23,17 +23,17 @@ export default function Packs({ pack }: PackPageProps) {
 }
 
 // The flagship loop this pack runs end-to-end. Numbered as a six-beat
-// playbook — what a Director would walk a partner through.
+// playbook - what a Director would walk a partner through.
 const BILLING_FLOW = [
   {
     n: "01",
-    name: "Inbound — customer emails support@",
+    name: "Inbound - customer emails support@",
     detail:
       "Resend webhook delivers the parsed message. Manthan opens a case keyed to the sender's address, writes a Manthan-branded acknowledgement, and tells the customer when they'll hear back.",
   },
   {
     n: "02",
-    name: "Investigation — eleven sources, one pass",
+    name: "Investigation - eleven sources, one pass",
     detail:
       "Manthan reads the Stripe charge + dispute, the original contract in Notion, daily active usage in PostHog, the support ticket history in Intercom, and the NPS history in HubSpot. Every claim ends with a clickable citation.",
   },
@@ -45,25 +45,25 @@ const BILLING_FLOW = [
   },
   {
     n: "04",
-    name: "Decision — auto, recommend, hitl, or escalate",
+    name: "Decision - auto, recommend, hitl, or escalate",
     detail:
-      "If the rule matched 'auto', Manthan fires the actions itself. Otherwise the case sits in your inbox, awaiting one click. Below $25,000 a single approver; above, two — the rule decides.",
+      "If the rule matched 'auto', Manthan fires the actions itself. Otherwise the case sits in your inbox, awaiting one click. Below $25,000 a single approver; above, two - the rule decides.",
   },
   {
     n: "05",
-    name: "Action — Stripe + Resend + Notion in sequence",
+    name: "Action - Stripe + Resend + Notion in sequence",
     detail:
       "Refund or dispute-evidence submission to Stripe, decision-log append in Notion, customer reply via Resend (Manthan-branded HTML, never policy-leaky). Each fire records its external ref.",
   },
   {
     n: "06",
-    name: "Close — case resolved, receipts attached",
+    name: "Close - case resolved, receipts attached",
     detail:
       "Case flips to resolved with timestamps + external refs on every action. The customer's reply to your email routes back to the same case automatically.",
   },
 ];
 
-// Triggers — ordered so the email path the demo shows is at the top.
+// Triggers - ordered so the email path the demo shows is at the top.
 const BILLING_TRIGGERS = [
   {
     label: "Inbound email to support@",
@@ -84,7 +84,7 @@ const BILLING_TRIGGERS = [
   },
 ];
 
-// Source byline list — order chosen so the eye lands on the four that
+// Source byline list - order chosen so the eye lands on the four that
 // drive most of the dispute decisions.
 const BILLING_SOURCES = [
   "stripe",
@@ -126,13 +126,13 @@ const BILLING_POLICY = [
     name: "email-refund-clean-customer",
     mode: "auto",
     detail:
-      "Email-triggered refund under $200, customer in good standing, confidence ≥ 90% — Manthan refunds and replies alone.",
+      "Email-triggered refund under $200, customer in good standing, confidence ≥ 90% - Manthan refunds and replies alone.",
   },
   {
     name: "chargeback-fight-strong-evidence",
     mode: "auto",
     detail:
-      "Stripe chargeback under $5K, contract in writing, confidence ≥ 92% — Manthan submits the evidence packet on its own.",
+      "Stripe chargeback under $5K, contract in writing, confidence ≥ 92% - Manthan submits the evidence packet on its own.",
   },
   {
     name: "email-default-investigate-then-ask",
@@ -157,7 +157,7 @@ function BillingPack() {
         title="Billing Ops"
         meta={
           <>
-            The default pack this workspace runs — built around the
+            The default pack this workspace runs - built around the
             <em
               className="font-display italic mx-1"
               style={{ color: "var(--color-ink-strong)" }}
@@ -318,7 +318,7 @@ function RenewalsPack() {
       <PageHeader
         eyebrow="Domain pack · Q3 2026"
         title="Renewals"
-        meta="Renewal risk detection + save plays across your customer book. Roadmap teaser — not active in this workspace yet."
+        meta="Renewal risk detection + save plays across your customer book. Roadmap teaser - not active in this workspace yet."
       />
 
       <Section eyebrow="What it will do">
@@ -328,8 +328,8 @@ function RenewalsPack() {
         >
           Reads usage telemetry (PostHog), CSM notes (Salesforce / HubSpot), and
           CS conversation sentiment (Intercom / Zendesk) to surface at-risk
-          renewals 60-90 days out. Drafts save plays — discount, exec call,
-          usage-recovery program — and lets the CSM approve from the queue.
+          renewals 60-90 days out. Drafts save plays - discount, exec call,
+          usage-recovery program - and lets the CSM approve from the queue.
         </p>
       </Section>
 

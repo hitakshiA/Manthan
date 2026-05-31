@@ -3,7 +3,7 @@
 Coral surface limitation
 ------------------------
 The Coral ``slack`` source ONLY exposes the ``channels`` and ``users``
-tables — it does NOT expose messages. So nothing this script writes to
+tables - it does NOT expose messages. So nothing this script writes to
 chat is discoverable by the agent through Coral today. We still create
 channels (queryable as the ``channels`` table) and post a handful of
 realistic messages for future use, but the workflow signals (W1/W2/W3)
@@ -16,19 +16,19 @@ What this script does
 2. Lists existing public channels (``conversations.list``) and creates
    any of the target 9 channels that are missing.
 3. The bot ``manthantest`` automatically joins channels it creates, so
-   no explicit invite is required for those — for any channel that
+   no explicit invite is required for those - for any channel that
    already existed (e.g. user-pre-created), it self-joins via
    ``conversations.join``.
-4. Lists workspace users (``users.list``) — we cannot create new humans
+4. Lists workspace users (``users.list``) - we cannot create new humans
    programmatically (Slack workspace users require email invite +
    acceptance), so we accept the existing ~2 humans + the bot.
 5. Posts ~30-50 ambient messages across the channels: deploy pings,
-   AR-collection nudges, customer-success chatter — plus three explicit
+   AR-collection nudges, customer-success chatter - plus three explicit
    W1/W2/W3 signal messages in #cs-escalations / #engineering-incidents.
 
 Idempotency
 -----------
-Creates check existence first. Messages are NOT deduped automatically —
+Creates check existence first. Messages are NOT deduped automatically -
 if you re-run this script you'll get a fresh batch. If that ever matters,
 gate the message section with an env flag.
 
@@ -78,7 +78,7 @@ TIMEOUT = httpx.Timeout(20.0, connect=10.0)
 # ────────────────────────────────────────────────────────────────────────
 
 # Note: #cs-escalations, #ar-collections, #deal-desk are documented as
-# pre-created by the user. We treat them the same as the rest — list
+# pre-created by the user. We treat them the same as the rest - list
 # first, create only if missing.
 TARGET_CHANNELS: list[tuple[str, str]] = [
     ("cs-escalations",         "Customer-success escalations and red accounts."),
@@ -104,7 +104,7 @@ SIGNAL_MESSAGES: list[tuple[str, str, str]] = [
         "cs-escalations",
         "W1",
         (
-            "Acme Genomics dispute #3 incoming. Same pattern as before — "
+            "Acme Genomics dispute #3 incoming. Same pattern as before - "
             "claim 'I cancelled' but no formal cancel on file and they're "
             "still actively using the product. AE wants the logo retained "
             "but RevOps lead is overriding to fight this one. "
@@ -115,7 +115,7 @@ SIGNAL_MESSAGES: list[tuple[str, str, str]] = [
         "engineering-incidents",
         "W2",
         (
-            ":rotating_light: SEV-1 — billing-webhook-handler "
+            ":rotating_light: SEV-1 - billing-webhook-handler "
             "unhandled TypeError 2026-05-12 10:00 UTC. "
             "`invoice.payment_succeeded` events failing to flip the "
             "entitlements table. Customer charges going through but "
@@ -139,20 +139,20 @@ SIGNAL_MESSAGES: list[tuple[str, str, str]] = [
 
 
 # ────────────────────────────────────────────────────────────────────────
-# Ambient noise messages — realistic chatter for cosmetic seeding
+# Ambient noise messages - realistic chatter for cosmetic seeding
 # ────────────────────────────────────────────────────────────────────────
 
 NOISE_MESSAGES: list[tuple[str, str]] = [
     # ── #engineering-incidents ──
     ("engineering-incidents", "Deploy #4892 going out to prod in 5 min. Touches billing-api only."),
     ("engineering-incidents", "Deploy complete. Error rate stable. Closing watch."),
-    ("engineering-incidents", "Brief blip on the public API around 09:14 UTC — already recovered. Investigating."),
+    ("engineering-incidents", "Brief blip on the public API around 09:14 UTC - already recovered. Investigating."),
     ("engineering-incidents", "Postmortem for INC-238 (CDN cache miss storm) posted: see notion link in #engineering."),
     ("engineering-incidents", "Scheduled DB maintenance window tonight 02:00-03:00 UTC. Read-only mode for ~20 minutes."),
     ("engineering-incidents", ":green_check: SEV-3 from yesterday resolved. Root cause was a stale env var on the staging cluster."),
 
     # ── #billing-platform ──
-    ("billing-platform", "PR up to dedupe webhook deliveries — would appreciate eyes from @karan or @priya."),
+    ("billing-platform", "PR up to dedupe webhook deliveries - would appreciate eyes from @karan or @priya."),
     ("billing-platform", "Anyone seen the Stripe `invoice.finalized` event lag spike up to 90s today? Or just me?"),
     ("billing-platform", "Migrating the legacy proration logic into the new Pricing service. Tracking ticket BILL-417."),
     ("billing-platform", "Reminder: please don't hand-edit the entitlements table in prod. There's a runbook for everything."),
@@ -160,9 +160,9 @@ NOISE_MESSAGES: list[tuple[str, str]] = [
 
     # ── #cs-escalations ──
     ("cs-escalations", "Helix Bio is 47 days past due on a $134k invoice. AR lead is on it but they're going silent."),
-    ("cs-escalations", "Acme Logistics churned — final notice sent, will cancel auto-renew at end of cycle."),
+    ("cs-escalations", "Acme Logistics churned - final notice sent, will cancel auto-renew at end of cycle."),
     ("cs-escalations", "Voyager Shipping pinged about API rate limits. Bumping their plan throughput by 2x temporarily."),
-    ("cs-escalations", "Northwind Logistics opened a ticket — their Enterprise upgrade isn't showing up. Looking into it."),
+    ("cs-escalations", "Northwind Logistics opened a ticket - their Enterprise upgrade isn't showing up. Looking into it."),
     ("cs-escalations", "Summit Payments is in renewal negotiation, asking for a 15% discount. Sending to deal-desk."),
 
     # ── #ar-collections ──
@@ -174,25 +174,25 @@ NOISE_MESSAGES: list[tuple[str, str]] = [
 
     # ── #deal-desk ──
     ("deal-desk", "Q2 pipeline review tomorrow 10am PT. Please update HubSpot stages before then."),
-    ("deal-desk", "Phoenix Fund Enterprise renewal closed at $168k — 4% uplift, same logo."),
-    ("deal-desk", "Stellar AI multi-year ask — finance needs ramp deal structured by Friday."),
+    ("deal-desk", "Phoenix Fund Enterprise renewal closed at $168k - 4% uplift, same logo."),
+    ("deal-desk", "Stellar AI multi-year ask - finance needs ramp deal structured by Friday."),
     ("deal-desk", "Reminder: any non-standard MSA terms require legal sign-off in writing, not Slack."),
 
     # ── #customer-success ──
     ("customer-success", "QBR template v3 is now live in Notion. Please use it for all >$60k ARR accounts."),
     ("customer-success", "Health-score model refresh this week. Some yellows will flip green and vice versa."),
-    ("customer-success", "Sharing a great win from Saga Foods — their team expanded usage 3x quarter-over-quarter."),
+    ("customer-success", "Sharing a great win from Saga Foods - their team expanded usage 3x quarter-over-quarter."),
     ("customer-success", "Friendly reminder: log all customer calls in HubSpot, not in DMs."),
     ("customer-success", "Onboarding deck refresh for the new Pro Annual tier landed. Linked in the playbook."),
 
     # ── #revops ──
     ("revops", "Pipeline -> ARR conversion rate is up 7% QoQ. Sharing the breakdown in the all-hands tomorrow."),
     ("revops", "Salesforce + HubSpot sync had a 14-minute lag this morning. Resolved."),
-    ("revops", "New leadcycle automation rolling out next week. Heads up to AEs — expect fewer manual assignments."),
+    ("revops", "New leadcycle automation rolling out next week. Heads up to AEs - expect fewer manual assignments."),
     ("revops", "Forecast call moved to Wednesday 11am PT. Calendar updated."),
 
     # ── #all-hands ──
-    ("all-hands", "Welcome to our two new hires this week — quick intros at the all-hands tomorrow."),
+    ("all-hands", "Welcome to our two new hires this week - quick intros at the all-hands tomorrow."),
     ("all-hands", "Q2 OKR check-in posted in Notion. Please update your team's progress by Friday."),
     ("all-hands", "Office closed Memorial Day. Remote-first folks: take the day, you earned it."),
     ("all-hands", "Reminder: open enrollment for benefits ends June 1."),
@@ -231,7 +231,7 @@ def slack_call(
             r = client.post(url, json=json or {}, headers=HEADERS)
         if r.status_code == 429:
             wait = float(r.headers.get("Retry-After", "1.0"))
-            print(f"  ! 429 — sleeping {wait:.1f}s")
+            print(f"  ! 429 - sleeping {wait:.1f}s")
             time.sleep(max(wait, 1.0))
             continue
         if 500 <= r.status_code < 600:
@@ -308,7 +308,7 @@ def ensure_channel(
             time.sleep(API_SLEEP)
         else:
             action = "existing"
-        # Best-effort purpose update — non-fatal if it fails.
+        # Best-effort purpose update - non-fatal if it fails.
         if purpose and ch.get("purpose", {}).get("value", "") != purpose:
             slack_call(
                 client,
@@ -399,7 +399,7 @@ def main() -> None:
     print("Workspace: ManthanDemo  |  Bot: manthantest")
     print(
         "Coral surface limitation: the Coral `slack` source exposes ONLY\n"
-        "  the `channels` and `users` tables — messages posted by this\n"
+        "  the `channels` and `users` tables - messages posted by this\n"
         "  script will NOT be queryable by the agent today."
     )
     print()
@@ -444,7 +444,7 @@ def main() -> None:
             print(f"    [{role:<8}] {u.get('name'):<20} {u.get('id')}")
         print()
         print(
-            "  NOTE: cannot create new humans programmatically — Slack\n"
+            "  NOTE: cannot create new humans programmatically - Slack\n"
             "  workspace users require email invite + acceptance. The\n"
             "  workspace will remain at the current count until an admin\n"
             "  invites people through the Slack UI."
@@ -479,7 +479,7 @@ def main() -> None:
         for channel_name, text in shuffled:
             ch_id = channel_id_by_name.get(channel_name)
             if not ch_id:
-                print(f"  ! skip — #{channel_name} not available")
+                print(f"  ! skip - #{channel_name} not available")
                 failed += 1
                 continue
             data = post_message(client, ch_id, text)
@@ -519,7 +519,7 @@ def main() -> None:
         print()
         print("Coral surface note:")
         print("  The Coral `slack` source exposes ONLY `channels` and "
-              "`users` —")
+              "`users` -")
         print("  the messages above (including W1/W2/W3 signals) are "
               "INVISIBLE")
         print("  to the agent today. The real W1/W2/W3 signals live in "

@@ -3,7 +3,7 @@
 Runs as a long-lived subprocess spawned by
 :class:`src.tools.python_session.PythonSession`. Each worker holds one
 persistent ``globals`` dict so variables survive across ``run_python``
-calls — the agent can load a DataFrame once and iterate on it across
+calls - the agent can load a DataFrame once and iterate on it across
 many turns without re-parsing Parquet every time.
 
 ## Protocol
@@ -74,7 +74,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
     Every ``gold_*.parquet`` file under ``data_dir`` is attached as a
     DuckDB view whose name is the parquet stem (e.g.
     ``gold_teams_40db28``). The *first* parquet file (alphabetically)
-    is additionally aliased as ``dataset`` for backward compatibility —
+    is additionally aliased as ``dataset`` for backward compatibility -
     agents can always ``SELECT * FROM dataset`` to reach the primary
     Gold table. ``df`` is a pandas DataFrame loaded from ``dataset``.
 
@@ -117,7 +117,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
     if parquet_files:
         # Alias the first parquet as the canonical ``dataset`` view.
         # Also attempt to derive the entity slug from the parquet
-        # stem — agents naturally type ``SELECT * FROM startup_funding``
+        # stem - agents naturally type ``SELECT * FROM startup_funding``
         # when the entity slug is ``startup_funding``, not
         # ``SELECT * FROM dataset``. Accept both so a misremembered
         # table name doesn't bounce the agent into a retry loop.
@@ -145,7 +145,7 @@ def _bootstrap(data_dir: Path, output_dir: Path) -> dict[str, Any]:
                     )
                     attached_views.append(slug)
                 except Exception:
-                    # Defensive — some slugs may collide with SQL
+                    # Defensive - some slugs may collide with SQL
                     # keywords. ``dataset`` remains the canonical
                     # name either way.
                     pass

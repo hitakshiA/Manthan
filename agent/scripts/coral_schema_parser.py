@@ -2,7 +2,7 @@
 
 Coral's real source manifests (`/coral/sources/core/<source>/manifest.yaml`
 and `/coral/sources/community/<source>/manifest.yaml`) declare every
-column the source exposes — for Stripe that's 78 cols per disputes, 376
+column the source exposes - for Stripe that's 78 cols per disputes, 376
 per charges, etc.
 
 This module locates the manifest for a given source, parses it, and

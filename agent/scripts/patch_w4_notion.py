@@ -1,4 +1,4 @@
-"""Patch W4 — Notion anchor page for the Helix Bio Zendesk SLA-breach
+"""Patch W4 - Notion anchor page for the Helix Bio Zendesk SLA-breach
 refund workflow.
 
 Creates a SINGLE policy SOP page under the ManthanOps parent that
@@ -42,7 +42,7 @@ from seed_notion import (  # noqa: E402
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W4 spec — Support SLA & first-response refund policy
+# W4 spec - Support SLA & first-response refund policy
 # ──────────────────────────────────────────────────────────────────────
 
 W4_PAGE = NotionPage(
@@ -50,18 +50,18 @@ W4_PAGE = NotionPage(
     category="Policy & SOP",
     signal_id="W4",
     paragraphs=[
-        "Owner: CS lead (jules@miny-labs.com). Status: CURRENT — "
+        "Owner: CS lead (jules@miny-labs.com). Status: CURRENT - "
         "authoritative. Last reviewed 2026-04-22.",
 
         "Scope: this policy covers support ticket SLA breaches and "
         "the goodwill refund offered to customers when our "
         "first-response targets are missed on urgent tickets. Does "
-        "NOT cover platform uptime SLA credits — see 'SLA credit "
+        "NOT cover platform uptime SLA credits - see 'SLA credit "
         "calculation runbook'.",
 
         "First-response SLA targets (measured from ticket creation "
-        "to first non-automated human reply): Urgent priority — 4 "
-        "business hours. High priority — 1 business day. Normal — 2 "
+        "to first non-automated human reply): Urgent priority - 4 "
+        "business hours. High priority - 1 business day. Normal - 2 "
         "business days.",
 
         "If first-response SLA is breached by >72 hours on an Urgent "
@@ -74,7 +74,7 @@ W4_PAGE = NotionPage(
         "'never heard back' style language AND there is an Urgent "
         "ticket aged >72h with no first-responder reply, the right "
         "move is to refund the most recent month + apologize. NEVER "
-        "fight — the SLA breach is on us.",
+        "fight - the SLA breach is on us.",
 
         "Calculation: refund = (annual ARR / 12) for customers on "
         "annual plans; OR the most recent monthly charge for "
@@ -92,7 +92,7 @@ W4_PAGE = NotionPage(
 
 def main() -> None:
     print("=" * 70)
-    print("Manthan patch_w4_notion — W4 SLA-breach policy SOP")
+    print("Manthan patch_w4_notion - W4 SLA-breach policy SOP")
     print("=" * 70)
 
     with httpx.Client(headers=HEADERS, timeout=TIMEOUT) as client:
@@ -110,7 +110,7 @@ def main() -> None:
         if W4_PAGE.title in existing:
             page_id = existing[W4_PAGE.title]
             print(
-                f"\nSKIP: page already exists — title={W4_PAGE.title!r} "
+                f"\nSKIP: page already exists - title={W4_PAGE.title!r} "
                 f"page_id={page_id}"
             )
             _print_summary(page_id)

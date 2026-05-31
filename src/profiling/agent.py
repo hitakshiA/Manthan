@@ -3,11 +3,11 @@
 Runs a deterministic version of the ReAct loop described in
 ``docs/LAYER1_SPEC.md``:
 
-1. **PERCEIVE**   — :func:`profile_columns` against the raw table.
-2. **CLASSIFY**   — :func:`classify_columns` via the LLM.
-3. **ENRICH**     — temporal grain detection and metric proposals.
-4. **VALIDATE**   — cross-checks between classifier output and stats.
-5. **EMIT**       — a :class:`ProfilingResult` aggregated for the
+1. **PERCEIVE**   - :func:`profile_columns` against the raw table.
+2. **CLASSIFY**   - :func:`classify_columns` via the LLM.
+3. **ENRICH**     - temporal grain detection and metric proposals.
+4. **VALIDATE**   - cross-checks between classifier output and stats.
+5. **EMIT**       - a :class:`ProfilingResult` aggregated for the
    semantic layer to turn into a Data Context Document.
 
 Interactive user clarification (``ask_user``) is intentionally not wired
@@ -19,7 +19,7 @@ Column sensitivity is expressed through the LLM's role assignment
 (``identifier`` for unique-ish keys like customer_name or order_id), not
 through a separate PII pipeline. The analysis agent's job is to never
 enumerate individual values of identifier columns when answering
-questions — aggregate or count them instead.
+questions - aggregate or count them instead.
 """
 
 from __future__ import annotations

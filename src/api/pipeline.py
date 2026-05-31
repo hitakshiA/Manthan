@@ -2,8 +2,8 @@
 
 Two entry points share the same Silver + Gold tail:
 
-- :func:`ingest_and_profile` — file-based (CSV, Parquet, Excel, JSON)
-- :func:`ingest_database_and_profile` — database source via DuckDB
+- :func:`ingest_and_profile` - file-based (CSV, Parquet, Excel, JSON)
+- :func:`ingest_database_and_profile` - database source via DuckDB
   scanner extensions (Postgres, MySQL, SQLite)
 """
 
@@ -71,7 +71,7 @@ async def ingest_and_profile(
         skip_clarification: If True, the pipeline accepts the LLM's
             initial classifications without prompting the user. Used
             by the refresh flow where re-ingestion should be
-            autonomous — the user already clarified columns on the
+            autonomous - the user already clarified columns on the
             first upload and expects the update to land silently.
     """
     validate_file(file_path, max_size_mb=max_upload_size_mb)
@@ -276,7 +276,7 @@ async def _finish_pipeline(
     # via the ask_user primitive and block until they answer (or
     # timeout fires). This happens BEFORE Gold materialization so the
     # corrected roles feed into summary tables and verified queries.
-    # In refresh mode we skip the gate entirely — the user already
+    # In refresh mode we skip the gate entirely - the user already
     # clarified on first ingest and expects the update to be silent.
     clarification_questions = (
         [] if skip_clarification else generate_questions(profiling_result)
@@ -536,7 +536,7 @@ async def _finish_pipeline(
     state.dcds[entry.dataset_id] = dcd
     state.gold_table_names[entry.dataset_id] = gold_table_name
     state.rebuild_entity_index()
-    # Phase 3 — record this DCD snapshot in the history log so an
+    # Phase 3 - record this DCD snapshot in the history log so an
     # auditor can walk "what did Revenue mean on 2026-03-15?"
     log_dcd_change(
         data_directory=state.data_directory,

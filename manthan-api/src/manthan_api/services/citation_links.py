@@ -1,4 +1,4 @@
-"""Citation deep-link resolver — turn (source, table, ref) into a clickable URL.
+"""Citation deep-link resolver - turn (source, table, ref) into a clickable URL.
 
 The agent records citations as `{source, table, ref, field}`. The UI lights
 the citation as a chip; ideally the operator clicks the chip and lands in
@@ -9,7 +9,7 @@ quirks (HubSpot portal IDs, Salesforce instance URLs, Notion page UUID
 formatting) live here and nowhere else.
 
 When the URL can't be resolved (missing env, unknown source, malformed ref),
-we return None and the UI renders a non-clickable chip — never a broken link.
+we return None and the UI renders a non-clickable chip - never a broken link.
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ def _stripe_url(table: str, ref: str) -> str | None:
 
 
 def _notion_url(table: str, ref: str) -> str | None:
-    """Notion pages — strip dashes from UUID (Notion's URL convention)."""
+    """Notion pages - strip dashes from UUID (Notion's URL convention)."""
     if not ref:
         return None
     clean = ref.replace("-", "")
@@ -231,7 +231,7 @@ def _linear_url(table: str, ref: str) -> str | None:
 
 
 def _github_url(table: str, ref: str) -> str | None:
-    """GitHub deep-links — issue/PR/commit. Repo comes from env."""
+    """GitHub deep-links - issue/PR/commit. Repo comes from env."""
     repo = os.environ.get("GITHUB_REPO")  # owner/name
     if not repo or not ref:
         return None
@@ -246,7 +246,7 @@ def _github_url(table: str, ref: str) -> str | None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Search fallback — if we can't build a record-specific URL, send the
+# Search fallback - if we can't build a record-specific URL, send the
 # operator to the source's search/inbox so they at least land in the
 # right product. Better than a dead chip.
 # ──────────────────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ def _github_url(table: str, ref: str) -> str | None:
 def _search_fallback(source: str, ref: str) -> str | None:
     """When the (source, table, ref) tuple doesn't resolve, drop the
     operator into the source's main UI with `ref` as a search query.
-    The user can then locate the record themselves — still one click
+    The user can then locate the record themselves - still one click
     instead of zero."""
     if not ref:
         return None
@@ -340,8 +340,8 @@ def resolve_url(source: str | None, table: str | None, ref: str | None) -> str |
     Resolution order:
       1. Source-specific table-aware builder (the precise record URL).
       2. Search fallback (drops the operator into the source's search UI
-         with `ref` as the query) — better than a dead chip.
-      3. None — UI renders a non-clickable chip.
+         with `ref` as the query) - better than a dead chip.
+      3. None - UI renders a non-clickable chip.
     """
     if not source or not ref:
         return None

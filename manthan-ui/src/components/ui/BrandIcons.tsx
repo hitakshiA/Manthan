@@ -1,4 +1,4 @@
-/** Inline SVGs for Google + GitHub — lucide-react version pinned here
+/** Inline SVGs for Google + GitHub - lucide-react version pinned here
  *  doesn't export them, and using simple-icons mono is preferable for
  *  the auth UX (sized identically, consistent stroke). */
 

@@ -7,7 +7,7 @@
 #   systemctl restart caddy
 #
 # Caddy will issue a Let's Encrypt cert automatically on the first
-# request to https://your-domain.com — no extra config needed.
+# request to https://your-domain.com - no extra config needed.
 
 your-domain.com {
     reverse_proxy localhost:8000

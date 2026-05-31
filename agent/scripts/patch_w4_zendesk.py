@@ -1,4 +1,4 @@
-"""Patch W4 — Helix Bio SLA-breach refund workflow anchor.
+"""Patch W4 - Helix Bio SLA-breach refund workflow anchor.
 
 Creates a single urgent open Zendesk ticket on the helix-bio org, for the
 Manthan v2 billing-dispute investigation agent.
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import httpx
 
-# Reuse the seed_zendesk module — same auth, helpers, state file.
+# Reuse the seed_zendesk module - same auth, helpers, state file.
 SCRIPT_DIR = Path(__file__).parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -42,7 +42,7 @@ from seed_world import COMPANIES  # noqa: E402
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W4 spec — Helix Bio
+# W4 spec - Helix Bio
 # ──────────────────────────────────────────────────────────────────────
 
 W4_SLUG = "helix-bio"
@@ -50,10 +50,10 @@ W4_USER_EMAIL = "billing@helix-bio.test"
 W4_USER_NAME = "Helix Bio billing"
 W4_USER_EXTERNAL_ID = "ext_helix-bio_w4_billing"
 
-W4_SUBJECT = "Urgent — May invoice clarification needed before EOQ"
+W4_SUBJECT = "Urgent - May invoice clarification needed before EOQ"
 W4_BODY = (
     "We need clarification on the $X May renewal invoice before our "
-    "end-of-quarter close on Friday. Please respond ASAP — we have "
+    "end-of-quarter close on Friday. Please respond ASAP - we have "
     "leadership reviewing this on Thursday. We've also been concerned "
     "about value delivered vs. price over the last cycle."
 )
@@ -125,7 +125,7 @@ def main() -> None:
             else:
                 print(
                     f"W4 ticket: cached id {existing_tid} not found "
-                    f"({r.status_code}) — recreating"
+                    f"({r.status_code}) - recreating"
                 )
 
         # Backdate created_at by 8 days. The /imports/tickets.json endpoint
@@ -147,7 +147,7 @@ def main() -> None:
         try:
             tid = import_ticket(client, spec)
         except TrialCapHit:
-            sys.exit("ERROR: Zendesk trial cap hit — cannot create W4 ticket")
+            sys.exit("ERROR: Zendesk trial cap hit - cannot create W4 ticket")
         if not tid:
             sys.exit("ERROR: failed to create W4 ticket")
 

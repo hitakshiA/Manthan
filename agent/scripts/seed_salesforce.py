@@ -5,7 +5,7 @@ Drives the Manthan v2 billing-dispute investigation agent. Reads from
 seed_world.py for canonical company identity so cross-source JOINs stay
 consistent.
 
-Idempotent — re-runs check existence by Name (Accounts), Email (Contacts),
+Idempotent - re-runs check existence by Name (Accounts), Email (Contacts),
 Name+AccountId (Opportunities), and Subject+AccountId (Cases) before
 creating.
 
@@ -15,7 +15,7 @@ that from `salesforce.opportunities.description`.
 
 We DO NOT touch the dev-org sample accounts (Edge Communications,
 Burlington Textiles, Pyramid Construction, Dickenson plc, Grand Hotels &
-Resorts, etc.) — they sit alongside our 35 as noise.
+Resorts, etc.) - they sit alongside our 35 as noise.
 
 Run:
     .venv/bin/python scripts/refresh_salesforce_token.py
@@ -65,14 +65,14 @@ HEADERS = {
     "Accept": "application/json",
 }
 
-# Pace ~5-8 req/sec — well under Dev Edition's 5k/day cap.
+# Pace ~5-8 req/sec - well under Dev Edition's 5k/day cap.
 REQ_SLEEP = 0.15
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
 # Deterministic RNG so re-runs pick the same noise pattern.
 RNG = random.Random(20260527)
 
-# Accounts created by the dev-org template — never touch these.
+# Accounts created by the dev-org template - never touch these.
 DEV_ORG_SAMPLE_ACCOUNTS = {
     "Edge Communications",
     "Burlington Textiles Corp of America",
@@ -103,12 +103,12 @@ W_TARGET_SLUGS = {
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Industry mapping — seed_world.py industries → Salesforce picklist values
+# Industry mapping - seed_world.py industries → Salesforce picklist values
 # ──────────────────────────────────────────────────────────────────────
 
 # seed_world.py country strings → Salesforce BillingCountry labels.
 # The Dev Org has state/country picklists enabled, which rejects "USA" /
-# "UK" — the BillingCountryCode picklist's labels are full names ("United
+# "UK" - the BillingCountryCode picklist's labels are full names ("United
 # States", "United Kingdom"). Anything not listed here falls through
 # unchanged (most are already full names in seed_world.py).
 COUNTRY_MAP: dict[str, str] = {
@@ -256,7 +256,7 @@ def _ae_name(slug: str) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# HTTP wrapper — retries on 429/5xx, refreshes auth on 401
+# HTTP wrapper - retries on 429/5xx, refreshes auth on 401
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -300,7 +300,7 @@ def _request(
         r = client.request(method, url, json=json, params=params)
         last = r
         if r.status_code == 401 and not refreshed_once:
-            # Token expired mid-run — refresh once and retry.
+            # Token expired mid-run - refresh once and retry.
             try:
                 new_token = _refresh_token_inline()
             except AuthRefreshError as e:
@@ -550,7 +550,7 @@ class ContactPlan:
 def _build_contact_plan(c: Company) -> list[ContactPlan]:
     plans: list[ContactPlan] = []
 
-    # Finance lead — CFO
+    # Finance lead - CFO
     cf_first, cf_last = _pick_name(c.slug, "finance")
     plans.append(ContactPlan(
         role="finance",
@@ -597,7 +597,7 @@ def _build_contact_plan(c: Company) -> list[ContactPlan]:
 CLOSED_CASE_TOPICS: dict[str, list[tuple[str, str]]] = {
     "genomics": [
         ("Q1 invoice clarification",
-         "Customer asked us to walk through the Q1 2026 invoice line items — "
+         "Customer asked us to walk through the Q1 2026 invoice line items - "
          "specifically the sample-processing overage. Resolved on a 20-min call."),
         ("Data export for internal audit",
          "Customer wanted to confirm we can export sequencing data in VCF + BAM "
@@ -903,7 +903,7 @@ OPEN_CASE_TOPICS: dict[str, list[tuple[str, str]]] = {
 def _opportunity_description(c: Company) -> str:
     """Description for the renewal opportunity. W7 anchor on nexus-data."""
     if c.slug == "nexus-data":
-        # Load-bearing W7 signal — surface from salesforce.opportunities.description
+        # Load-bearing W7 signal - surface from salesforce.opportunities.description
         return (
             "Renewal closed by AE Jamie Park. Customer renewed early based on "
             "verbal commit: \"We will conduct a pricing review by EOQ2 2026 "
@@ -940,7 +940,7 @@ def _case_plan(c: Company) -> list[tuple[str, str, str, str, str]]:
     # ~30% get an additional open case.
     if _slug_hash(c.slug, "open-case") % 10 < 3:
         open_topics = OPEN_CASE_TOPICS.get(c.industry, [(
-            "Generic follow-up — in progress",
+            "Generic follow-up - in progress",
             "Customer follow-up still in flight, awaiting their team.",
         )])
         open_idx = _slug_hash(c.slug, "open-case-idx") % len(open_topics)
@@ -1026,7 +1026,7 @@ def main() -> int:
                 errors.append(f"opp skipped (no account): {c.slug}")
                 counts["opps_error"] += 1
                 continue
-            opp_name = f"{c.name} — Y2 Renewal (May 2026)"
+            opp_name = f"{c.name} - Y2 Renewal (May 2026)"
             opp_id, action = upsert_opportunity(
                 client,
                 account_id=aid,
@@ -1098,7 +1098,7 @@ def main() -> int:
                 print(f"  amount         : {payload.get('Amount')}")
                 print(f"  has W7 anchor  : {w7_ok}")
         else:
-            print("  nexus-data opportunity id missing — W7 anchor cannot be verified")
+            print("  nexus-data opportunity id missing - W7 anchor cannot be verified")
 
         # ── 6. Account-count verification ──────────────────────────────
         all_records = _query(client, "SELECT COUNT(Id) total FROM Account")

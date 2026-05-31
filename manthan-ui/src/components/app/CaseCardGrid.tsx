@@ -1,9 +1,9 @@
 /**
- * CaseCardGrid — shared card-grid renderer for any list of cases.
+ * CaseCardGrid - shared card-grid renderer for any list of cases.
  *
  * Originally defined inline inside Inbox.tsx; extracted so the Done /
  * Active / Escalated pages (which previously rendered a thin
- * `divide-y` list — a flat, dense terminal vibe that read as "log"
+ * `divide-y` list - a flat, dense terminal vibe that read as "log"
  * rather than "ledger of decisions") can use the same editorial card
  * treatment. The card is the right unit of attention for a case: it
  * carries the customer + verdict + Gemini-Flash one-line summary that
@@ -55,9 +55,9 @@ export function CaseCardGrid({
   urgent,
 }: {
   cases: ApiCase[];
-  /** Lower the surface opacity — for "closed" / archival groupings. */
+  /** Lower the surface opacity - for "closed" / archival groupings. */
   muted?: boolean;
-  /** Add the amber left-edge accent — for "awaiting your nod". */
+  /** Add the amber left-edge accent - for "awaiting your nod". */
   urgent?: boolean;
 }) {
   return (
@@ -126,7 +126,7 @@ export function CaseCard({
         }
       >
         <div className="px-4 pt-3.5 pb-4 h-full flex flex-col gap-2.5">
-          {/* Header — case id (mono) on left, status (small caps) on right */}
+          {/* Header - case id (mono) on left, status (small caps) on right */}
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <SourceIcon id={source} size={12} tinted />
@@ -163,7 +163,7 @@ export function CaseCard({
             )}
           </div>
 
-          {/* Description — Gemini-Flash one-liner, Spectral italic so it
+          {/* Description - Gemini-Flash one-liner, Spectral italic so it
               reads as narrative summary rather than data. */}
           {description && (
             <p
@@ -176,7 +176,7 @@ export function CaseCard({
 
           <div className="flex-1" />
 
-          {/* Footer — trigger surface + age */}
+          {/* Footer - trigger surface + age */}
           <div
             className="flex items-baseline justify-between text-[10.5px] tabular-nums"
             style={{ color: "var(--color-ink-ghost)" }}
@@ -190,7 +190,7 @@ export function CaseCard({
   );
 }
 
-/** Fallback when the prettifier hasn't written a card_summary yet — a
+/** Fallback when the prettifier hasn't written a card_summary yet - a
  *  sensible synthetic line so the card never looks empty. */
 export function synthesizeDescription(c: ApiCase): string {
   const amount = formatAmount(c.amount_minor, c.currency ?? "usd");
@@ -214,7 +214,7 @@ export function synthesizeDescription(c: ApiCase): string {
     if (verb) {
       return `${verb} fired. All drafted actions executed.`;
     }
-    return "Resolved — all drafted actions executed.";
+    return "Resolved - all drafted actions executed.";
   }
   if (c.status === "escalated") {
     return "Escalated to a human team for review beyond Manthan.";

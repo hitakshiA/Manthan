@@ -2,7 +2,7 @@
 
 Spawns `coral mcp-stdio` as a subprocess, opens an MCP session, lists the
 tools Coral exposes, and (if available) calls `list_catalog` to confirm
-SQL-plane access. This is the agent's first cross-layer step — once this
+SQL-plane access. This is the agent's first cross-layer step - once this
 works, the agent loop can wire `coral_sql` as a tool against the same
 client.
 
@@ -11,8 +11,8 @@ Run with:
     .venv/bin/python scripts/smoke_coral.py
 
 Exit codes:
-    0 — success
-    1 — Coral binary missing, MCP handshake failed, or tool call errored
+    0 - success
+    1 - Coral binary missing, MCP handshake failed, or tool call errored
 """
 
 from __future__ import annotations
@@ -60,7 +60,7 @@ async def run() -> int:
                 "  cd /Users/akshmnd/Dev\\ Projects/coral\n"
                 "  cargo build --release -p coral-cli --no-default-features\n\n"
                 "Then set CORAL_BINARY in manthanv2/agent/.env.",
-                title="Coral smoke — binary missing",
+                title="Coral smoke - binary missing",
                 border_style="red",
             )
         )
@@ -98,7 +98,7 @@ async def run() -> int:
                     f"[dim]{len(tools)} tool(s) exposed by coral mcp-stdio[/dim]"
                 )
 
-                # Catalog probe — try list_catalog first; fall back to running
+                # Catalog probe - try list_catalog first; fall back to running
                 # a SQL query against the meta schema if the named tool is absent.
                 tool_names = {t.name for t in tools}
                 console.print()
@@ -143,7 +143,7 @@ async def run() -> int:
                     console.print(
                         Panel(
                             text,
-                            title="catalog probe — first result block",
+                            title="catalog probe - first result block",
                             border_style="green",
                         )
                     )
@@ -153,7 +153,7 @@ async def run() -> int:
         console.print(f"[red]Cannot spawn coral binary:[/red] {exc}")
         return 1
     except Exception as exc:
-        # Surface any provider/transport error verbatim — class + message.
+        # Surface any provider/transport error verbatim - class + message.
         console.print(
             f"[red]Coral MCP smoke failed:[/red] {type(exc).__name__}: {exc}"
         )

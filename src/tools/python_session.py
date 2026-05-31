@@ -9,7 +9,7 @@ variables across many turns without re-loading data.
 
 The Docker-based :mod:`src.tools.python_tool` gave us isolation at the
 cost of state: every call spun a fresh container. Agents need the
-opposite tradeoff — they need to carry a DataFrame across ten tool
+opposite tradeoff - they need to carry a DataFrame across ten tool
 calls, build up temp views in one turn and query them in the next,
 save a chart after iterating on it. A host subprocess is the simplest
 way to get that.
@@ -20,7 +20,7 @@ For a deployment running on a trusted developer machine this is fine.
 For a production multi-tenant deployment you would want either per-
 session Docker containers (one container for the life of the session)
 or a true sandbox like gVisor. We intentionally leave that out of
-scope — see ``docs/LAYER1_SPEC.md``.
+scope - see ``docs/LAYER1_SPEC.md``.
 """
 
 from __future__ import annotations

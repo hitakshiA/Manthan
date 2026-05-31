@@ -7,7 +7,7 @@ profiles feed the column classifier, the enricher, the PII detector, and
 ultimately the Data Context Document.
 
 This module is the *statistical* surface of the Silver stage. It does no
-LLM calls and no semantic interpretation — every function here is
+LLM calls and no semantic interpretation - every function here is
 deterministic and testable against a fixed dataset.
 """
 

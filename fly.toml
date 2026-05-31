@@ -1,4 +1,4 @@
-# fly.toml — Fly.io deployment config for Manthan Layer 1.
+# fly.toml - Fly.io deployment config for Manthan Layer 1.
 #
 # Deploy:
 #   fly launch --no-deploy          # first time

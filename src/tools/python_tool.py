@@ -245,7 +245,7 @@ def _resolve_prelude_path() -> Path:
     raise SandboxError(f"Sandbox prelude not found at {candidate}")
 
 
-class _suppress_exceptions:  # noqa: N801 — tiny context manager, lowercase OK
+class _suppress_exceptions:  # noqa: N801 - tiny context manager, lowercase OK
     """Context manager that swallows any exception (cleanup helper)."""
 
     def __enter__(self) -> _suppress_exceptions:

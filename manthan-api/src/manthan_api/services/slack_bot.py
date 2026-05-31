@@ -1,4 +1,4 @@
-"""Slack bot — Manthan as a Slack-native investigator.
+"""Slack bot - Manthan as a Slack-native investigator.
 
 Three inbound paths:
   1. @manthan mention in a channel    → open a new case from the mention text
@@ -14,7 +14,7 @@ One outbound shape:
     - "Hold" button → flips status, no execution
 
 When the operator clicks Approve, we open a Block Kit view (modal) asking for
-a one-line signature ("Approved — Mark from RevOps"). Submitting the modal
+a one-line signature ("Approved - Mark from RevOps"). Submitting the modal
 calls /api/cases/{id}/approve with that signature attached to the action
 metadata.
 
@@ -44,7 +44,7 @@ logger = logging.getLogger("services.slack_bot")
 def _client() -> WebClient:
     token = os.environ.get("SLACK_TOKEN") or os.environ.get("SLACK_BOT_TOKEN")
     if not token:
-        raise RuntimeError("SLACK_TOKEN missing — set in .env")
+        raise RuntimeError("SLACK_TOKEN missing - set in .env")
     return WebClient(token=token)
 
 
@@ -67,7 +67,7 @@ async def open_case_from_slack(
     """Open a case from a Slack mention/DM. Returns (case_id, short_id).
 
     The investigate worker will pick it up via NOTIFY and start
-    investigating. We don't post the brief here — that happens later when
+    investigating. We don't post the brief here - that happens later when
     brief_drafted fires (see `post_brief_to_thread` below, called from the
     actor or a dedicated dispatcher).
     """
@@ -77,7 +77,7 @@ async def open_case_from_slack(
     short_id = f"SLK-{secrets.randbelow(900000) + 100000}"
 
     # Strip the bot mention from the text if present (the Events API
-    # delivers "<@U123456> text..." — drop the leading mention).
+    # delivers "<@U123456> text..." - drop the leading mention).
     cleaned = text.strip()
     if cleaned.startswith("<@") and ">" in cleaned:
         cleaned = cleaned.split(">", 1)[1].strip()
@@ -213,7 +213,7 @@ async def route_thread_reply(
         )
         return True
 
-    # ── Branch 3: chat follow-up. Memory continues — chat_loop reads
+    # ── Branch 3: chat follow-up. Memory continues - chat_loop reads
     #    the agent_thread state from the checkpointer when it picks
     #    this event up. ──
     async with get_pool().acquire() as conn:
@@ -366,7 +366,7 @@ async def _consume_signature_and_approve(
         await post_reply_to_thread(
             channel_id=channel_id,
             thread_ts=thread_ts,
-            text=f":warning: Couldn't approve `{short_id}` — {type(e).__name__}: {e}",
+            text=f":warning: Couldn't approve `{short_id}` - {type(e).__name__}: {e}",
         )
         return
 
@@ -374,7 +374,7 @@ async def _consume_signature_and_approve(
         channel_id=channel_id,
         thread_ts=thread_ts,
         text=(
-            f":white_check_mark: Signed by *{full_name}* — _{role}_.\n"
+            f":white_check_mark: Signed by *{full_name}* - _{role}_.\n"
             f"Executing {len(approved)} action(s). I'll post the final "
             "receipts here when they land."
         ),
@@ -412,7 +412,7 @@ def build_brief_blocks(
       - Inline hint: reply `approve` here to fire them
       - Approve / Hold / Open buttons
 
-    Suggested actions come in as a list of {emoji, title, target} dicts —
+    Suggested actions come in as a list of {emoji, title, target} dicts -
     rendered as a bullet list with the source emoji at the start.
     """
     decision_emoji = {
@@ -422,7 +422,7 @@ def build_brief_blocks(
         "escalate": ":bell:",
     }.get(decision_action or "", ":mag:")
 
-    conf_pct = f"{int((decision_confidence or 0) * 100)}%" if decision_confidence else "—"
+    conf_pct = f"{int((decision_confidence or 0) * 100)}%" if decision_confidence else "-"
 
     findings_text = "\n".join(f"• {f}" for f in top_findings[:3]) or "_No findings yet._"
 
@@ -433,7 +433,7 @@ def build_brief_blocks(
             for a in suggested_actions[:8]
         )
     else:
-        actions_text = "_No actions drafted — nothing for you to approve here._"
+        actions_text = "_No actions drafted - nothing for you to approve here._"
 
     greeting = "hey "
     if requester_slack_id:
@@ -583,7 +583,7 @@ def build_investigating_card(
             "elements": [
                 {
                     "type": "mrkdwn",
-                    "text": "I'll drop the brief here as soon as I'm done — usually 30–60 seconds.",
+                    "text": "I'll drop the brief here as soon as I'm done - usually 30–60 seconds.",
                 },
             ],
         },
@@ -620,7 +620,7 @@ def build_actions_performed_card(
             line += f"  ·  `{ref}`"
         return line
 
-    executed_text = "\n".join(_format_row(a, ":white_check_mark:") for a in executed) or "—"
+    executed_text = "\n".join(_format_row(a, ":white_check_mark:") for a in executed) or "-"
     failed_text = "\n".join(_format_row(a, ":warning:") for a in failed)
 
     blocks: list[dict[str, Any]] = [
@@ -689,7 +689,7 @@ def build_actions_performed_card(
                 {
                     "type": "mrkdwn",
                     "text": (
-                        "Need to revisit? Reply in this thread — I'll re-open "
+                        "Need to revisit? Reply in this thread - I'll re-open "
                         "the conversation and re-investigate if needed."
                     ),
                 },
@@ -700,7 +700,7 @@ def build_actions_performed_card(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Customer-name parsing — pulled out of the mention text for the
+# Customer-name parsing - pulled out of the mention text for the
 # investigating card.
 # ──────────────────────────────────────────────────────────────────────
 
@@ -719,7 +719,7 @@ def parse_customer_hint(text: str) -> str | None:
 
     if not text:
         return None
-    # Email — common pattern.
+    # Email - common pattern.
     m = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
     if m:
         return m.group(0)
@@ -764,7 +764,7 @@ _APPROVAL_TOKENS = {
 def is_approval_text(text: str) -> bool:
     """True when a thread reply looks like an approval verb.
 
-    We're permissive — false positives just trigger the e-signature
+    We're permissive - false positives just trigger the e-signature
     question, which is a graceful confirmation step. Better one extra
     "your name + role please?" than a missed approve."""
     if not text:
@@ -814,7 +814,7 @@ def parse_signature_reply(text: str) -> tuple[str, str] | None:
         return paren.group(1).strip(), paren.group(2).strip()
 
     # Separator-based: ",", "-", "|"
-    for sep in (",", " - ", " — ", " | ", " · "):
+    for sep in (",", " - ", " - ", " | ", " · "):
         if sep in cleaned:
             parts = [p.strip() for p in cleaned.split(sep, 1)]
             if len(parts) == 2 and parts[0] and parts[1]:
@@ -827,7 +827,7 @@ def build_signature_prompt_text(short_id: str) -> str:
     return (
         f":lock: Before I fire the actions on *{short_id}*, I need a "
         "1-line audit signature.\n"
-        "*Reply with your full name and role* — e.g. "
+        "*Reply with your full name and role* - e.g. "
         "_Mark Johnson, Director of Revenue Accounting_."
     )
 
@@ -835,7 +835,7 @@ def build_signature_prompt_text(short_id: str) -> str:
 def build_signature_invalid_text() -> str:
     return (
         ":warning: Couldn't separate name from role. Reply in the shape "
-        "*Full name, Role* — e.g. _Mark Johnson, Director of Revenue Accounting_."
+        "*Full name, Role* - e.g. _Mark Johnson, Director of Revenue Accounting_."
     )
 
 
@@ -931,7 +931,7 @@ async def post_brief_to_thread(
         resp = client.chat_postMessage(
             channel=channel_id,
             thread_ts=thread_ts,
-            text=f"Manthan brief — {case_row['short_id']} · {customer}",
+            text=f"Manthan brief - {case_row['short_id']} · {customer}",
             blocks=blocks,
         )
     except SlackApiError as e:
@@ -998,7 +998,7 @@ async def post_blocks_to_thread(
     text: str,
     blocks: list[dict[str, Any]],
 ) -> None:
-    """Block Kit reply in a Slack thread — used for the actions-performed
+    """Block Kit reply in a Slack thread - used for the actions-performed
     card. `text` is the fallback shown on notification previews."""
     client = _client()
     try:
@@ -1049,7 +1049,7 @@ def build_signature_modal(case_id: str, short_id: str) -> dict[str, Any]:
                 "text": {
                     "type": "mrkdwn",
                     "text": (
-                        ":lock: *Audit signature* — required for SOX-grade "
+                        ":lock: *Audit signature* - required for SOX-grade "
                         "trail. Stored on the action payload + posted in "
                         "the thread."
                     ),
@@ -1103,7 +1103,7 @@ def build_signature_modal(case_id: str, short_id: str) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Action summary helper — turns one drafted action into a brief Slack-
+# Action summary helper - turns one drafted action into a brief Slack-
 # friendly row used by the brief card and the actions-performed card.
 # ──────────────────────────────────────────────────────────────────────
 
@@ -1128,7 +1128,7 @@ def _action_block_summary(kind: str, payload: dict[str, Any] | None) -> dict[str
     elif kind == "customer_email":
         subj = p.get("subject") or ""
         to = p.get("to") or ""
-        title = f"Email customer — {subj[:80]}" if subj else "Email customer"
+        title = f"Email customer - {subj[:80]}" if subj else "Email customer"
         target = f"to {to}" if to else ""
     elif kind == "notion_decision_log":
         nt = p.get("title") or ""

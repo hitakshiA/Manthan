@@ -1,4 +1,4 @@
-"""The agent loop — one while-loop, well-defined tools.
+"""The agent loop - one while-loop, well-defined tools.
 
 A single async loop where Gemini reasons, emits tool calls, observes
 results, and iterates. Rich SSE events emitted at every decision point
@@ -155,7 +155,7 @@ class ManthanAgent:
             catalog_token = events.set_alias_catalog(catalog)
         except Exception:
             # If state isn't ready (very early boot / tests), skip
-            # masking silently — physical names are still correct,
+            # masking silently - physical names are still correct,
             # just not pretty.
             catalog_token = None
 
@@ -212,7 +212,7 @@ class ManthanAgent:
         while turns < self.config.max_turns:
             # Stream the LLM call. Frames flow back as they arrive on the
             # wire so the UI renders narrative + tool args character by
-            # character — instead of waiting for the full response and
+            # character - instead of waiting for the full response and
             # then dumping a wall of text. ``assistant_msg`` is built up
             # over the stream and the ``done`` frame hands the assembled
             # message (matching the non-streaming choices[0].message
@@ -260,7 +260,7 @@ class ManthanAgent:
             if not tool_calls:
                 # Silent-exit guard. Some models (GLM in particular) end
                 # a turn with empty content AND no tool_calls after
-                # receiving tool results — the exec sees "Done" with no
+                # receiving tool results - the exec sees "Done" with no
                 # output. If we've already executed tools in this
                 # session, nudge once with a forcing message and retry.
                 # If the second pass is still empty, emit a plain-
@@ -286,14 +286,14 @@ class ManthanAgent:
                             ),
                         }
                     )
-                    # Loop around — same turn budget, retry with nudge
+                    # Loop around - same turn budget, retry with nudge
                     continue
 
                 # Delivery-forcing guard: the agent has done real
                 # analytical work (≥2 data tools), is now trying to
                 # finish with long prose, but never called
                 # emit_visual / create_artifact. For moderate–complex
-                # questions the prompt requires a tool delivery — a
+                # questions the prompt requires a tool delivery - a
                 # wall of text is the wrong shape. Nudge once.
                 if (
                     content
@@ -317,7 +317,7 @@ class ManthanAgent:
                                 "complex answer. Call `create_artifact` "
                                 "now with the brief template (or a "
                                 "dashboard if that fits better). Do "
-                                "NOT answer as prose — the artifact IS "
+                                "NOT answer as prose - the artifact IS "
                                 "the answer."
                             ),
                         }
@@ -338,7 +338,7 @@ class ManthanAgent:
                     and _content_cites_numbers(content)
                 ):
                     nudged_for_empty = True
-                    # Don't keep the unverified content in history —
+                    # Don't keep the unverified content in history -
                     # the retry should start fresh.
                     if messages and messages[-1].get("role") == "assistant":
                         messages.pop()
@@ -350,7 +350,7 @@ class ManthanAgent:
                                 "running any data tool. Every figure in "
                                 "a Manthan answer must come from a "
                                 "compute_metric or run_sql call you "
-                                "execute in THIS turn — not memory, not "
+                                "execute in THIS turn - not memory, not "
                                 "priors. Call the appropriate tool(s) "
                                 "now and re-answer with verified values."
                             ),
@@ -368,7 +368,7 @@ class ManthanAgent:
                     if tool_calls_total > 0:
                         yield events.narrative(
                             "I pulled the data but didn't produce a final "
-                            "answer — that's a model hiccup, not a missing "
+                            "answer - that's a model hiccup, not a missing "
                             "result. Try asking the same question again; the "
                             "cached work should make the retry instant."
                         )
@@ -539,7 +539,7 @@ class ManthanAgent:
 
                     # Server-side JS parse. If any inline <script> fails
                     # ``node --check``, kick a focused repair pass. One
-                    # retry, bounded — if still broken we ship the
+                    # retry, bounded - if still broken we ship the
                     # original and let the client best-effort-render.
                     validation = await validate_artifact_html_async(html)
                     if not validation.ok and not validation.skipped:
@@ -631,7 +631,7 @@ class ManthanAgent:
                                 elapsed_ms=tc_ms,
                             )
 
-                        # Phase 3 extension — auto-emit numeric_claim for
+                        # Phase 3 extension - auto-emit numeric_claim for
                         # run_sql scalar results (1x1). These are the
                         # exec-facing numbers the agent typically cites
                         # inline; without a backing claim the narrative's
@@ -659,7 +659,7 @@ class ManthanAgent:
                                     if isinstance(cell, bool):
                                         continue
                                     if _is_dimension_column(col):
-                                        continue  # year / id / code — not a measure
+                                        continue  # year / id / code - not a measure
                                     unit_guess = _guess_unit(col)
                                     yield events.numeric_claim(
                                         value=float(cell),
@@ -679,11 +679,11 @@ class ManthanAgent:
                                         unit=unit_guess,
                                     )
 
-                    # Phase 3 audit surface — auto-emit numeric_claim
+                    # Phase 3 audit surface - auto-emit numeric_claim
                     # for EVERY numeric cell in a compute_metric
                     # result, not just scalars. A "top state by
                     # revenue" query returns 1 row × (state, value)
-                    # = not a scalar — but the exec still cites that
+                    # = not a scalar - but the exec still cites that
                     # value in prose ("California at $436.5M"). The
                     # per-cell emit ensures each cited number carries
                     # the metric's rich semantic metadata (governed
@@ -748,9 +748,9 @@ class ManthanAgent:
                                         unit=metric_unit,
                                     )
 
-                    # Phase 3 audit surface — Python-computed numbers.
+                    # Phase 3 audit surface - Python-computed numbers.
                     # ``run_python`` is how the agent does regressions,
-                    # forecasts, segment scoring, statistical tests —
+                    # forecasts, segment scoring, statistical tests -
                     # the resulting numbers (projected $231 by 2028,
                     # cluster centroid 0.18, ttest p=0.03) land in
                     # stdout and get quoted in the narrative. Without
@@ -777,7 +777,7 @@ class ManthanAgent:
                                     label="Computed in Python",
                                     description=(
                                         "Calculated by the run_python "
-                                        "tool in this session — see "
+                                        "tool in this session - see "
                                         "the script for derivation."
                                     ),
                                     entity=None,
@@ -808,7 +808,7 @@ class ManthanAgent:
         session_history.set_history(session_id, messages)
         yield events.error("Max turns reached", recoverable=False)
         yield events.done(
-            "Analysis incomplete — max turns reached.",
+            "Analysis incomplete - max turns reached.",
             turns,
             tool_calls=tool_calls_total,
             elapsed=elapsed,
@@ -825,14 +825,14 @@ class ManthanAgent:
 
         Yields a sequence of frames:
 
-        - ``("delta", text)`` — a fragment of assistant content as it
+        - ``("delta", text)`` - a fragment of assistant content as it
           arrives over the wire. The caller forwards each fragment to
           the SSE stream as a ``narrative_delta`` event so the UI can
           render the answer character-by-character (instead of waiting
           for the full response and dumping a wall of text). Tool-call
           deltas are accumulated server-side and surfaced only via the
           terminal ``done`` frame.
-        - ``("done", assistant_msg)`` — exactly one terminal frame at
+        - ``("done", assistant_msg)`` - exactly one terminal frame at
           the end of the stream. ``assistant_msg`` matches the
           non-streaming ``choices[0].message`` shape (``role``,
           ``content``, optional ``tool_calls``) so the rest of the loop
@@ -853,7 +853,7 @@ class ManthanAgent:
         }
 
         last_error: Exception | None = None
-        # Once we've started yielding deltas the client has them — we
+        # Once we've started yielding deltas the client has them - we
         # can't retry without double-streaming. ``progress_yielded`` is
         # the latch: if it ever flips true within an attempt, we bail
         # out of the retry loop and surface whatever we got so far.
@@ -920,7 +920,7 @@ class ManthanAgent:
                         # tool_calls match the non-streaming shape.
                         # Surface "starting" + arg fragments as frames
                         # so the loop can forward them to the SSE
-                        # stream — the UI shows SQL / Python being
+                        # stream - the UI shows SQL / Python being
                         # typed character by character instead of
                         # popping in as a finished block.
                         for tc_delta in delta.get("tool_calls") or []:
@@ -1033,7 +1033,7 @@ class ManthanAgent:
             except Exception as exc:
                 last_error = exc
 
-            # Don't retry once we've already streamed content — the
+            # Don't retry once we've already streamed content - the
             # client would see duplicated tokens.
             if progress_yielded:
                 break
@@ -1051,7 +1051,7 @@ class ManthanAgent:
         artifact. Returns the raw model response (caller strips
         fences via ``extract_html_from_llm_response``). Separate from
         ``_call_llm`` because this pass doesn't use the agent's tool
-        catalog — it's a single repair prompt, no function calling."""
+        catalog - it's a single repair prompt, no function calling."""
         from src.agent.artifact_repair import REPAIR_SYSTEM_PROMPT
 
         payload: dict[str, Any] = {
@@ -1084,7 +1084,7 @@ class ManthanAgent:
 
 def _content_cites_numbers(text: str) -> bool:
     """True if the assistant narrative looks like it cites concrete
-    numbers — either via the ``[value]()`` citation format the prompt
+    numbers - either via the ``[value]()`` citation format the prompt
     mandates, or as bare currency / percentage / large-integer
     tokens. Used to detect zero-tool answers that leaked model-prior
     numbers into prose."""
@@ -1092,7 +1092,7 @@ def _content_cites_numbers(text: str) -> bool:
         return False
     import re
 
-    # ``[anything]()`` — empty-href pattern the agent uses to mark cited numbers
+    # ``[anything]()`` - empty-href pattern the agent uses to mark cited numbers
     if re.search(r"\[[^\]]+\]\(\)", text):
         return True
     # Bare currency: $X, $X.XM, $X.XB, $X,XXX.XX
@@ -1114,7 +1114,7 @@ def _looks_like_inline_brief(text: str) -> bool:
     if not text:
         return False
     stripped = text.strip()
-    # Short answers — let them through as prose.
+    # Short answers - let them through as prose.
     if len(stripped) < 600:
         return False
     return _content_cites_numbers(stripped)
@@ -1131,7 +1131,7 @@ def _describe_sql_cell(
     one-line description) and composes ``{aggregation} {column} [from
     {entity}] [where {filter}]``. The drawer renders this in its
     "What this measures" section. Falls back to ``None`` for
-    unparseable SQL — the drawer then uses a column-label heuristic.
+    unparseable SQL - the drawer then uses a column-label heuristic.
     """
     if not sql:
         return None
@@ -1247,7 +1247,7 @@ _MONEY_COL_HINTS = (
 )
 _PCT_COL_HINTS = ("pct", "percent", "_rate", "ratio", "share")
 # Columns whose values are labels/dimensions even when stored as
-# integers. Skipping these from auto-claim emission — they never make
+# integers. Skipping these from auto-claim emission - they never make
 # sense as "Cited numbers" with audit drawers ("how was the year 2019
 # calculated?" is nonsense).
 _DIMENSION_COL_PATTERNS = (
@@ -1296,7 +1296,7 @@ def _guess_unit(column: str | None) -> str | None:
     column name almost always does ("Totals.Revenue" → money,
     "on_time_rate" → percent). We use this when auto-emitting
     ``numeric_claim`` events so the formatted string matches what the
-    exec sees in the narrative — ``$436.5M`` instead of ``436,532,750``.
+    exec sees in the narrative - ``$436.5M`` instead of ``436,532,750``.
     """
     if not column:
         return None
@@ -1320,7 +1320,7 @@ _PY_NUMBER_PATTERNS: tuple[tuple[str, str | None], ...] = (
     (r"-?\d+(?:\.\d+)?\s*%", "percent"),
     # Scaled bare: 12.3M / 700K / 2.5B (no $)
     (r"\b\d+(?:\.\d+)?\s*[KMB](?!\w)", None),
-    # Plain floats / integers with optional thousands separators —
+    # Plain floats / integers with optional thousands separators -
     # last so the currency / percent patterns win on overlap.
     (r"\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b", None),
     (r"\b\d+\.\d+\b", None),
@@ -1359,7 +1359,7 @@ def _parse_numeric_token(raw: str) -> tuple[float, str | None] | None:
         value = float(token) * scale
     except ValueError:
         return None
-    # Skip trivial integers — too noisy ("0 rows", "Step 1") to claim.
+    # Skip trivial integers - too noisy ("0 rows", "Step 1") to claim.
     if scale == 1.0 and abs(value) < 10 and float(value).is_integer():
         return None
     return value, unit
@@ -1396,7 +1396,7 @@ def _extract_python_numbers(
                 continue
             seen_values[key] = raw
             # Use the model's rendered form as the canonical
-            # ``formatted`` — it's what shows up in the drawer
+            # ``formatted`` - it's what shows up in the drawer
             # header and what the narrative most likely re-quotes.
             ordered.append((value, raw.strip(), unit))
             if len(ordered) >= 60:
@@ -1409,7 +1409,7 @@ def _format_metric_value(value: float, unit: str | None) -> str:
     string. The agent can always override by authoring its own text
     in the narrative; this is the drawer-label fallback."""
     if value is None:
-        return "—"
+        return "-"
     unit_l = (unit or "").lower()
     if unit_l in {"usd", "eur", "gbp", "inr", "cad", "aud"}:
         sign = "-" if value < 0 else ""

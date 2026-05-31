@@ -4,7 +4,7 @@ A small in-memory registry of tasks the agent is working on during a
 conversation. Scoped to a ``session_id`` so a master agent and its
 subagents each track their own plans independently. Unlike the cross-
 session :mod:`src.core.memory` store, this one does not persist across
-restarts — tasks are ephemeral to the agent's working set.
+restarts - tasks are ephemeral to the agent's working set.
 
 The agent uses this to:
 

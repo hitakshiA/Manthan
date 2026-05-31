@@ -1,14 +1,14 @@
 /**
- * ScenarioStory — full-screen takeover overlay that walks the operator
+ * ScenarioStory - full-screen takeover overlay that walks the operator
  * through a guided narrative before firing a demo scenario.
  *
  * Behavior per the user's spec:
  *  • Full-screen (no sidebar, no inbox chrome behind it)
  *  • Manual advance: arrow-right / ▶ to next, arrow-left / ◀ to prev
- *  • NO skip — operator must reach the final slide before the CTA appears
+ *  • NO skip - operator must reach the final slide before the CTA appears
  *  • Final slide shows the "Begin investigation" CTA which fires the
  *    scenario via the same onFire callback the ScenarioCard uses today
- *  • Esc closes the overlay (cancels — does NOT fire)
+ *  • Esc closes the overlay (cancels - does NOT fire)
  *  • Image-left + caption-right two-column layout; caption is in the
  *    editorial-memo voice (Spectral italic), image takes ~55% of the
  *    viewport width
@@ -34,7 +34,7 @@ interface Props {
   firing?: boolean;
   /** The operator's own login email. When provided, the last slide
    *  surfaces a heads-up that the customer email will land here once
-   *  the operator approves — replacing the env-level demo override. */
+   *  the operator approves - replacing the env-level demo override. */
   userEmail?: string | null;
 }
 
@@ -95,7 +95,7 @@ export function ScenarioStory({
       aria-modal="true"
       aria-label="Scenario story walkthrough"
     >
-      {/* TOP BAR — slide indicator + close. No "Skip" affordance per
+      {/* TOP BAR - slide indicator + close. No "Skip" affordance per
           spec: the operator must walk the whole story. */}
       <header
         className="shrink-0 flex items-center px-9 py-5"
@@ -153,7 +153,7 @@ export function ScenarioStory({
         </button>
       </header>
 
-      {/* BODY — two-column image + caption. The image swaps with a
+      {/* BODY - two-column image + caption. The image swaps with a
           cross-fade keyed on the slide index. */}
       <div
         className="flex-1 min-h-0 grid"
@@ -161,11 +161,11 @@ export function ScenarioStory({
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
         }}
       >
-        {/* LEFT — image. We deliberately do NOT use AnimatePresence
+        {/* LEFT - image. We deliberately do NOT use AnimatePresence
             mode="wait" here because back-to-back clicks of NEXT made
             the exit animation block and the slide content would freeze
             at index 1 while the indicator advanced. Plain <img> with
-            a key swap is enough — the browser caches the JPEG so the
+            a key swap is enough - the browser caches the JPEG so the
             second-half-of-story slides flip instantly. */}
         <div
           className="relative overflow-hidden flex items-center justify-center"
@@ -183,7 +183,7 @@ export function ScenarioStory({
           />
         </div>
 
-        {/* RIGHT — caption. Scrolls internally on the data-heavy
+        {/* RIGHT - caption. Scrolls internally on the data-heavy
             slides (the source-breakdown one) so nothing gets clipped. */}
         <div className="overflow-y-auto">
           <div className="flex flex-col justify-center min-h-full px-16 py-14 max-w-[760px]">
@@ -247,7 +247,7 @@ export function ScenarioStory({
         </div>
       </div>
 
-      {/* BOTTOM BAR — nav arrows + (on last slide) the fire CTA. */}
+      {/* BOTTOM BAR - nav arrows + (on last slide) the fire CTA. */}
       <footer
         className="shrink-0 flex items-center px-9 py-5 gap-6"
         style={{ borderTop: "1px solid var(--color-rule-soft)" }}
@@ -329,8 +329,8 @@ export function ScenarioStory({
 }
 
 /**
- * BodyText — render the slide body, which may be a single string or
- * an array of paragraphs. Spectral serif at a substantial size — this
+ * BodyText - render the slide body, which may be a single string or
+ * an array of paragraphs. Spectral serif at a substantial size - this
  * is the meat of the story, not a side caption.
  */
 function BodyText({ body }: { body: string | string[] }) {
@@ -357,7 +357,7 @@ function BodyText({ body }: { body: string | string[] }) {
 }
 
 /**
- * SourceList — the structured "what each source contributes" block.
+ * SourceList - the structured "what each source contributes" block.
  * Used on the slide that breaks down why the agent has to query
  * eight different systems. Each row: brand icon + brand-colored
  * source name + one-line explanation in editorial prose.

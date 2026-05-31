@@ -42,9 +42,9 @@ export function AppRouter() {
       <Routes>
         {/* Public marketing */}
         <Route path="/" element={<Landing />} />
-        {/* Auth routes use /* so Clerk's internal routing — SSO
+        {/* Auth routes use /* so Clerk's internal routing - SSO
             callback, factor-two verification, OAuth account-link
-            flows — can mount sub-paths under /login/* and /signup/*
+            flows - can mount sub-paths under /login/* and /signup/*
             without our catch-all bouncing them to the landing page.
             (Previously: clicking Google on /signup with an existing
             account redirected back to /signup/sso-callback which
@@ -71,7 +71,7 @@ export function AppRouter() {
                 title="Active cases"
                 description="Manthan is on these right now or waiting on your nod."
                 statuses={["investigating", "awaiting_approval", "acting"]}
-                emptyHint="Nothing in flight. Inbox zero — Manthan is idle."
+                emptyHint="Nothing in flight. Inbox zero - Manthan is idle."
               />
             }
           />
@@ -91,7 +91,7 @@ export function AppRouter() {
             element={
               <CaseList
                 title="Escalated"
-                description="Cases the agent handed back to a human — by policy, low confidence, or hard error."
+                description="Cases the agent handed back to a human - by policy, low confidence, or hard error."
                 statuses={["escalated", "errored"]}
                 emptyHint="Nothing escalated. Manthan is handling everything itself."
               />
@@ -112,7 +112,7 @@ export function AppRouter() {
           <Route path="settings" element={<Settings />} />
           <Route path="help" element={<Help />} />
 
-          {/* Throwaway dashboard-redesign prototypes — editorial-memo
+          {/* Throwaway dashboard-redesign prototypes - editorial-memo
               vocabulary, pulled from the landing's BriefCanvas + the
               AuditVisual / CrossSourceVisual patterns. */}
           <Route path="workspace-memo" element={<WorkspaceMemo />} />

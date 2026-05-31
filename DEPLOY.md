@@ -64,7 +64,7 @@ Seed the demo org + admin:
 cd manthan-api && uv run python -m manthan_api.scripts.bootstrap_dev_org
 ```
 
-Seed the demo policy rule (already in `003_policy_engine.sql` — verify it landed):
+Seed the demo policy rule (already in `003_policy_engine.sql` - verify it landed):
 
 ```bash
 psql ... -c "SELECT name FROM policy_rules"
@@ -81,7 +81,7 @@ fly launch --no-deploy --copy-config --name manthan-api \
            --dockerfile manthan-api/Dockerfile .
 ```
 
-Set secrets (one per line — paste your real keys):
+Set secrets (one per line - paste your real keys):
 
 ```bash
 fly secrets set \
@@ -136,8 +136,8 @@ fly certs create api.demo.manthan.quest
 ## 4. Inbound email (~10 min)
 
 In **Resend dashboard**:
-1. Add domain `manthan.quest` (or `demo.manthan.quest`) — verify SPF + DKIM + DMARC records they show
-2. Enable **Inbound** — they'll give you MX records to add (typically pointing to `inbound-smtp.resend.com`)
+1. Add domain `manthan.quest` (or `demo.manthan.quest`) - verify SPF + DKIM + DMARC records they show
+2. Enable **Inbound** - they'll give you MX records to add (typically pointing to `inbound-smtp.resend.com`)
 3. Create an Inbound Webhook → URL: `https://api.demo.manthan.quest/webhooks/email/acme`
 4. Copy the signing secret → `fly secrets set RESEND_INBOUND_WEBHOOK_SECRET=...`
 
@@ -207,7 +207,7 @@ stripe trigger charge.dispute.created \
        --add charge.dispute:amount=900000 \
        --add charge.dispute:currency=usd
 
-# Watch the UI Inbox at https://demo.manthan.quest/app — a new case should appear
+# Watch the UI Inbox at https://demo.manthan.quest/app - a new case should appear
 # within ~2 seconds.
 ```
 
@@ -218,7 +218,7 @@ stripe trigger charge.dispute.created \
 A cron that wipes the DB and re-seeds, so each demo viewer sees a clean state:
 
 ```toml
-# fly.toml — add another process
+# fly.toml - add another process
 [processes]
   reset = "uv run python -m manthan_api.scripts.nightly_reset"
 ```
@@ -231,6 +231,6 @@ Or run as a one-shot from local: `fly machine run --schedule daily ...`.
 
 - **CORS errors in browser**: check `WEB_APP_ORIGIN` matches `demo.manthan.quest` exactly
 - **Slack signature mismatch**: timestamp drift > 5 min → check Fly machine clock
-- **Resend inbound 404**: webhook URL slug must be `acme` (or whatever your org slug is — see DB `orgs.slug`)
+- **Resend inbound 404**: webhook URL slug must be `acme` (or whatever your org slug is - see DB `orgs.slug`)
 - **Stripe webhook 400**: signature secret must be the **test mode** one, not live
-- **Worker not picking up cases**: tail `fly logs --process investigate` — likely a missing env var
+- **Worker not picking up cases**: tail `fly logs --process investigate` - likely a missing env var

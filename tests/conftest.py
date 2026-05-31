@@ -5,7 +5,7 @@
 - ``gold_connection``: a DuckDB in-memory connection with
   ``sample_sales.csv`` preloaded as ``raw_sales``.
 - ``sample_dcd``: a fully-populated Data Context Document built from
-  ``sample_sales.csv`` using deterministic (non-LLM) classifications —
+  ``sample_sales.csv`` using deterministic (non-LLM) classifications -
   used by every test that needs a DCD without reaching out to an LLM.
 """
 

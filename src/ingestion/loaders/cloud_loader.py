@@ -2,10 +2,10 @@
 
 One loader, three protocols:
 
-    * ``https://host/path/file.csv`` — any public (or pre-signed) URL
-    * ``s3://bucket/path/*.csv`` — AWS S3 (and S3-compatible: R2, MinIO)
-    * ``gs://bucket/path/file.parquet`` — Google Cloud Storage
-    * ``az://container/path/*.json`` — Azure Blob (requires `azure` ext)
+    * ``https://host/path/file.csv`` - any public (or pre-signed) URL
+    * ``s3://bucket/path/*.csv`` - AWS S3 (and S3-compatible: R2, MinIO)
+    * ``gs://bucket/path/file.parquet`` - Google Cloud Storage
+    * ``az://container/path/*.json`` - Azure Blob (requires `azure` ext)
 
 DuckDB's httpfs + secret system handles auth; we just shape the
 ``CREATE SECRET`` call from whatever credentials the user provided.
@@ -72,7 +72,7 @@ def _ensure_extensions(connection: duckdb.DuckDBPyConnection, url: str) -> None:
     """
     connection.execute("INSTALL httpfs; LOAD httpfs;")
     if url.startswith(("az://", "azure://")):
-        # The azure extension isn't bundled in all DuckDB builds — if
+        # The azure extension isn't bundled in all DuckDB builds - if
         # install fails, fall through and let the read surface a clearer
         # error than "unknown extension". Using contextlib.suppress would
         # work too but loses the inline explanation here.
@@ -91,7 +91,7 @@ def _install_secret(
     if not secret:
         return
     scheme = url.split("://", 1)[0].lower() if "://" in url else ""
-    # Sanitized secret name — one per scheme per process.
+    # Sanitized secret name - one per scheme per process.
     secret_name = f"manthan_{scheme or 'http'}"
     # Map scheme → DuckDB TYPE + KEY/VALUE pairs.
     if scheme == "s3":
@@ -116,7 +116,7 @@ def _install_secret(
         }
         secret_type = "AZURE"
     else:
-        return  # plain https — no secret needed
+        return  # plain https - no secret needed
     pairs = ", ".join(
         f"{k} '{str(v).replace(chr(39), chr(39) + chr(39))}'"
         for k, v in keys.items()
@@ -164,7 +164,7 @@ def load_from_url(
 
     # LoadResult.source_type is a ``Literal["csv"|"excel"|"json"|"parquet"|...]``,
     # so we return the bare format. The URL origin is captured separately
-    # via ``original_filename`` and the ingestion log — no need to smuggle
+    # via ``original_filename`` and the ingestion log - no need to smuggle
     # provenance into the type field.
     return LoadResult(
         table_name=request.destination_table,

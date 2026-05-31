@@ -5,8 +5,8 @@ Run with:
     uv run python scripts/smoke_llm.py
 
 Exit codes:
-    0 — success, or OPENROUTER_API_KEY missing (skipped cleanly)
-    1 — API key present but the call failed
+    0 - success, or OPENROUTER_API_KEY missing (skipped cleanly)
+    1 - API key present but the call failed
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def main() -> int:
                 "[yellow]OPENROUTER_API_KEY is not set.[/yellow]\n\n"
                 "Add it to [bold]manthanv2/agent/.env[/bold] and re-run.\n"
                 "Get a key at https://openrouter.ai/keys",
-                title="LLM smoke — skipped",
+                title="LLM smoke - skipped",
                 border_style="yellow",
             )
         )
@@ -61,7 +61,7 @@ def main() -> int:
         console.print(f"[red]{exc}[/red]")
         return 1
     except Exception as exc:
-        # Surface any provider error verbatim — class name + message.
+        # Surface any provider error verbatim - class name + message.
         console.print(f"[red]LLM call failed:[/red] {type(exc).__name__}: {exc}")
         return 1
 
@@ -79,7 +79,7 @@ def main() -> int:
             if usage
             else ""
         ),
-        title="LLM smoke — ok",
+        title="LLM smoke - ok",
         border_style="green",
     )
     console.print(panel)

@@ -1,4 +1,4 @@
-"""Inbound webhooks — Stripe, Slack (events), Resend (inbound mail).
+"""Inbound webhooks - Stripe, Slack (events), Resend (inbound mail).
 
 This is the TRIGGER half of the system: external services push real
 billing events here, we verify the signature, dedupe by event id, and
@@ -59,7 +59,7 @@ async def stripe_webhook(org_slug: str, request: Request) -> dict[str, Any]:
     sig_header = request.headers.get("stripe-signature", "")
 
     # Signature verification. In dev with no secret set, we still parse the
-    # payload but log a warning — this lets local `stripe trigger` work
+    # payload but log a warning - this lets local `stripe trigger` work
     # without `stripe listen` configured.
     if secret:
         try:
@@ -76,7 +76,7 @@ async def stripe_webhook(org_slug: str, request: Request) -> dict[str, Any]:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="STRIPE_WEBHOOK_SECRET not configured",
             )
-        logger.warning("STRIPE_WEBHOOK_SECRET unset — skipping signature check (dev only)")
+        logger.warning("STRIPE_WEBHOOK_SECRET unset - skipping signature check (dev only)")
         try:
             event = json.loads(body.decode("utf-8"))
         except Exception:
@@ -104,7 +104,7 @@ async def stripe_webhook(org_slug: str, request: Request) -> dict[str, Any]:
 
         # Idempotency: dedupe by Stripe event id. If we've already opened a
         # case for this event, ack 200 + skip. Stripe retries failures up to
-        # 3 days — duplicate fires must not duplicate cases.
+        # 3 days - duplicate fires must not duplicate cases.
         already = await conn.fetchval(
             """
             SELECT 1 FROM cases
@@ -147,7 +147,7 @@ async def stripe_webhook(org_slug: str, request: Request) -> dict[str, Any]:
                 org_id,
                 thread_id,
                 short_id,
-                # asyncpg JSONB codec serializes dicts — don't json.dumps.
+                # asyncpg JSONB codec serializes dicts - don't json.dumps.
                 {
                     "event_id": event_id,
                     "event_type": event_type,
@@ -160,7 +160,7 @@ async def stripe_webhook(org_slug: str, request: Request) -> dict[str, Any]:
             )
             case_id = case_row["id"]
 
-            # case_opened — the investigate worker fires off NOTIFY.
+            # case_opened - the investigate worker fires off NOTIFY.
             await conn.execute(
                 """
                 INSERT INTO events (org_id, thread_id, seq, type, actor, data)
@@ -261,7 +261,7 @@ def _summarize_event(
         text = (
             f"Stripe refund status changed on {customer}: "
             f"${(amount or 0) / 100:,.2f} {currency.upper()} "
-            f"on charge {charge_id} — status now '{refund_status}'. "
+            f"on charge {charge_id} - status now '{refund_status}'. "
             f"Reconcile with original case and notify customer."
         )
         return text, customer, amount, currency, "refund_reconciliation"

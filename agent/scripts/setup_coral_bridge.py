@@ -12,7 +12,7 @@ Run:
     cd manthanv2/agent
     .venv/bin/python scripts/setup_coral_bridge.py [--scenario S01B-acme-brutal]
 
-This script is idempotent — overwriting JSON and manifest files is fine.
+This script is idempotent - overwriting JSON and manifest files is fine.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ _DATA_DIR = _AGENT_ROOT / ".manthan"
 _JSON_PATH = _DATA_DIR / "scenario_world.json"
 _MANIFEST_DIR = _DATA_DIR / "coral_sources"
 _MCP_SCRIPT = (_AGENT_ROOT / "scripts" / "manthan_mock_mcp.py").resolve()
-# Don't `.resolve()` this — the .venv/bin/python symlink is what activates
+# Don't `.resolve()` this - the .venv/bin/python symlink is what activates
 # the venv site-packages (where mcp + duckdb live). Following the symlink
 # resolves to the bare base python without the venv.
 _VENV_PYTHON = _AGENT_ROOT.resolve() / ".venv" / "bin" / "python"
@@ -77,7 +77,7 @@ def _manifest_for_source(
          customer_email on stripe.disputes).
       3. Result: the manifest declares a real-Coral-sized column surface
          (~50-100 cols per table) while our data populates only a small
-         subset. Coral returns rows with the rest as NULL — the same
+         subset. Coral returns rows with the rest as NULL - the same
          sparsity pattern real production data has.
     """
     real_cols_by_table = load_real_columns(source)
@@ -103,7 +103,7 @@ def _manifest_for_source(
         our_types = {c: _infer_coral_type([r.get(c) for r in rows]) for c in ours}
 
         # Real columns for THIS table (may be empty if the table isn't
-        # part of the real source — e.g. our slack.messages, where the
+        # part of the real source - e.g. our slack.messages, where the
         # real Coral slack source doesn't expose a messages table).
         real_cols = real_cols_by_table.get(table, [])
         real_col_names = {c["name"] for c in real_cols if c.get("name")}
@@ -169,7 +169,7 @@ def main() -> int:
 
     _DATA_DIR.mkdir(parents=True, exist_ok=True)
     _MANIFEST_DIR.mkdir(parents=True, exist_ok=True)
-    # Wipe stale manifests from prior scenarios — Coral will still have
+    # Wipe stale manifests from prior scenarios - Coral will still have
     # them registered, but the user is expected to `coral source remove`
     # before re-registering. The print at the end lists fresh ones.
     for stale in _MANIFEST_DIR.glob("*.yaml"):

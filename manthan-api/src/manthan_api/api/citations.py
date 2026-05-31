@@ -8,7 +8,7 @@ Surfaces the citation-reasoning service. Two routes:
                  generated_at, cached}
 
   GET  /api/cases/{id}/citations
-       returns: {reasonings: [...]}   — every cached reasoning for the
+       returns: {reasonings: [...]}   - every cached reasoning for the
        case, for the UI to pre-warm on workspace load.
 """
 

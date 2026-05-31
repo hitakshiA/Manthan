@@ -1,5 +1,5 @@
 /**
- * Help — quick reference + links to docs / support / community.
+ * Help - quick reference + links to docs / support / community.
  *
  * Editorial form: print directory. No icon boxes for each link, no FAQ
  * cards-in-cards. Just a short directory of links and a typeset FAQ.
@@ -34,7 +34,7 @@ const FAQ = [
   },
   {
     q: "Can I edit a drafted action before approving?",
-    a: "Yes — pencil icon next to any drafted action card in the workspace. The actor honours your edits. Original LLM draft is preserved in the audit log.",
+    a: "Yes - pencil icon next to any drafted action card in the workspace. The actor honours your edits. Original LLM draft is preserved in the audit log.",
   },
   {
     q: "What's the difference between Active and Inbox?",
@@ -140,8 +140,8 @@ export default function Help() {
           className="text-[13px] leading-relaxed max-w-prose"
           style={{ color: "var(--color-ink-muted)" }}
         >
-          For anything urgent — billing emergencies, prod incidents, demo-day
-          support — email{" "}
+          For anything urgent - billing emergencies, prod incidents, demo-day
+          support - email{" "}
           <a
             href="mailto:hello@manthan.quest"
             className="underline"

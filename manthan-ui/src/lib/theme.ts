@@ -1,5 +1,5 @@
 /**
- * Theme — dark | light, persisted in localStorage, applied via
+ * Theme - dark | light, persisted in localStorage, applied via
  * `<html data-theme="…">`. No system-preference fallback: the user opts in
  * explicitly. Default is dark (the editorial direction).
  */
@@ -27,7 +27,7 @@ export function bootTheme(): void {
   applyTheme(getStoredTheme());
 }
 
-/** React hook — read + set theme. */
+/** React hook - read + set theme. */
 export function useTheme(): [Theme, (next: Theme) => void] {
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
   useEffect(() => {
@@ -39,12 +39,12 @@ export function useTheme(): [Theme, (next: Theme) => void] {
 /**
  * Force a specific theme while a component is mounted, without touching
  * the user's stored preference. Used by Landing / Login / Signup which
- * are designed around dark only — if the operator switched the
+ * are designed around dark only - if the operator switched the
  * workspace to light, we still want the marketing + auth pages to look
  * the way they were designed.
  *
  * On unmount, restores whatever `data-theme` was on the document before
- * we touched it (NOT the stored preference — so if the user toggles
+ * we touched it (NOT the stored preference - so if the user toggles
  * theme inside `/app`, leaving `/app` and coming back keeps the toggle).
  */
 export function useLockedTheme(theme: Theme): void {

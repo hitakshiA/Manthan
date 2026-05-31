@@ -1,5 +1,5 @@
 /**
- * Case workspace — the unified 3-column layout (sidebar / center / right rail).
+ * Case workspace - the unified 3-column layout (sidebar / center / right rail).
  *
  * Extracted from HeroShowcase so the live product uses the same components
  * as the marketing site. Receives data via props; no module-level constants.
@@ -60,7 +60,7 @@ export interface CaseWorkspaceProps {
   onActiveCaseChange: (num: string) => void;
   /** "you" if the current member should be considered the active operator. */
   meOwner?: string;
-  /** UUID of the active case — used to subscribe to its live event stream. */
+  /** UUID of the active case - used to subscribe to its live event stream. */
   activeCaseId?: string;
   /** Live event stream owned by the parent page (so refetch on milestones can fire). */
   streamedEvents?: CaseEvent[];
@@ -86,11 +86,11 @@ export function CaseWorkspace({
   const [approvedSteps, setApprovedSteps] = useState(0);
   const [editingAction, setEditingAction] = useState<number | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  // Citation modal — opened by clicking any [n] chip in the Brief.
+  // Citation modal - opened by clicking any [n] chip in the Brief.
   // Lifted to root so the same modal serves chips in any section.
   const [citationRequest, setCitationRequest] =
     useState<CitationDetailRequest | null>(null);
-  // Original-email modal — only relevant for email-triggered cases.
+  // Original-email modal - only relevant for email-triggered cases.
   // Toggle from the BriefHeader.
   const [emailModalOpen, setEmailModalOpen] = useState(false);
 
@@ -120,7 +120,7 @@ export function CaseWorkspace({
     (activeCase ? detailByNum[activeCase.num] : undefined);
 
   // ────────────────────────────────────────────────────────────────────
-  // All hooks must run on every render — Rules of Hooks.
+  // All hooks must run on every render - Rules of Hooks.
   //
   // Previously the early-return for "case not found / detail loading"
   // sat above the useMemos below, so the hook count flipped (8 → 12)
@@ -193,7 +193,7 @@ export function CaseWorkspace({
         elapsed={elapsed}
       />
 
-      {/* BODY — stage-driven layout:
+      {/* BODY - stage-driven layout:
             investigation → InvestigationPlayground
             review        → Brief + Drafted actions (two-column)
             approving     → ApprovalCinematic takeover
@@ -222,7 +222,7 @@ export function CaseWorkspace({
             gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
           }}
         >
-          {/* LEFT — Brief + decision rationale + collapsible trace */}
+          {/* LEFT - Brief + decision rationale + collapsible trace */}
           <section
             className="overflow-y-auto border-r"
             style={{ borderColor: "var(--color-rule-soft)" }}
@@ -256,7 +256,7 @@ export function CaseWorkspace({
             </div>
           </section>
 
-          {/* RIGHT — Drafted/Performed actions + Receipts */}
+          {/* RIGHT - Drafted/Performed actions + Receipts */}
           <section className="overflow-y-auto">
             <div className="px-10 md:px-12 pt-10 pb-16 max-w-[62ch] mx-auto space-y-12">
               <CaseActions
@@ -292,7 +292,7 @@ export function CaseWorkspace({
         </div>
       )}
 
-      {/* Action bar is only meaningful in the review stage — once the
+      {/* Action bar is only meaningful in the review stage - once the
           operator has approved/denied/escalated, the verbs become noise.
           In the closed state we still surface the chat affordance via
           the ChatDrawer side-tab, so nothing is lost. */}
@@ -310,7 +310,7 @@ export function CaseWorkspace({
       )}
 
       {/* In the closed state, give the operator a quiet inline "Talk to
-          agent" affordance — they can ask follow-up questions about
+          agent" affordance - they can ask follow-up questions about
           what was decided. No big verb row, just a hairline footer. */}
       {stage === "closed" && (
         <ClosedCaseFooter
@@ -319,7 +319,7 @@ export function CaseWorkspace({
         />
       )}
 
-      {/* Talk-to-agent drawer — toggled either from the action bar or the
+      {/* Talk-to-agent drawer - toggled either from the action bar or the
           side-edge tab. State is lifted up so both controls stay in sync. */}
       <ChatDrawer
         caseId={activeCaseId}
@@ -329,7 +329,7 @@ export function CaseWorkspace({
         onOpenChange={setChatOpen}
       />
 
-      {/* Clicky citation modal — opens when any [n] chip in the Brief
+      {/* Clicky citation modal - opens when any [n] chip in the Brief
           is clicked. Lifted up so the same modal is reused across
           Brief, Postmortem, and (future) Evidence rail. */}
       <CitationDetailModal
@@ -337,7 +337,7 @@ export function CaseWorkspace({
         onClose={() => setCitationRequest(null)}
       />
 
-      {/* Original-email modal — only ever opened for email-triggered
+      {/* Original-email modal - only ever opened for email-triggered
           cases (BriefHeader hides the affordance otherwise). Endpoint
           404s for non-email cases, so it's safe even if the toggle
           fires unexpectedly. */}
@@ -362,14 +362,14 @@ function extractSourcesUsed(events: CaseEvent[]): string[] {
 interface SourceStat {
   /** How many tool_call queries hit this source. */
   count: number;
-  /** Distinct table names referenced — e.g. ["disputes", "charges"]. */
+  /** Distinct table names referenced - e.g. ["disputes", "charges"]. */
   tables: string[];
 }
 
 /**
- * Per-source breakdown of "what did Manthan touch here?" — count of
+ * Per-source breakdown of "what did Manthan touch here?" - count of
  * queries and the distinct table names. Powers the rich source chips
- * in the case header ("Stripe — disputes, charges").
+ * in the case header ("Stripe - disputes, charges").
  */
 function extractSourceStats(events: CaseEvent[]): Record<string, SourceStat> {
   const KNOWN = new Set([
@@ -436,11 +436,11 @@ function computeElapsed(events: CaseEvent[]): string | null {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// InvestigationPlayground — the cinematic "Manthan is working" view.
+// InvestigationPlayground - the cinematic "Manthan is working" view.
 //
 // Replaces the 2-column Brief/Actions body while the agent is still
 // running. Shows:
-//   1. A wide source mesh — every connected source as a small glyph.
+//   1. A wide source mesh - every connected source as a small glyph.
 //      Glyphs illuminate when the agent queries that source, then fade
 //      back to dim. The currently-querying source has a pulsing dot.
 //   2. A "rolling" live trace of the last N events, with the prettifier
@@ -542,7 +542,7 @@ function InvestigationPlayground({
             className="display-italic"
             style={{ color: "var(--color-ink-muted)" }}
           >
-            across {sourcesUsed.length || "—"} source
+            across {sourcesUsed.length || "-"} source
             {sourcesUsed.length === 1 ? "" : "s"}
           </em>
         </h3>
@@ -733,7 +733,7 @@ function prettyFallback(e: CaseEvent): string {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// CaseHeaderV2 — the new top strip that replaces the old header + right
+// CaseHeaderV2 - the new top strip that replaces the old header + right
 // rail. Shows the case title, source chips used, time taken, status,
 // and a "Talk to agent" trigger. Compact (60-70px tall) so the two-
 // column body has the screen.
@@ -838,7 +838,7 @@ function CaseHeaderV2({
           </div>
         )}
 
-        {/* Time taken — print-style callout on its own row, aligned with
+        {/* Time taken - print-style callout on its own row, aligned with
             the sketch's "Time taken ←" arrow on the left. */}
         {elapsed && (
           <div className="mt-3 inline-flex items-baseline gap-2">
@@ -879,7 +879,7 @@ function CaseHeaderV2({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// ChatDrawer — slides in from the right edge with the talk-to-agent
+// ChatDrawer - slides in from the right edge with the talk-to-agent
 // thread. Toggle lives as a vertical tab on the right side; clicking
 // expands a 380px-wide drawer.
 // ──────────────────────────────────────────────────────────────────────
@@ -905,7 +905,7 @@ function ChatDrawer({
 
   return (
     <>
-      {/* Toggle tab — vertical pill anchored to the right edge */}
+      {/* Toggle tab - vertical pill anchored to the right edge */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="fixed right-0 top-1/2 -translate-y-1/2 z-30 px-2 py-3 flex flex-col items-center gap-1.5 hover:opacity-90 transition-opacity"
@@ -983,7 +983,7 @@ function ChatDrawer({
                   className="font-display italic text-[13.5px] leading-relaxed max-w-prose"
                   style={{ color: "var(--color-ink-muted)" }}
                 >
-                  Ask the agent anything about this case — &quot;why did you
+                  Ask the agent anything about this case - &quot;why did you
                   fight this?&quot;, &quot;re-check the Notion policy&quot;,
                   &quot;rewrite the customer email warmer&quot;. The agent
                   has full Coral access to re-investigate.
@@ -1022,7 +1022,7 @@ function ChatDrawer({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Case closed banner — appears above the Brief once a case is terminal
+// Case closed banner - appears above the Brief once a case is terminal
 // ──────────────────────────────────────────────────────────────────────
 
 /** A quiet, hairline-bordered banner across the top of the Brief column
@@ -1114,11 +1114,11 @@ function CaseClosedBanner({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Brief — header + TL;DR lede + postmortem-in-detail + inline citation chips
+// Brief - header + TL;DR lede + postmortem-in-detail + inline citation chips
 // ──────────────────────────────────────────────────────────────────────
 
 /**
- * BriefPostmortem — the centerpiece of the Brief column.
+ * BriefPostmortem - the centerpiece of the Brief column.
  *
  *   ┌────────────────────────────────┐
  *   │ Header (customer · verdict)    │
@@ -1132,7 +1132,7 @@ function CaseClosedBanner({
  *   │ Decision rationale             │
  *   └────────────────────────────────┘
  *
- * Citation chips [n] are clickable — calls `onCite` with the evidence
+ * Citation chips [n] are clickable - calls `onCite` with the evidence
  * row so the parent opens the CitationDetailModal.
  */
 function BriefPostmortem({
@@ -1159,14 +1159,14 @@ function BriefPostmortem({
 
   return (
     <div className="space-y-8 shrink-0">
-      {/* ── Header — customer · verdict · amount · confidence ── */}
+      {/* ── Header - customer · verdict · amount · confidence ── */}
       <BriefHeader
         caseRow={caseRow}
         detail={detail}
         onShowOriginalEmail={onShowOriginalEmail}
       />
 
-      {/* ── TLDR lede — italic display, the "what happened in one breath" ── */}
+      {/* ── TLDR lede - italic display, the "what happened in one breath" ── */}
       {tldrParagraphs.length > 0 && (
         <div className="space-y-4">
           {tldrParagraphs.map((p, i) => (
@@ -1181,7 +1181,7 @@ function BriefPostmortem({
         </div>
       )}
 
-      {/* ── Postmortem in detail — each finding as a numbered paragraph
+      {/* ── Postmortem in detail - each finding as a numbered paragraph
              with inline citation chips at the end. ── */}
       {showPostmortem && (
         <div className="space-y-4">
@@ -1242,7 +1242,7 @@ function BriefPostmortem({
         </div>
       )}
 
-      {/* ── Decision rationale — the agent's spoken reasoning. ── */}
+      {/* ── Decision rationale - the agent's spoken reasoning. ── */}
       {detail.policyReasoning && (
         <div className="space-y-2">
           <Eyebrow>Decision rationale</Eyebrow>
@@ -1339,14 +1339,14 @@ function BriefHeader({
   );
 }
 
-/** Inline numbered citation chip — `[icon][n]↗` linked to the source.
+/** Inline numbered citation chip - `[icon][n]↗` linked to the source.
  *
  *  Two affordances in one inline glyph:
  *    - **Plain click** on the chip → opens the source record in a new
- *      tab (one-click verification — the primary UX per the sketch).
+ *      tab (one-click verification - the primary UX per the sketch).
  *    - **Click the small `ⓘ`** to its right → opens the reasoning
  *      modal with the agent's "why this matters" explanation.
- *    - **Shift-click** on the chip is the same as clicking `ⓘ` —
+ *    - **Shift-click** on the chip is the same as clicking `ⓘ` -
  *      useful when keyboard is faster than aiming at the info dot.
  *
  *  When no URL is known (resolver returned null), the chip falls back
@@ -1412,7 +1412,7 @@ function CitationChip({
       onClick={onShowReasoning}
       className={baseClasses}
       style={baseStyle}
-      title={`Citation [${n}] — no direct link available · click for reasoning`}
+      title={`Citation [${n}] - no direct link available · click for reasoning`}
     >
       <SourceIcon id={src} size={9} tinted />
       <span>[{n}]</span>
@@ -1426,7 +1426,7 @@ function CitationChip({
         <button
           type="button"
           onClick={onShowReasoning}
-          aria-label={`Why this citation matters — [${n}]`}
+          aria-label={`Why this citation matters - [${n}]`}
           title="Why this matters"
           className={
             "citation-info inline-flex items-center justify-center " +
@@ -1514,13 +1514,13 @@ function CaseActions({
 
   const emptyText = closed
     ? closedKind === "denied"
-      ? "You denied the agent's recommendation — no actions fired."
+      ? "You denied the agent's recommendation - no actions fired."
       : closedKind === "escalated"
         ? "Case was escalated before the agent drafted actions."
         : closedKind === "errored"
           ? "The run errored before any action could fire."
           : "No actions were fired for this case."
-    : "No actions drafted yet — investigation in progress.";
+    : "No actions drafted yet - investigation in progress.";
 
   return (
     <section className="h-full flex flex-col min-h-0">
@@ -1759,7 +1759,7 @@ function ActionStatusPill({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Investigation timeline — live stream of agent activity
+// Investigation timeline - live stream of agent activity
 // ──────────────────────────────────────────────────────────────────────
 
 /** Stage of the case workspace.
@@ -1779,7 +1779,7 @@ function deriveClosedKind(
   caseRow: WorkspaceCaseRow,
   events: CaseEvent[],
 ): ClosedKind | null {
-  // The Tone type loses "escalated" + "errored" detail — we recover it
+  // The Tone type loses "escalated" + "errored" detail - we recover it
   // from the event log instead.
   const escalated = events.some((e) => e.type === "human_escalated");
   if (escalated) return "escalated";
@@ -1790,7 +1790,7 @@ function deriveClosedKind(
   // errored based on event log.
   if (caseRow.status === "resolved") return errored ? "errored" : "resolved";
   // Some cases sit in "drafted" tone after errored/escalated due to the
-  // adapter's lossy mapping — recover from events.
+  // adapter's lossy mapping - recover from events.
   const caseClosed = events.some((e) => e.type === "case_closed");
   if (caseClosed) return "resolved";
   if (errored) return "errored";
@@ -1824,11 +1824,11 @@ function investigationIsActive(
 }
 
 /**
- * InvestigationTrace — always-open list of every step the agent took,
+ * InvestigationTrace - always-open list of every step the agent took,
  * with relative time offsets (+0:00, +0:01.2, …) running down the gutter.
  *
  * Individual rows are still per-step expandable so the operator can pop
- * a step open to read the raw SQL or tool result — but the section as a
+ * a step open to read the raw SQL or tool result - but the section as a
  * whole is never collapsed. The whole point of the trace is to be the
  * audit log; hiding it would defeat that.
  *
@@ -1965,7 +1965,7 @@ function pairToolEvents(events: CaseEvent[]): TimelineStep[] {
               : name;
       const title = prettyTitle || fallbackTitle;
 
-      // Show the SQL as a SECONDARY hint when we have a pretty summary —
+      // Show the SQL as a SECONDARY hint when we have a pretty summary -
       // they complement each other (summary = intent, query = mechanism).
       const summary = prettyTitle
         ? (query ? truncateInline(query, 100) : undefined)
@@ -2144,7 +2144,7 @@ function TimelineStep({
             : "var(--color-ink-faint)";
 
   // Wall-clock with seconds is the primary timestamp. The relative
-  // offset from case start is shown below it, bounded — cases that
+  // offset from case start is shown below it, bounded - cases that
   // span hours (because the operator re-investigated through chat
   // hours later) show "+1h+" instead of an absurd "+569:03".
   const wallClock = formatWallClock(step.at);
@@ -2163,7 +2163,7 @@ function TimelineStep({
           gridTemplateColumns: "auto 12px minmax(0,1fr) auto",
         }}
       >
-        {/* Timestamp gutter — wall-clock primary, offset secondary */}
+        {/* Timestamp gutter - wall-clock primary, offset secondary */}
         <div
           className="text-right tabular-nums leading-tight shrink-0"
           style={{ width: 70 }}
@@ -2281,7 +2281,7 @@ function TimelineStep({
  *  centisecond precision under 10 seconds so the operator can feel the
  *  difference between back-to-back tool calls. */
 /**
- * Bounded relative offset. Anything past 60 minutes returns "+1h+" —
+ * Bounded relative offset. Anything past 60 minutes returns "+1h+" -
  * cases that span hours are almost always cases the operator
  * re-investigated through chat later, and the operator cares about
  * the wall-clock not the multi-hour gap.
@@ -2298,7 +2298,7 @@ function boundedOffset(at: string, firstAt: string): string | null {
   return `+${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** "14:21:09" — wall-clock with seconds for the primary timestamp. */
+/** "14:21:09" - wall-clock with seconds for the primary timestamp. */
 function formatWallClock(at: string): string {
   const d = new Date(at);
   if (Number.isNaN(d.getTime())) return "";
@@ -2560,7 +2560,7 @@ function CaseChatInput({
           placeholder={
             disabled
               ? "Manthan is investigating…"
-              : "Ask a follow-up — \"why fight not refund?\" or \"rewrite the email warmer\""
+              : "Ask a follow-up - \"why fight not refund?\" or \"rewrite the email warmer\""
           }
           disabled={disabled || sending}
           className="flex-1 bg-transparent text-[12.5px] outline-none min-w-0"
@@ -2587,7 +2587,7 @@ function CaseChatInput({
 // Closed-case footer (hairline, just the chat toggle)
 // ──────────────────────────────────────────────────────────────────────
 
-/** Footer for terminal cases — no big verbs, just an option to open the
+/** Footer for terminal cases - no big verbs, just an option to open the
  *  agent chat for follow-up questions. Matches the layout space the
  *  CaseActionBar occupies in review mode so the page doesn't reflow on
  *  the review → closed transition. */
@@ -2807,11 +2807,11 @@ function CaseActionBar({
           {actionVerb}
         </div>
 
-        {/* Action row — left side has the secondary "negative" verbs, the
+        {/* Action row - left side has the secondary "negative" verbs, the
             right has the primary "act" verb. The chat trigger sits all the
             way right so it doesn't compete with Approve. */}
         <div className="flex items-center gap-4">
-          {/* Escalate · Hold · Deny — text-only secondary verbs */}
+          {/* Escalate · Hold · Deny - text-only secondary verbs */}
           <button
             onClick={() => setEscalateOpen(true)}
             className="text-[12px] tracking-[0.02em] hover:opacity-90"
@@ -2843,7 +2843,7 @@ function CaseActionBar({
             Deny
           </button>
 
-          {/* Approve — primary verb */}
+          {/* Approve - primary verb */}
           <button
             disabled={status === "approving"}
             onClick={async () => {
@@ -2865,7 +2865,7 @@ function CaseActionBar({
             {status === "approving" ? "Approving…" : "Approve"}
           </button>
 
-          {/* Talk to agent — toggle the right-side chat drawer */}
+          {/* Talk to agent - toggle the right-side chat drawer */}
           {onToggleChat && (
             <button
               onClick={onToggleChat}
@@ -2914,7 +2914,7 @@ function CaseActionBar({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Deny modal — operator rejects the agent's recommendation, captures
+// Deny modal - operator rejects the agent's recommendation, captures
 // the reason for the audit trail.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -2954,7 +2954,7 @@ function DenyModal({
       title="Deny recommendation"
       eyebrow="Audit-logged"
       description="Manthan will mark the drafted actions as denied and close the case. The reason is captured for the audit trail."
-      placeholder="Why are you denying? — e.g. customer reached out separately, will handle directly."
+      placeholder="Why are you denying? - e.g. customer reached out separately, will handle directly."
       submitLabel={submitting ? "Denying…" : "Deny"}
       reason={reason}
       onReasonChange={setReason}
@@ -2966,7 +2966,7 @@ function DenyModal({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Escalate modal — hand the case off to a human team.
+// Escalate modal - hand the case off to a human team.
 // ──────────────────────────────────────────────────────────────────────
 
 function EscalateModal({
@@ -3018,7 +3018,7 @@ function EscalateModal({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// ReasonModal — shared shell for any "capture a reason then submit"
+// ReasonModal - shared shell for any "capture a reason then submit"
 // modal so Deny and Escalate stay visually identical.
 // ──────────────────────────────────────────────────────────────────────
 

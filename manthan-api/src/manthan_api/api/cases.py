@@ -1,4 +1,4 @@
-"""Case endpoints — the inbox view + per-case detail + create.
+"""Case endpoints - the inbox view + per-case detail + create.
 
 All endpoints are tenant-scoped via the `get_ctx` dependency. No cross-tenant
 data leakage is possible without explicit elevation.
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/api/cases", tags=["cases"])
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /api/cases  — the inbox view
+# GET /api/cases  - the inbox view
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -119,7 +119,7 @@ async def fetch_cases_for_org(
         # Pick the best one-line summary for the inbox card:
         # 1. Brief TLDR (set once the agent concludes)
         # 2. Latest prettifier-written event summary (during investigation)
-        # 3. None — frontend falls back to a synthetic line
+        # 3. None - frontend falls back to a synthetic line
         rd["card_summary"] = _shorten_summary(brief_tldr or latest_pretty)
         cases.append(Case(**rd))
     return cases, total or 0
@@ -172,7 +172,7 @@ async def get_trigger_email(
 ) -> dict:
     """Return the raw inbound email that opened this case.
 
-    Pulls fields off `cases.trigger_payload` — only relevant for cases
+    Pulls fields off `cases.trigger_payload` - only relevant for cases
     with `trigger_surface='inbound_email'`. Returns 404 for other
     surfaces so the UI can hide the affordance.
     """
@@ -208,7 +208,7 @@ async def get_trigger_email(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /api/cases/{id}  — case detail (with findings)
+# GET /api/cases/{id}  - case detail (with findings)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -335,7 +335,7 @@ async def get_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/cases  — manual trigger from the web "+ New" button or API
+# POST /api/cases  - manual trigger from the web "+ New" button or API
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -384,7 +384,7 @@ async def create_case(
                 body.currency,
             )
 
-            # case_opened event — agent worker reacts to this via LISTEN.
+            # case_opened event - agent worker reacts to this via LISTEN.
             await conn.execute(
                 """
                 INSERT INTO events (org_id, thread_id, seq, type, actor, data)
@@ -410,7 +410,7 @@ async def create_case(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /api/cases/{id}/brief.pdf  — render the brief as a one-page PDF
+# GET /api/cases/{id}/brief.pdf  - render the brief as a one-page PDF
 # ──────────────────────────────────────────────────────────────────────
 
 

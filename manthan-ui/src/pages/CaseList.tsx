@@ -1,9 +1,9 @@
 /**
- * CaseList — focused, status-filtered ledger of cases.
+ * CaseList - focused, status-filtered ledger of cases.
  *
  * Backs /app/active, /app/done, /app/escalated. Renders the same
  * editorial card grid the Inbox uses, so the operator's visual model
- * stays consistent across views — same card shape, same Spectral
+ * stays consistent across views - same card shape, same Spectral
  * description line, same hairline + status accent. Previously these
  * pages collapsed to a thin `divide-y` list that read as a CSV dump
  * with no breathing room.
@@ -77,7 +77,7 @@ export default function CaseList({
     };
   }, [statuses]);
 
-  // "Done" and "Escalated" feel archival — mute the surface so the
+  // "Done" and "Escalated" feel archival - mute the surface so the
   // operator's eye reads the active band first when they have both in
   // view. "Active" pages stay full opacity.
   const archival = useMemo(

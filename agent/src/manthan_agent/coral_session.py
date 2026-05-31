@@ -24,7 +24,7 @@ from typing import Any
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-# Shared contextvar — tools.py reads this to decide whether to dispatch
+# Shared contextvar - tools.py reads this to decide whether to dispatch
 # to the real Coral or to the in-process mock.
 _ACTIVE_CORAL_SESSION: contextvars.ContextVar[ClientSession | None] = (
     contextvars.ContextVar("manthan_active_coral_session", default=None)
@@ -48,7 +48,7 @@ async def coral_mcp_session(coral_binary: str) -> Any:
     """Spawn `<coral_binary> mcp-stdio` and yield an initialized session.
 
     Caller is expected to manage the contextvar binding via
-    set_active_coral_session() / clear_active_coral_session() — this
+    set_active_coral_session() / clear_active_coral_session() - this
     helper only owns the subprocess lifecycle.
     """
     params = StdioServerParameters(

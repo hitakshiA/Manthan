@@ -141,7 +141,7 @@ def run_dlt_pipeline(
 def _build_source(request: DltRunRequest) -> Any:
     """Instantiate the right dlt source with credentials.
 
-    This is a thin registry — each case maps to a dlt-native source
+    This is a thin registry - each case maps to a dlt-native source
     module. Missing cases raise so the API can 400 cleanly rather
     than silently producing empty tables.
     """
@@ -174,7 +174,7 @@ def _build_source(request: DltRunRequest) -> Any:
         return github_reactions(owner, name, access_token=token)
     if request.source == "stripe":
         # dlt doesn't ship a first-class Stripe source in the base
-        # install — it's in dlt-hub/verified-sources. We raise with a
+        # install - it's in dlt-hub/verified-sources. We raise with a
         # helpful message; Phase 6 extension can install the source.
         raise NotImplementedError(
             "Stripe requires `pip install 'dlt[duckdb] dlt-sources-stripe'` "
@@ -220,13 +220,13 @@ def list_available_sources() -> list[dict[str, Any]]:
         },
         {
             "slug": "stripe",
-            "label": "Stripe — charges, subscriptions, invoices",
+            "label": "Stripe - charges, subscriptions, invoices",
             "ready": False,
             "install_hint": "Needs the verified-sources Stripe source installed.",
         },
         {
             "slug": "notion",
-            "label": "Notion — databases & pages",
+            "label": "Notion - databases & pages",
             "ready": False,
             "install_hint": "Needs the verified-sources Notion source installed.",
         },
@@ -238,10 +238,10 @@ def scaffold_from_openapi(spec_url: str, dest_name: str) -> dict[str, Any]:
 
     Returns a summary the frontend can display (generated files, next
     steps). Actual code execution requires the user to review and
-    commit the scaffolded module — we never auto-install a generated
+    commit the scaffolded module - we never auto-install a generated
     connector into the live process.
     """
-    # A stub — real implementation would spawn ``dlt init ...`` in a
+    # A stub - real implementation would spawn ``dlt init ...`` in a
     # subprocess and capture the generated files.
     return {
         "spec_url": spec_url,

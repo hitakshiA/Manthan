@@ -51,11 +51,11 @@ def execute_sql(
         raise HTTPException(
             status_code=404, detail=f"Unknown dataset: {sql_request.dataset_id}"
         )
-    # Phase 2 semantic validator — runs before DuckDB to catch
+    # Phase 2 semantic validator - runs before DuckDB to catch
     # hallucinated tables/columns and silent metric-filter drops.
     # Failures raise HTTP 400 with an agent-readable repair hint;
     # the agent retries up to its internal limit. Unknown-column
-    # and other soft issues are warnings — they don't block exec.
+    # and other soft issues are warnings - they don't block exec.
     dcd = state.dcds[sql_request.dataset_id]
     catalog = EntityCatalog.from_dcd(dcd)
     extras = set(state.gold_table_names.values()) | set(_list_raw_tables(state))
@@ -82,7 +82,7 @@ def execute_sql(
             },
         )
     try:
-        # Serialize DuckDB access — the native connection is not
+        # Serialize DuckDB access - the native connection is not
         # thread-safe and the agent fires many parallel SQL calls.
         with state.connection_lock:
             return run_sql(
@@ -131,7 +131,7 @@ def schema(dataset_id: str, state: StateDep) -> SchemaSummary:
 class MetricResponse(BaseModel):
     """Exec-friendly shape returned by ``POST /tools/metric``.
 
-    Carries both the tabular result and the full auditable context —
+    Carries both the tabular result and the full auditable context -
     the exact SQL that ran, the metric's declared filter, and the
     dimensions/grain that produced the slice. The ``numeric_claim``
     event emitted by the agent loop in Phase 3 copies directly from
@@ -165,7 +165,7 @@ def execute_metric(
     The agent sends a structured request (entity + metric + optional
     dimensions/filters/grain); Manthan composes SQL from the declared
     metric definition and executes it. This bypasses the validator
-    because we trust our own composer — the semantic contract is the
+    because we trust our own composer - the semantic contract is the
     definition.
     """
     try:

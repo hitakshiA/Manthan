@@ -1,6 +1,6 @@
 """Subagent scopes for multi-agent analysis.
 
-A subagent is an isolated **workspace** — not a second LLM runtime.
+A subagent is an isolated **workspace** - not a second LLM runtime.
 Layer 1 owns the scope (its own session_id, its own task list, its
 own memory scope, its own Python session); Layer 2 runs the actual
 LLM loop inside that scope. This keeps Layer 1 a toolbox without

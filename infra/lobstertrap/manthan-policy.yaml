@@ -1,4 +1,4 @@
-# Lobster Trap policy — Manthan production preset
+# Lobster Trap policy - Manthan production preset
 #
 # Drops in front of Gemini (Google AI Studio's OpenAI-compat endpoint) and
 # inspects every prompt the agent sends + every response Gemini returns.
@@ -50,12 +50,12 @@ ingress_rules:
   # ("company", "investor", "customer") that the inspector's PII regex
   # treats as a request for personal data. For a governed BI analyst
   # those are public business columns, not PII. We catch the only
-  # leak that actually matters — credentials in the model's RESPONSE —
+  # leak that actually matters - credentials in the model's RESPONSE -
   # via the egress rule below.
 
   # ── Manthan-specific: ALLOW + LOG analytical work ─────────────
   - name: log_sql_analytics
-    description: "SQL or Python analytical work — log for the audit drawer"
+    description: "SQL or Python analytical work - log for the audit drawer"
     priority: 40
     action: LOG
     conditions:
@@ -64,7 +64,7 @@ ingress_rules:
         value: "data_analysis"
 
   - name: log_code_execution
-    description: "Agent's run_python / run_sql tool calls — keep an audit trail"
+    description: "Agent's run_python / run_sql tool calls - keep an audit trail"
     priority: 30
     action: LOG
     conditions:
@@ -85,7 +85,7 @@ egress_rules:
         value: true
 
   - name: log_numeric_claims
-    description: "Response contains figures — keep for downstream audit drawer"
+    description: "Response contains figures - keep for downstream audit drawer"
     priority: 20
     action: LOG
     conditions:

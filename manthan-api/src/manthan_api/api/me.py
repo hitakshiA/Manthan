@@ -1,4 +1,4 @@
-"""Identity — current member + org context.
+"""Identity - current member + org context.
 
 Used by the UI to render the sidebar user widget, Settings page, and
 Workspace owner field. Reads from the resolved TenantCtx (Clerk JWT in

@@ -1,4 +1,4 @@
-"""Stripe adapter — refunds, dispute responses."""
+"""Stripe adapter - refunds, dispute responses."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def refund(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
     except stripe.error.StripeError as e:  # type: ignore[attr-defined]
         # Special-case the most common refund-rejection in the demo
         # flow: charge_disputed. Stripe holds the funds while a dispute
-        # is open, so a direct refund is impossible — the customer
+        # is open, so a direct refund is impossible - the customer
         # gets refunded via dispute resolution instead. The
         # stripe_dispute_response action (which fires alongside this
         # one) carries the actual evidence + concession. Convert this
@@ -120,7 +120,7 @@ def dispute_response(payload: dict[str, Any], idempotency_key: str) -> Execution
 
 
 def verify_refund(external_ref: str) -> bool:
-    """Write-then-verify — re-read the refund and check it succeeded."""
+    """Write-then-verify - re-read the refund and check it succeeded."""
     _client()
     try:
         r = stripe.Refund.retrieve(external_ref)

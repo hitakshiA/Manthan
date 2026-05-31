@@ -1,5 +1,5 @@
 /**
- * Auth controls — faithful port of Aurora Onboard's SocialButton +
+ * Auth controls - faithful port of Aurora Onboard's SocialButton +
  * InputGroup. brand-gray = #1A1A1A; rounded-xl; ring on focus.
  */
 
@@ -73,7 +73,7 @@ export function SocialButton({
 }
 
 export function Divider({ children = "or" }: { children?: ReactNode }) {
-  // Two equal flex-1 rules flanking the label — mathematically symmetric,
+  // Two equal flex-1 rules flanking the label - mathematically symmetric,
   // so the label is always pixel-centered regardless of label width.
   // (Old "absolute line under a centered span with bg-black" technique
   // could look off when the bg-black mask didn't exactly cover the line.)

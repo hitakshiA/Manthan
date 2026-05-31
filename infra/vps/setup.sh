@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Manthan — generic VPS bootstrap.
+# Manthan - generic VPS bootstrap.
 #
 # Idempotent installer for a fresh Ubuntu 22.04 / 24.04 VPS (DigitalOcean,
-# Vultr, Linode, Hetzner, AWS Lightsail — anywhere that gives you an Ubuntu
+# Vultr, Linode, Hetzner, AWS Lightsail - anywhere that gives you an Ubuntu
 # box with root SSH). Installs Docker + compose, clones the repo, writes a
 # placeholder .env, opens the firewall, and runs `docker compose up -d`.
 #
@@ -33,7 +33,7 @@ apt-get update -qq
 apt-get install -y -qq \
   ca-certificates curl git gnupg lsb-release ufw
 
-# 2. Docker (official convenience script — idempotent)
+# 2. Docker (official convenience script - idempotent)
 if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
 fi
@@ -57,7 +57,7 @@ if [[ ! -f "$INSTALL_DIR/.env" ]]; then
   echo "  (paste your GEMINI_API_KEY before the next restart)"
 fi
 
-# 5. minimal firewall — SSH + 80 + 443 + the FastAPI port if you want direct access
+# 5. minimal firewall - SSH + 80 + 443 + the FastAPI port if you want direct access
 ufw --force reset >/dev/null
 ufw default deny incoming >/dev/null
 ufw default allow outgoing >/dev/null
@@ -80,7 +80,7 @@ echo
 echo "  Next steps:"
 echo "    1. ssh root@${PUBLIC_IP}"
 echo "    2. nano ${INSTALL_DIR}/.env"
-echo "       — paste your GEMINI_API_KEY from https://aistudio.google.com/apikey"
+echo "       - paste your GEMINI_API_KEY from https://aistudio.google.com/apikey"
 echo "    3. docker compose -f ${INSTALL_DIR}/docker-compose.yml restart"
 echo
 echo "  To put a hostname + TLS in front, see infra/vps/Caddyfile.example"

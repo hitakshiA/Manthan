@@ -1,5 +1,5 @@
 /**
- * AppShell — sidebar + top bar + outlet for every /app route.
+ * AppShell - sidebar + top bar + outlet for every /app route.
  *
  * Editorial direction: print sidebar. Nav rows are 11px letterspaced
  * labels with tabular numerals on the right, no icons, no rounded
@@ -43,13 +43,13 @@ export function AppShell() {
         color: "var(--color-ink)",
       }}
     >
-      {/* SIDEBAR — focused six-item nav.
+      {/* SIDEBAR - focused six-item nav.
             We deliberately cut the long sectioned list (15 rows across
             five groups) down to the surfaces a Director actually opens
             during a triage session: Inbox, Done, Policies, Sources,
             Audit, Settings. Everything else (Active/Escalated/Chat/
             Memory/Metrics/Help/etc) is either reachable via filters in
-            the Inbox or covered by the case workspace itself — keeping
+            the Inbox or covered by the case workspace itself - keeping
             it in the chrome was clutter, not utility. */}
       <aside
         className="hidden lg:flex w-[224px] shrink-0 flex-col border-r"
@@ -74,7 +74,7 @@ export function AppShell() {
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* No TopBar — every editorial-memo surface owns its own header.
+        {/* No TopBar - every editorial-memo surface owns its own header.
             The breadcrumb / recovered-$$ chip / demo selector used to
             live here; they're gone on purpose now so each page's
             Spectral title + eyebrow can carry the whole top weight. */}
@@ -87,7 +87,7 @@ export function AppShell() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Workspace switcher — title + slug, no chrome.
+// Workspace switcher - title + slug, no chrome.
 // ──────────────────────────────────────────────────────────────────────
 
 function WorkspaceSwitch({ me }: { me: MeResponse | null }) {
@@ -111,7 +111,7 @@ function WorkspaceSwitch({ me }: { me: MeResponse | null }) {
             className="text-[10.5px] tracking-[0.06em] mt-0.5 truncate"
             style={{ color: "var(--color-ink-faint)" }}
           >
-            {me ? `${me.org.slug} · ${me.org.plan.replace(/_/g, " ")}` : "—"}
+            {me ? `${me.org.slug} · ${me.org.plan.replace(/_/g, " ")}` : "-"}
           </div>
         </div>
         <ChevronsUpDown
@@ -209,11 +209,11 @@ function NavRow({
 }
 
 /**
- * NavAnimatedIcon — the per-nav-row icon. Renders a static first-frame
+ * NavAnimatedIcon - the per-nav-row icon. Renders a static first-frame
  * PNG by default, and on row hover swaps to the animated GIF (which
  * restarts the loop). The GIFs ship black on transparent, so we apply
- * `filter: invert(var(--icon-invert))` — a token set to 1 in dark
- * theme and 0 in light — to keep them legible across both themes.
+ * `filter: invert(var(--icon-invert))` - a token set to 1 in dark
+ * theme and 0 in light - to keep them legible across both themes.
  *
  * The hover swap relies on the parent NavLink's :hover state via the
  * `.nav-row` class. Implemented with two stacked <img>s for zero
@@ -230,7 +230,7 @@ function NavAnimatedIcon({
   return (
     <span
       // Use a data attribute (not inline CSS custom prop) for the
-      // active-state selector — React's inline-style serialization is
+      // active-state selector - React's inline-style serialization is
       // sensitive to whitespace and CSS attribute selectors are brittle
       // against it. data-active="1" is reliable across browsers.
       data-active={active ? "1" : "0"}
@@ -257,15 +257,15 @@ function NavAnimatedIcon({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// User widget — initials + name, hairline border above.
+// User widget - initials + name, hairline border above.
 // ──────────────────────────────────────────────────────────────────────
 
 function UserWidget({ me }: { me: MeResponse | null }) {
-  const initials = me?.member.initials ?? "—";
-  const name = me?.member.display_name ?? "—";
+  const initials = me?.member.initials ?? "-";
+  const name = me?.member.display_name ?? "-";
   const role = me?.member.role ?? "";
   const [theme, setTheme] = useTheme();
-  // `useClerk()` returns the singleton Clerk instance — calling
+  // `useClerk()` returns the singleton Clerk instance - calling
   // `.signOut()` clears the session and respects the
   // `afterSignOutUrl="/"` config from main.tsx, so the user lands
   // back on the marketing page.
@@ -325,7 +325,7 @@ function UserWidget({ me }: { me: MeResponse | null }) {
       </button>
       <button
         onClick={() => {
-          // Fire-and-forget — Clerk handles its own state cleanup +
+          // Fire-and-forget - Clerk handles its own state cleanup +
           // the afterSignOutUrl redirect from main.tsx.
           void clerk?.signOut();
         }}
@@ -341,7 +341,7 @@ function UserWidget({ me }: { me: MeResponse | null }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// TopBar — print-style breadcrumb on a hairline, recovered $$ chip + demo.
+// TopBar - print-style breadcrumb on a hairline, recovered $$ chip + demo.
 // No glow, no backdrop-blur theatre.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -353,9 +353,9 @@ function TopBar({
   metrics: DashboardMetrics | null;
 }) {
   // The page header inside each route owns the primary heading
-  // ("Inbox", "Policies", etc) — we don't duplicate it here. Only
+  // ("Inbox", "Policies", etc) - we don't duplicate it here. Only
   // show a breadcrumb for the deep paths where it actually helps
-  // (e.g. /app/case/abc — show "Inbox / Case").
+  // (e.g. /app/case/abc - show "Inbox / Case").
   const crumbs = pathname.split("/").filter(Boolean);
   const isShallow =
     crumbs.length === 0 ||
@@ -417,7 +417,7 @@ function RecoveredChip({ minor }: { minor: number | null }) {
         className="text-[11.5px] tabular-nums"
         style={{ color: "var(--color-ink-ghost)" }}
       >
-        —
+        -
       </span>
     );
   }
@@ -459,7 +459,7 @@ function useDashboardMetrics(): DashboardMetrics | null {
         const r = await getDashboardMetrics();
         if (!cancelled) setM(r);
       } catch {
-        // ignore — retry next tick
+        // ignore - retry next tick
       } finally {
         if (!cancelled) timer = window.setTimeout(tick, 8000);
       }
@@ -475,7 +475,7 @@ function useDashboardMetrics(): DashboardMetrics | null {
 
 function useMe(): MeResponse | null {
   const [me, setMe] = useState<MeResponse | null>(null);
-  // Re-fetch /api/me whenever the Clerk session changes — so the
+  // Re-fetch /api/me whenever the Clerk session changes - so the
   // sidebar identity reflects the actual signed-in user. Without this
   // dependency, the first /api/me fires BEFORE Clerk has resolved the
   // session, ClerkIdentitySync hasn't set the X-Manthan-Dev-Email

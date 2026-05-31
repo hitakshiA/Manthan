@@ -1,5 +1,5 @@
 /**
- * TryDemoButton — public "Try the live demo" CTA.
+ * TryDemoButton - public "Try the live demo" CTA.
  *
  * Used on Landing / Login / Signup so a fresh viewer can land on a
  * running case in one click. Fires a pre-baked scenario (default: Quill,
@@ -41,7 +41,7 @@ export function TryDemoButton({
       const r = await triggerDemoScenario(scenarioId);
       navigate(`/app/case/${r.case_id}`);
     } catch {
-      // Demo endpoint disabled or unreachable — just route to /app.
+      // Demo endpoint disabled or unreachable - just route to /app.
       navigate("/app");
     } finally {
       setFiring(false);

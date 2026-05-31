@@ -1,13 +1,13 @@
 """Cross-cases inbox SSE stream.
 
 The per-case stream lives in `events.py` (`/api/cases/{id}/stream`). This
-file owns the *cross-cases* surface — the Inbox page subscribes here and
+file owns the *cross-cases* surface - the Inbox page subscribes here and
 gets pushed an updated list whenever any case in the org changes.
 
 Why a separate endpoint instead of N per-case streams: the Inbox shows
 ~60 cards at once. Opening 60 EventSources from the browser hits the
 6-per-host HTTP/1 connection cap and is generally awful. One stream,
-one update on changes — debounced to ~1s so investigation bursts collapse.
+one update on changes - debounced to ~1s so investigation bursts collapse.
 
 Wire flow
 ─────────
@@ -79,7 +79,7 @@ async def stream_inbox(
             return
         yield {"event": "cases", "data": json.dumps(initial)}
 
-        # 2. LISTEN connection — dedicated, not pooled, because asyncpg
+        # 2. LISTEN connection - dedicated, not pooled, because asyncpg
         #    holds the conn for the duration of the listener.
         notify_conn = await asyncpg.connect(dsn=settings.database_url)
         # Asyncio.Event is set whenever any matching NOTIFY arrives. The

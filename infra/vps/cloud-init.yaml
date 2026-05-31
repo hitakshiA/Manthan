@@ -1,9 +1,9 @@
 #cloud-config
-# Manthan — one-click VPS bootstrap.
+# Manthan - one-click VPS bootstrap.
 #
 # Paste the body of this file into the "Startup Script" / "User Data"
 # field when provisioning an Ubuntu 22.04 / 24.04 VPS (DigitalOcean,
-# Vultr, Linode, Hetzner, AWS Lightsail — anywhere that takes
+# Vultr, Linode, Hetzner, AWS Lightsail - anywhere that takes
 # cloud-init). The VM boots, installs Docker, clones the repo, and
 # starts the stack. SSH in afterwards to paste your GEMINI_API_KEY
 # into /opt/manthan/.env, then restart compose.

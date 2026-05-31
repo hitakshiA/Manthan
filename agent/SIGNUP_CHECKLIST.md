@@ -1,18 +1,18 @@
-# Source signup checklist — Manthan v2 phase 1
+# Source signup checklist - Manthan v2 phase 1
 
 30 sources. All free-tier or free-trial. All accessible to a solo dev
-without a sales call or a credit card (one exception: K8s — see #30).
+without a sales call or a credit card (one exception: K8s - see #30).
 Goal: get every `*_API_KEY` line in `.env` filled.
 
 Order is recommended (top 5 unlock 14/16 in-scope cases). Power through in
 parallel tabs.
 
 After each: paste the key into `manthanv2/agent/.env` at the listed line.
-Drop them in as you go — I'll start seeding the moment they appear.
+Drop them in as you go - I'll start seeding the moment they appear.
 
 ---
 
-## 1. Stripe — test mode trigger surface (~3 min)
+## 1. Stripe - test mode trigger surface (~3 min)
 
 **Signup:** https://dashboard.stripe.com/register
 **Steps:**
@@ -30,7 +30,7 @@ Drop them in as you go — I'll start seeding the moment they appear.
 
 ---
 
-## 2. HubSpot — free CRM (~3 min)
+## 2. HubSpot - free CRM (~3 min)
 
 **Signup:** https://www.hubspot.com/products/get-started-free
 **Steps:**
@@ -48,7 +48,7 @@ Drop them in as you go — I'll start seeding the moment they appear.
 
 ---
 
-## 3. Slack — new workspace + bot app (~7 min)
+## 3. Slack - new workspace + bot app (~7 min)
 
 **Signup:** https://slack.com/get-started
 **Steps:**
@@ -76,12 +76,12 @@ don't need to `/invite` it anywhere.
 
 ---
 
-## 4. Notion — workspace + integration (~5 min)
+## 4. Notion - workspace + integration (~5 min)
 
 **Signup:** https://notion.so (use existing if you have one)
 **Steps:**
 1. Create or open a workspace dedicated to Manthan (avoid personal
-   workspace — easier to clean up later).
+   workspace - easier to clean up later).
 2. https://www.notion.so/profile/integrations → **New integration** →
    name: `Manthan Agent`, associated workspace: Manthan dev.
 3. Capabilities: **Read, Update, Insert content**. Leave user-info as
@@ -97,9 +97,9 @@ don't need to `/invite` it anywhere.
 
 ---
 
-## 5. Intercom — developer workspace (~5 min)
+## 5. Intercom - developer workspace (~5 min)
 
-**Signup:** https://app.intercom.com/admins/sign_up (use the dev signup —
+**Signup:** https://app.intercom.com/admins/sign_up (use the dev signup -
 not the sales-led free trial)
 **Steps:**
 1. Sign up. If it asks for company info, use minimal answers.
@@ -113,7 +113,7 @@ not the sales-led free trial)
 
 ---
 
-## 6. Linear — free workspace + key (~2 min)
+## 6. Linear - free workspace + key (~2 min)
 
 **Signup:** https://linear.app/signup
 **Steps:**
@@ -126,7 +126,7 @@ not the sales-led free trial)
 
 ---
 
-## 7. GitHub — existing acct + PAT (~3 min)
+## 7. GitHub - existing acct + PAT (~3 min)
 
 Use your existing GitHub.
 **Steps:**
@@ -141,12 +141,12 @@ Use your existing GitHub.
 
 ---
 
-## 8. Sentry — free developer tier (~5 min)
+## 8. Sentry - free developer tier (~5 min)
 
 **Signup:** https://sentry.io/signup/
 **Steps:**
 1. Sign up. Org name: `manthan-dev` (single word, no spaces).
-2. Skip the language picker — we'll create projects programmatically.
+2. Skip the language picker - we'll create projects programmatically.
 3. **Settings → Account → API → Auth Tokens** (or
    https://sentry.io/settings/account/api/auth-tokens/).
 4. **Create New Token** → scopes: `project:read`, `event:read`,
@@ -161,13 +161,13 @@ SENTRY_ORG=manthan-dev
 
 ---
 
-## 9. PostHog — free tier (~3 min)
+## 9. PostHog - free tier (~3 min)
 
 **Signup:** https://us.posthog.com/signup
 **Steps:**
 1. Sign up. Project name: `Manthan Dev`. Region: US.
 2. **Settings → Project → API keys**.
-3. **Personal API key** (not the project key — we want the user-level
+3. **Personal API key** (not the project key - we want the user-level
    one for the read API): https://us.posthog.com/settings/user-api-keys
 4. **Create personal API key** → name: `manthan-agent`. Scopes: enable
    `project:read`, `event:read`, `person:read`, `query:read`,
@@ -182,7 +182,7 @@ POSTHOG_HOST=https://us.posthog.com
 
 ---
 
-## 10. Zendesk — 14-day trial (~6 min)
+## 10. Zendesk - 14-day trial (~6 min)
 
 **Signup:** https://www.zendesk.com/register/
 **Steps:**
@@ -205,13 +205,13 @@ ZENDESK_API_TOKEN=...
 
 ---
 
-## 11. Chargebee — trial site (~5 min)
+## 11. Chargebee - trial site (~5 min)
 
 **Signup:** https://www.chargebee.com/trial-signup/
 **Steps:**
 1. Sign up. Site name: `manthan-dev` (yours will be
    `manthan-dev.chargebee.com`).
-2. Pick currency: INR (or USD — your call).
+2. Pick currency: INR (or USD - your call).
 3. **Settings (gear) → API Keys & Webhooks → API Keys**.
 4. **Add API Key → Full-Access key** (we need create permissions for
    seeding). Name: `manthan-agent`.
@@ -225,7 +225,7 @@ CHARGEBEE_API_KEY=live_...
 
 ---
 
-## 12. Razorpay — test mode (~5 min)
+## 12. Razorpay - test mode (~5 min)
 
 **Signup:** https://dashboard.razorpay.com/signup
 **Steps:**
@@ -243,13 +243,13 @@ RAZORPAY_KEY_SECRET=...
 
 ---
 
-## 13. Salesforce — Developer Edition (~10 min, most tedious)
+## 13. Salesforce - Developer Edition (~10 min, most tedious)
 
 **Signup:** https://developer.salesforce.com/signup
 **Steps:**
 1. Sign up with a real-ish email. Username should follow
    `you+manthan@miny-labs.com.dev` pattern (Salesforce requires unique
-   usernames globally — appending `.dev` works).
+   usernames globally - appending `.dev` works).
 2. Confirm email → **set a password** in the verification email.
 3. After login, top-right gear → **Setup**.
 4. Quick Find: type `My Personal Information` → **Reset My Security Token**
@@ -270,7 +270,7 @@ SALESFORCE_ACCESS_TOKEN=  # generated by an OAuth call I'll script after signup
 
 **Note:** Salesforce auth is the gnarliest. I'll handle the OAuth-token
 flow programmatically once you have the consumer-key/secret + username +
-password + security-token. Don't worry about the access-token line — it's
+password + security-token. Don't worry about the access-token line - it's
 derived.
 
 ---
@@ -283,7 +283,7 @@ After each key drops in:
 2. Reply with `source X in` (e.g. `stripe in`) and I'll add it to Coral +
    start that source's seeder.
 
-You don't have to do all 30 to start — the agent gets more interesting
+You don't have to do all 30 to start - the agent gets more interesting
 with each source added. Stripe alone unlocks 12 of the 16 scenarios as a
 single-source ablation. Stripe + HubSpot + Slack + Notion + Intercom hits
 the cross-source sweet spot. Sources 14–30 below add depth to specific
@@ -291,7 +291,7 @@ case categories (email evidence, incidents, identity, alt providers).
 
 ---
 
-## 14. Gmail — customer email (OAuth, ~8 min)
+## 14. Gmail - customer email (OAuth, ~8 min)
 
 **Signup:** uses your existing Google account.
 **Steps:**
@@ -328,14 +328,14 @@ populated by the bootstrap.
 
 ---
 
-## 15. Google Drive — same OAuth as Gmail
+## 15. Google Drive - same OAuth as Gmail
 
 Already done in #14. No separate signup. The Drive access token is the
 same as Gmail's (single OAuth, dual scope).
 
 ---
 
-## 16. Postmark — transactional email evidence (~3 min)
+## 16. Postmark - transactional email evidence (~3 min)
 
 **Signup:** https://account.postmarkapp.com/sign_up
 **Steps:**
@@ -346,7 +346,7 @@ same as Gmail's (single OAuth, dual scope).
 
 ---
 
-## 17. Resend — modern transactional email (~2 min)
+## 17. Resend - modern transactional email (~2 min)
 
 **Signup:** https://resend.com/signup
 **Steps:**
@@ -358,13 +358,13 @@ same as Gmail's (single OAuth, dual scope).
 
 ---
 
-## 18. Mailchimp — marketing email evidence (~3 min)
+## 18. Mailchimp - marketing email evidence (~3 min)
 
 **Signup:** https://mailchimp.com/signup/
 **Steps:**
 1. Sign up. Free plan is fine (up to 500 contacts).
 2. **Profile → Extras → API keys → Create A Key** → copy.
-3. Note the **server prefix** — it's the last segment of your dashboard
+3. Note the **server prefix** - it's the last segment of your dashboard
    URL hostname, e.g. for `us21.admin.mailchimp.com` the prefix is `us21`.
 
 **`.env` lines:**
@@ -375,7 +375,7 @@ MAILCHIMP_SERVER_PREFIX=us21
 
 ---
 
-## 19. Loops — PLG marketing email (~2 min)
+## 19. Loops - PLG marketing email (~2 min)
 
 **Signup:** https://app.loops.so/signup
 **Steps:**
@@ -386,7 +386,7 @@ MAILCHIMP_SERVER_PREFIX=us21
 
 ---
 
-## 20. Twilio — SMS evidence (~5 min)
+## 20. Twilio - SMS evidence (~5 min)
 
 **Signup:** https://www.twilio.com/try-twilio
 **Steps:**
@@ -405,7 +405,7 @@ TWILIO_API_KEY_SECRET=...
 
 ---
 
-## 21. Clerk — auth events (~2 min)
+## 21. Clerk - auth events (~2 min)
 
 **Signup:** https://dashboard.clerk.com/sign-up
 **Steps:**
@@ -417,7 +417,7 @@ TWILIO_API_KEY_SECRET=...
 
 ---
 
-## 22. Cal.com — meeting history (~2 min)
+## 22. Cal.com - meeting history (~2 min)
 
 **Signup:** https://app.cal.com/signup
 **Steps:**
@@ -429,7 +429,7 @@ TWILIO_API_KEY_SECRET=...
 
 ---
 
-## 23. Mixpanel — alt product analytics (~4 min)
+## 23. Mixpanel - alt product analytics (~4 min)
 
 **Signup:** https://mixpanel.com/register/
 **Steps:**
@@ -448,11 +448,11 @@ MIXPANEL_SERVICE_ACCOUNT_SECRET=...
 
 ---
 
-## 24. Confluence — alt docs / runbooks (~5 min)
+## 24. Confluence - alt docs / runbooks (~5 min)
 
 **Signup:** https://www.atlassian.com/try/cloud/signup?bundle=confluence
 **Steps:**
-1. Sign up for Atlassian Cloud (Free tier — up to 10 users).
+1. Sign up for Atlassian Cloud (Free tier - up to 10 users).
 2. Pick a site name: `manthan-dev` → your URL becomes
    `manthan-dev.atlassian.net`.
 3. https://id.atlassian.com/manage-profile/security/api-tokens →
@@ -467,7 +467,7 @@ CONFLUENCE_API_TOKEN=...
 
 ---
 
-## 25. Grafana Cloud — observability (~4 min)
+## 25. Grafana Cloud - observability (~4 min)
 
 **Signup:** https://grafana.com/auth/sign-up/create-user
 **Steps:**
@@ -485,11 +485,11 @@ GRAFANA_TOKEN=glsa_...
 
 ---
 
-## 26. Datadog — observability (~5 min)
+## 26. Datadog - observability (~5 min)
 
 **Signup:** https://www.datadoghq.com/free-datadog-trial/
 **Steps:**
-1. Sign up (14-day free trial — no card needed for trial).
+1. Sign up (14-day free trial - no card needed for trial).
 2. Org name: `Manthan Dev`. Site region: pick the closest (US5 / EU /
    AP1). Note which one.
 3. After install screen: **Integrations (left rail) → APIs** →
@@ -506,7 +506,7 @@ DD_APPLICATION_KEY=...
 
 ---
 
-## 27. StatusGator — vendor status aggregator (~3 min)
+## 27. StatusGator - vendor status aggregator (~3 min)
 
 **Signup:** https://statusgator.com/users/sign_up
 **Steps:**
@@ -518,7 +518,7 @@ DD_APPLICATION_KEY=...
 
 ---
 
-## 28. PagerDuty — incidents (~5 min)
+## 28. PagerDuty - incidents (~5 min)
 
 **Signup:** https://www.pagerduty.com/sign-up/
 **Steps:**
@@ -530,7 +530,7 @@ DD_APPLICATION_KEY=...
 
 ---
 
-## 29. LaunchDarkly — feature flags (~5 min)
+## 29. LaunchDarkly - feature flags (~5 min)
 
 **Signup:** https://app.launchdarkly.com/signup
 **Steps:**
@@ -542,15 +542,15 @@ DD_APPLICATION_KEY=...
 
 ---
 
-## 30. Kubernetes — infrastructure (optional, complex)
+## 30. Kubernetes - infrastructure (optional, complex)
 
 **Caveat:** K8s coverage requires a reachable cluster API endpoint with
 a bearer token. Solo-dev options:
 
-- **Skip** — descope k8s for phase 1. Scenarios that touch it are rare.
-- **Civo / DigitalOcean / Linode** — free credits give you a small
+- **Skip** - descope k8s for phase 1. Scenarios that touch it are rare.
+- **Civo / DigitalOcean / Linode** - free credits give you a small
   managed cluster (~$10/month equivalent on trial).
-- **Local cluster (Minikube, Kind, k3s)** — works but the API server
+- **Local cluster (Minikube, Kind, k3s)** - works but the API server
   is on localhost; Coral has to run on the same machine and may need
   cert config.
 

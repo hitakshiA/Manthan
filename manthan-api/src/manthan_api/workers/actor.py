@@ -1,4 +1,4 @@
-"""worker.actor — drains the approved-action queue and fires real writes.
+"""worker.actor - drains the approved-action queue and fires real writes.
 
 Per-org serial worker (one action at a time per org, so writes can't race).
 Pattern: SELECT FOR UPDATE SKIP LOCKED → call adapter → record external_ref
@@ -125,7 +125,7 @@ class ActorWorker:
         log = logger.getChild(str(action_id)[:8])
 
         # Wrap the whole adapter run in try/finally so the finalize
-        # check ALWAYS runs — including on adapter rejection, unknown
+        # check ALWAYS runs - including on adapter rejection, unknown
         # kind, or unexpected exception. Previously the failure-return
         # paths each `return`-ed before reaching `_maybe_finalize_case`,
         # so a case whose LAST action failed would sit in
@@ -180,7 +180,7 @@ class ActorWorker:
             )
             log.info("action %s fired: %s", kind, result.summary)
 
-            # Mirror to Slack thread if this case was opened from Slack — close
+            # Mirror to Slack thread if this case was opened from Slack - close
             # the loop visually for Segment 4's "see actions firing in source".
             try:
                 from manthan_api.services.slack_notifier import maybe_notify
@@ -191,7 +191,7 @@ class ActorWorker:
                     event_type="agent_reply",
                     event_data={
                         "text": (
-                            f":zap: *{kind}* executed — {result.summary}"
+                            f":zap: *{kind}* executed - {result.summary}"
                             + (f"\n<{_source_ref_url(kind, result.external_ref)}|View in source ↗>"
                                if _source_ref_url(kind, result.external_ref) else "")
                         ),
@@ -221,7 +221,7 @@ class ActorWorker:
             # case? If so, finalize: flip cases.status → resolved + emit a
             # case_closed event so downstream (UI cinematic, Slack
             # actions-performed card) picks it up. CRITICAL: runs even on
-            # failure return paths above — otherwise a case whose last
+            # failure return paths above - otherwise a case whose last
             # action fails stays in 'acting' forever.
             try:
                 await self._maybe_finalize_case(org_id, case_id, log)
@@ -249,7 +249,7 @@ class ActorWorker:
             )
 
     async def _thread_id_for_case(self, case_id: UUID) -> UUID | None:
-        """Look up thread_id for a case — used by Slack mirror."""
+        """Look up thread_id for a case - used by Slack mirror."""
         async with get_pool().acquire() as conn:
             return await conn.fetchval(
                 "SELECT thread_id FROM cases WHERE id = $1",

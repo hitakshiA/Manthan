@@ -1,15 +1,15 @@
-"""Resend adapter — send customer emails.
+"""Resend adapter - send customer emails.
 
 Two paths the agent can take:
 
-1. **Branded template (preferred)** — payload carries
+1. **Branded template (preferred)** - payload carries
    `template='resolution'|'action_item'|'ack'` plus structured fields
    (`headline`, `body_paragraphs`, `customer_name`, `stripe_dispute_url`,
    etc.). The adapter renders Manthan-branded HTML via
    `services.email_templates` so every outbound email looks like it
    came from the same brand voice.
 
-2. **Raw HTML (escape hatch)** — payload carries `body_html` directly.
+2. **Raw HTML (escape hatch)** - payload carries `body_html` directly.
    Useful for power users / unusual cases. The agent's prompt should
    default to (1) unless it explicitly needs custom HTML.
 
@@ -41,10 +41,10 @@ def send(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
       headline: str (required for resolution / action_item)
       body_paragraphs: list[str] (one paragraph per item)
       stripe_dispute_url: str (optional)
-      signed_by: str (optional — "Mark Johnson, Director, RevOps")
+      signed_by: str (optional - "Mark Johnson, Director, RevOps")
       subject: str (override; default generated from headline + case_id)
       case_short_id: str (optional; threaded into footer)
-      purpose: str (action_item only — eyebrow like "Quick question")
+      purpose: str (action_item only - eyebrow like "Quick question")
 
     Payload keys (raw path):
       to, subject, body_text, body_html
@@ -54,7 +54,7 @@ def send(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
     settings = get_settings()
     api_key = settings.resend_api_key or os.environ.get("RESEND_API_KEY")
     if not api_key:
-        raise AdapterError("RESEND_API_KEY missing — set in .env to enable email sends")
+        raise AdapterError("RESEND_API_KEY missing - set in .env to enable email sends")
     resend.api_key = api_key
 
     to = payload.get("to")
@@ -90,7 +90,7 @@ def send(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
                 )
             )
         except RuntimeError as e:
-            # asyncio.run inside an existing loop — we should be running
+            # asyncio.run inside an existing loop - we should be running
             # inside the actor's `asyncio.to_thread`, so no loop in this
             # thread. But defend in case the call shape changes.
             raise AdapterError(f"branded render failed: {e}")
@@ -147,7 +147,7 @@ def send(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
     if reply_to:
         params["reply_to"] = reply_to
 
-    # Threading headers — only used by the raw path. We deliberately
+    # Threading headers - only used by the raw path. We deliberately
     # DON'T set these on the branded path: the email-as-identifier
     # routing means we don't need RFC-2822 threading to find the case.
     headers = {"X-Manthan-Idempotency-Key": idempotency_key}
@@ -162,7 +162,7 @@ def send(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
             headers["References"] = str(refs)
     params["headers"] = headers
 
-    # Tag for Resend analytics — separates ack from resolution etc.
+    # Tag for Resend analytics - separates ack from resolution etc.
     params["tags"] = [
         {"name": "manthan_template", "value": str(template or "raw")},
     ]

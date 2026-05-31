@@ -1,5 +1,5 @@
 /**
- * DraftInbox — Inbox, editorial-memo direction (DRAFT).
+ * DraftInbox - Inbox, editorial-memo direction (DRAFT).
  *
  * The inbox is a stack of mini-memos. Each row is a horizontally-laid-out
  * compact version of the Workspace memo: HeaderStrip on top, the case-line
@@ -19,13 +19,13 @@
  * on the desk, presented as if a senior analyst left a stack of memos on
  * your chair overnight.
  *
- * Throwaway draft — route /app/draft-inbox.
+ * Throwaway draft - route /app/draft-inbox.
  */
 
 import { motion } from "motion/react";
 
 // ──────────────────────────────────────────────────────────────────────
-// Mock data — six cases across three status states.
+// Mock data - six cases across three status states.
 // Sorted in this array as: investigating → awaiting → resolved
 // (newest-resolved first within each group).
 // ──────────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ interface InboxCase {
   nextAction: string;
   /** investigating → ETA string · resolved → "2h ago" · awaiting → null */
   statusMeta: string | null;
-  /** whether the recommended action is "fight" (full deny) — colors the recommended amount neutral instead of accent green when $X→$0 */
+  /** whether the recommended action is "fight" (full deny) - colors the recommended amount neutral instead of accent green when $X→$0 */
   recommendKind: "credit" | "fight" | "refund" | null;
 }
 
@@ -107,7 +107,7 @@ const CASES: InboxCase[] = [
     status: "awaiting_approval",
     policyMatched: "refund-sla-breach-concede",
     tldr:
-      "Refund request from 2026-05-04 went unactioned for 23 days; our SLA is 5. Stripe arbitration would not favor us — concede in full.",
+      "Refund request from 2026-05-04 went unactioned for 23 days; our SLA is 5. Stripe arbitration would not favor us - concede in full.",
     nextAction: "Issue full Stripe refund $11,000",
     statusMeta: null,
     recommendKind: "refund",
@@ -166,7 +166,7 @@ export default function DraftInbox() {
     >
       {/* Outer padding mirrors WorkspaceMemo (px-6 py-6) so the inbox sits
            in the same gutter as the case workspace it leads to. The inner
-           column caps at ~1100px for editorial readability — the AppShell
+           column caps at ~1100px for editorial readability - the AppShell
            sidebar consumes the remainder. */}
       <div
         className="mx-auto flex flex-col"
@@ -204,7 +204,7 @@ export default function DraftInbox() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PageHeader — eyebrow + Spectral italic title + italic subtitle.
+// PageHeader - eyebrow + Spectral italic title + italic subtitle.
 // Mirrors the WorkspaceMemo hero typography ramp.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -253,7 +253,7 @@ function PageHeader() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// CaseRow — the mini-memo. Same outer chrome as WorkspaceMemo:
+// CaseRow - the mini-memo. Same outer chrome as WorkspaceMemo:
 //   1px hairline border, 6px radius, oklch warm dark fill.
 // Hover: row background brightens from 0.00 → 0.025 over the surface.
 // ──────────────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ function CaseRow({ c }: { c: InboxCase }) {
         overflow: "hidden",
       }}
     >
-      {/* Hover brighten — a quiet 0.02 → 0.04 wash inside the frame,
+      {/* Hover brighten - a quiet 0.02 → 0.04 wash inside the frame,
            not on the border, so the hairline stays consistent. */}
       <div
         className="row-surface transition-colors duration-200"
@@ -282,7 +282,7 @@ function CaseRow({ c }: { c: InboxCase }) {
         <RowFooter c={c} />
       </div>
 
-      {/* Scoped hover style — uses :hover on the article and bubbles to
+      {/* Scoped hover style - uses :hover on the article and bubbles to
            a child so we don't have to track hover state in React. The
            selector targets the .row-surface inside the article. */}
       <style>{`
@@ -293,7 +293,7 @@ function CaseRow({ c }: { c: InboxCase }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// HeaderStrip — case identity. 40px tall. Mirrors WorkspaceMemo's
+// HeaderStrip - case identity. 40px tall. Mirrors WorkspaceMemo's
 // HeaderStrip exactly, just compressed for the inbox.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -344,7 +344,7 @@ function HeaderStrip({ c }: { c: InboxCase }) {
           >
             ·
           </span>
-          {/* Policy badge — small mono, matches WorkspaceMemo's pattern */}
+          {/* Policy badge - small mono, matches WorkspaceMemo's pattern */}
           <span
             className="font-mono text-[11.5px] tabular-nums inline-flex items-baseline gap-2 min-w-0"
             style={{
@@ -372,7 +372,7 @@ function HeaderStrip({ c }: { c: InboxCase }) {
         </>
       )}
 
-      {/* Status — right-aligned, color-on-text per the design constraint
+      {/* Status - right-aligned, color-on-text per the design constraint
            (no chips for status). */}
       <StatusLabel status={c.status} meta={c.statusMeta} />
     </header>
@@ -424,7 +424,7 @@ const STATUS_PRESENTATION: Record<Status, { label: string; color: string }> = {
 };
 
 // ──────────────────────────────────────────────────────────────────────
-// RowBody — the headline. Spectral italic case-line on the left, the
+// RowBody - the headline. Spectral italic case-line on the left, the
 // dollar transform on the right.
 //
 //   ~80px tall. The case-line gets clamp to keep it from ever wrapping
@@ -438,7 +438,7 @@ function RowBody({ c }: { c: InboxCase }) {
       className="flex items-start justify-between gap-10 px-7"
       style={{ paddingTop: 22, paddingBottom: 22, minHeight: 80 }}
     >
-      {/* LEFT — case-line. Customer name in regular Spectral, the
+      {/* LEFT - case-line. Customer name in regular Spectral, the
            "vs. an $X chargeback over Y" in italic muted. */}
       <h2
         className="leading-[1.18] min-w-0 flex-1"
@@ -460,7 +460,7 @@ function RowBody({ c }: { c: InboxCase }) {
         </em>
       </h2>
 
-      {/* RIGHT — dollar transform. $X,XXX → $XXX
+      {/* RIGHT - dollar transform. $X,XXX → $XXX
            Claim is mono tabular 18px muted. Arrow is muted ascii →.
            Recommended is Spectral italic 26px green (or muted ink when
            investigating / when it's a $X → $X full-refund). */}
@@ -471,7 +471,7 @@ function RowBody({ c }: { c: InboxCase }) {
 
 function DollarTransform({ c }: { c: InboxCase }) {
   // While investigating, the recommended slot reads as a placeholder
-  // ellipsis in muted ink — we don't pretend to know the verdict yet.
+  // ellipsis in muted ink - we don't pretend to know the verdict yet.
   const investigating = c.status === "investigating";
   const recommendedColor =
     c.recommendKind === "credit" || c.recommendKind === "fight"
@@ -537,7 +537,7 @@ function DollarTransform({ c }: { c: InboxCase }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RowFooter — bottom row. TLDR italic muted on left, "Next: ..." mono
+// RowFooter - bottom row. TLDR italic muted on left, "Next: ..." mono
 // on the right. ~32px tall. Hairline above to separate from the body.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -593,7 +593,7 @@ function RowFooter({ c }: { c: InboxCase }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Eyebrow — uppercase letterspaced section label. Identical to the
+// Eyebrow - uppercase letterspaced section label. Identical to the
 // helper in WorkspaceMemo.
 // ──────────────────────────────────────────────────────────────────────
 

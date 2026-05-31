@@ -1,4 +1,4 @@
-"""Policy CRUD endpoints — list rules, view match history, edit (later)."""
+"""Policy CRUD endpoints - list rules, view match history, edit (later)."""
 
 from __future__ import annotations
 
@@ -87,7 +87,7 @@ async def list_rules(ctx: TenantCtx = Depends(get_ctx)) -> list[PolicyRule]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# POST /api/policy/rules  — create
+# POST /api/policy/rules  - create
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -118,7 +118,7 @@ async def create_rule(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /api/policy/matches  — recent match history
+# GET /api/policy/matches  - recent match history
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -158,7 +158,7 @@ async def list_matches(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# PATCH /api/policy/rules/{id}  — toggle enabled / update priority
+# PATCH /api/policy/rules/{id}  - toggle enabled / update priority
 # ──────────────────────────────────────────────────────────────────────
 
 

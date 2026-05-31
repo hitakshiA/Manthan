@@ -2,7 +2,7 @@
 
 SQLite coverage is unit-level (checked-in synthetic `.db` built at test
 time). Postgres integration is marked ``slow`` and spins up an ephemeral
-container via testcontainers — skipped automatically when Docker is
+container via testcontainers - skipped automatically when Docker is
 unavailable so the test suite stays runnable on any machine.
 """
 

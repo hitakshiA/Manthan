@@ -1,8 +1,8 @@
 /**
- * DemoTriggerMenu — TopBar widget for firing pre-baked demo scenarios.
+ * DemoTriggerMenu - TopBar widget for firing pre-baked demo scenarios.
  *
  * Editorial form: a single italic "Demo" link in the top bar that drops
- * a quiet menu of scenarios on click. No amber pill, no zap icon — the
+ * a quiet menu of scenarios on click. No amber pill, no zap icon - the
  * dropdown does the speaking, the trigger is a typographic affordance.
  */
 

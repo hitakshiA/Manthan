@@ -3,8 +3,8 @@
 Uses ``httpx.MockTransport`` to stub the LLM classifier with a
 hand-crafted JSON response per dataset so the pipeline is fully
 deterministic. Asserts that the regenerated DCD matches a small set
-of structural expectations — column roles, hierarchies, agent
-instructions — rather than doing a full byte-for-byte YAML diff (the
+of structural expectations - column roles, hierarchies, agent
+instructions - rather than doing a full byte-for-byte YAML diff (the
 latter would break on trivial changes like ``ingested_at``
 timestamps, which is noise).
 

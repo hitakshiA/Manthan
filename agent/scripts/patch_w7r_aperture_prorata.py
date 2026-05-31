@@ -1,51 +1,51 @@
-"""Patch W7R — Aperture Analytics documented-incident pro-rata partial credit.
+"""Patch W7R - Aperture Analytics documented-incident pro-rata partial credit.
 
 Seeds evidence across 8 high-value sources so the Manthan agent investigating
 the dispute can corroborate the partial-credit math and derive the right
-$560 (2/30 × $8,400) refund — not the easy full-refund OR fight answer:
+$560 (2/30 × $8,400) refund - not the easy full-refund OR fight answer:
 
-  Stripe       — Premium customer billed $8,400 on 2026-04-12 (the April
+  Stripe       - Premium customer billed $8,400 on 2026-04-12 (the April
                  monthly cycle). Stripe dispute filed 2026-05-08, reason
                  product_not_as_described, semantic
                  service_degradation_claim. Disputed window the April
                  cycle (2026-04-12 → 2026-05-11).
-  HubSpot      — Company + contact for thatspacebiker@gmail.com.
+  HubSpot      - Company + contact for thatspacebiker@gmail.com.
                  Custom property plan_history reflecting the
                  Premium→Standard downgrade on 2026-04-16 04:32 UTC.
                  Note attached documenting the self-serve downgrade
                  event for the agent to discover.
-  Intercom     — Contact for the billing email. ONE conversation thread
+  Intercom     - Contact for the billing email. ONE conversation thread
                  dated 2026-04-14 with the user complaining about Custom
                  Reports timeouts "today and yesterday" (the two degraded
                  days). Tagged degradation, custom-reports, w7r.
-  Zendesk     — Org + user + ONE ticket created 2026-04-15 09:12 UTC by
+  Zendesk     - Org + user + ONE ticket created 2026-04-15 09:12 UTC by
                  the customer reporting the Custom Reports timeouts. A
                  PUBLIC reply from a support agent on 2026-04-15 14:08
                  explicitly promises "we'll get you a partial credit for
-                 the affected days" — but no follow-up action was ever
+                 the affected days" - but no follow-up action was ever
                  taken (the ticket sits solved/unactioned).
-  PostHog      — Events for 2 user personas at aperture-analytics.co
+  PostHog      - Events for 2 user personas at aperture-analytics.co
                  domain. 47× custom_reports_open events scattered across
                  2026-04-12 through 2026-04-15 (heavy daily reliance on
                  the Premium-only feature). Sparse standard-tier events
                  after the 04-16 downgrade.
-  Datadog      — Monitor "custom-reports-svc error_rate elevated" tagged
+  Datadog      - Monitor "custom-reports-svc error_rate elevated" tagged
                  workflow:W7-aperture-prorata, incident:INC-2026-04-13-
                  customreports, service:custom-reports-svc. Plus a
                  Datadog event narrating the 48h SLA breach from
                  2026-04-13 08:00 UTC → 2026-04-15 08:00 UTC and the
                  14:30 UTC fix on 2026-04-15.
-  Slack       — A message to #engineering posted 2026-04-15 14:32 UTC
+  Slack       - A message to #engineering posted 2026-04-15 14:32 UTC
                  from @maria (sre): "Custom Reports svc degraded last
                  2 days, fixed at 14:30 today. RCA in
                  INC-2026-04-13-customreports." Owns the incident
                  internally and corroborates the 2-day duration.
-  Notion      — Policy page "Documented Incident Pro-Rata Credit"
+  Notion      - Policy page "Documented Incident Pro-Rata Credit"
                  codifying: when a documented operational incident
                  degrades a paid feature for a specific number of days
                  within a billing cycle, credit pro-rata for the
                  affected days against the disputed charge for the
-                 affected tier — not the entire cycle. Formula in
+                 affected tier - not the entire cycle. Formula in
                  plain language: credit = (degraded_days / cycle_days)
                  × tier_amount.
 
@@ -161,7 +161,7 @@ APERTURE_ARR_USD = 100800
 APERTURE_PLAN = "Premium Monthly"
 APERTURE_PLAN_DISPLAY = "Aperture Premium"
 
-# The disputed charge — $8,400 for the April cycle.
+# The disputed charge - $8,400 for the April cycle.
 APRIL_CHARGE_USD = 8400
 APRIL_CHARGE_MINOR = 840000
 
@@ -173,16 +173,16 @@ CYCLE_START = datetime(2026, 4, 12, 9, 0, 0, tzinfo=timezone.utc)
 CYCLE_END = datetime(2026, 5, 11, 9, 0, 0, tzinfo=timezone.utc)
 CYCLE_DAYS = 30
 
-# Degradation incident — 48h spanning days 2-3 of the cycle.
+# Degradation incident - 48h spanning days 2-3 of the cycle.
 INCIDENT_START = datetime(2026, 4, 13, 8, 0, 0, tzinfo=timezone.utc)
 INCIDENT_END = datetime(2026, 4, 15, 8, 0, 0, tzinfo=timezone.utc)
 INCIDENT_FIX_TIME = datetime(2026, 4, 15, 14, 30, 0, tzinfo=timezone.utc)
 INCIDENT_DAYS = 2
 
-# Customer's self-serve downgrade — day 5 of the cycle.
+# Customer's self-serve downgrade - day 5 of the cycle.
 DOWNGRADE_TS = datetime(2026, 4, 16, 4, 32, 0, tzinfo=timezone.utc)
 
-# Customer raises it live in Intercom — day 3 (during the incident).
+# Customer raises it live in Intercom - day 3 (during the incident).
 INTERCOM_COMPLAINT_TS = datetime(2026, 4, 14, 10, 22, 0, tzinfo=timezone.utc)
 
 # Zendesk ticket: opened end of incident, support promises credit, never actions.
@@ -201,7 +201,7 @@ PRORATA_POLICY_ID = "documented-incident-prorata"
 # agent's queries against notion.pages where (properties ILIKE '%pro-rata%'
 # OR title ILIKE '%pro-rata%' OR propertiestext ILIKE '%refund%') all
 # match. The body has "refund" too but that lives in child blocks, not
-# properties — the title is the only field that lands in
+# properties - the title is the only field that lands in
 # notion.pages.properties for the search.
 PRORATA_POLICY_TITLE = "Documented Incident Pro-Rata Refund Credit Policy"
 
@@ -241,7 +241,7 @@ def aperture_company() -> Company:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Response → dict wrappers — each seed's _request returns raw
+# Response → dict wrappers - each seed's _request returns raw
 # httpx.Response objects. These helpers parse JSON, log errors, and
 # return a normal dict (or empty dict on failure).
 # ──────────────────────────────────────────────────────────────────────
@@ -292,7 +292,7 @@ def _nt(client: httpx.Client, method: str, path: str, **kw) -> dict:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 1. Stripe — customer + $8,400 April charge + dispute
+# 1. Stripe - customer + $8,400 April charge + dispute
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -382,7 +382,7 @@ def stripe_ensure_april_charge_and_dispute(
     """
     log("\n[STRIPE]  ensuring April $8,400 Premium charge + dispute…")
 
-    # Idempotency — look for an existing W7R dispute on any charge of
+    # Idempotency - look for an existing W7R dispute on any charge of
     # this customer.
     for d in stripe.Dispute.list(limit=100).auto_paging_iter():
         md = md_dict(d)
@@ -405,7 +405,7 @@ def stripe_ensure_april_charge_and_dispute(
         customer=cust.id,
         off_session=True,
         description=(
-            f"{APERTURE_PLAN_DISPLAY} — April 2026 cycle "
+            f"{APERTURE_PLAN_DISPLAY} - April 2026 cycle "
             f"({CYCLE_START.date().isoformat()} → "
             f"{CYCLE_END.date().isoformat()}). "
             "Customer claim: Custom Reports degraded for 2 days during "
@@ -484,7 +484,7 @@ def stripe_ensure_april_charge_and_dispute(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 2. HubSpot — company + contact + downgrade note
+# 2. HubSpot - company + contact + downgrade note
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -584,7 +584,7 @@ def hubspot_attach_downgrade_note(client: httpx.Client, company_id: str) -> None
     """Attach a note documenting the self-serve downgrade event."""
     log("\n[HUBSPOT] attaching plan-change note…")
     note_body = (
-        f"<p><b>Plan change event</b> — self-serve downgrade</p>"
+        f"<p><b>Plan change event</b> - self-serve downgrade</p>"
         f"<ul>"
         f"<li><b>From:</b> {APERTURE_PLAN_DISPLAY} (Premium Monthly, "
         f"$8,400/mo)</li>"
@@ -648,7 +648,7 @@ def hubspot_attach_downgrade_note(client: httpx.Client, company_id: str) -> None
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 3. Intercom — contact + degradation-complaint conversation
+# 3. Intercom - contact + degradation-complaint conversation
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -683,7 +683,7 @@ def intercom_create_conversation(
     body = {
         "from": {"type": "user", "id": contact_id},
         "body": (
-            "Hey — we're getting Custom Reports timeouts today and "
+            "Hey - we're getting Custom Reports timeouts today and "
             "yesterday. This is critical for our weekly reporting "
             "cycle and we can't get the export to run. Is something "
             "broken on your end? This is the Premium feature we "
@@ -711,7 +711,7 @@ def intercom_create_conversation(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 4. Zendesk — org + user + ticket with verbal-credit promise
+# 4. Zendesk - org + user + ticket with verbal-credit promise
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -847,7 +847,7 @@ def zendesk_seed(
                         "user_id": user_id,
                         "ticket_id": existing_id,
                     }
-                # Requester mismatch — repoint the ticket at the
+                # Requester mismatch - repoint the ticket at the
                 # current (correct-email) user so the agent join works.
                 log(
                     f"  [fix]   ticket {existing_id} requester is "
@@ -887,10 +887,10 @@ def zendesk_seed(
             pass
     ticket_body = {
         "ticket": {
-            "subject": "Custom Reports timeout — possible refund",
+            "subject": "Custom Reports timeout - possible refund",
             "comment": {
                 "body": (
-                    "Hi support — we're seeing Custom Reports timeouts "
+                    "Hi support - we're seeing Custom Reports timeouts "
                     "across both yesterday and today. This is the "
                     "feature we specifically subscribe to Premium for "
                     "and we've lost two full days of weekly reporting "
@@ -924,7 +924,7 @@ def zendesk_seed(
         "ticket": {
             "comment": {
                 "body": (
-                    "Hi Aperture team — thank you for flagging. I've "
+                    "Hi Aperture team - thank you for flagging. I've "
                     "confirmed with engineering that the Custom "
                     "Reports service was indeed degraded for "
                     "approximately 48 hours over the past two days "
@@ -932,7 +932,7 @@ def zendesk_seed(
                     "your account for our standard partial credit "
                     "for the affected days; you'll see the credit "
                     "land on your next invoice. Apologies for the "
-                    "disruption. — Sam (Support)"
+                    "disruption. - Sam (Support)"
                 ),
                 "public": True,
             },
@@ -946,14 +946,14 @@ def zendesk_seed(
             f"/tickets/{ticket_id}.json",
             json_body=reply_body,
         )
-        log("  [tag]   agent reply added — partial credit promised")
+        log("  [tag]   agent reply added - partial credit promised")
     except Exception as e:
         log(f"  [warn]  failed to add agent reply: {e}")
     return {"org_id": org_id, "user_id": user_id, "ticket_id": ticket_id}
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 5. Slack — #engineering ack message
+# 5. Slack - #engineering ack message
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -983,7 +983,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
             channels = payload.get("channels") or []
             # Agent queries: slack.channels WHERE name ILIKE '%support%' OR
             # name ILIKE '%ops%' OR name ILIKE '%incident%'. So we MUST pick
-            # one of those channel names — engineering will be invisible to
+            # one of those channel names - engineering will be invisible to
             # the agent. Exact-name preferences first, then substring fallback.
             preferred_exact = [
                 "incidents", "incident-room", "ops", "cs-ops",
@@ -998,7 +998,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
                 if channel_id:
                     break
             if not channel_id:
-                # Substring match — any channel whose name contains 'incident',
+                # Substring match - any channel whose name contains 'incident',
                 # 'ops', or 'support' will be queryable by the agent.
                 for needle in preferred_substr:
                     for ch in channels:
@@ -1008,7 +1008,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
                             break
                     if channel_id:
                         break
-            # Last-resort fallbacks — engineering / billing / general won't
+            # Last-resort fallbacks - engineering / billing / general won't
             # match the agent query but at least we post something.
             if not channel_id:
                 for name in ["engineering", "billing", "general"]:
@@ -1033,7 +1033,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
         "2 days (2026-04-13 → 2026-04-15). Fixed at 14:30 UTC "
         "today by deploy of custom-reports-svc v3.4.2 (KMS query "
         "path repaired). RCA in INC-2026-04-13-customreports. "
-        "Customer impact confined to Premium tier — "
+        "Customer impact confined to Premium tier - "
         f"{APERTURE_DOMAIN} (Aperture Analytics) was the heaviest "
         "impacted account (48h of intermittent timeouts on the "
         "custom_reports_open endpoint). Support has been looped "
@@ -1042,7 +1042,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
     )
     try:
         with httpx.Client(timeout=15.0) as client:
-            # Best-effort join — required for chat.postMessage if the bot
+            # Best-effort join - required for chat.postMessage if the bot
             # isn't already a member of the channel.
             try:
                 client.post(
@@ -1072,7 +1072,7 @@ def slack_post_engineering_ack(state: dict[str, Any]) -> str | None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 6. Notion — pro-rata credit policy page
+# 6. Notion - pro-rata credit policy page
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1081,7 +1081,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
     pages: list[tuple[str, str]] = []
     parent = notion_find_parent(client)
     # find_parent_page returns (page_id, title). Older patches expected
-    # just a string — handle both shapes.
+    # just a string - handle both shapes.
     if isinstance(parent, tuple):
         parent_id = parent[0]
     else:
@@ -1103,7 +1103,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
                 PRORATA_POLICY_TITLE in title
                 or any(legacy in title for legacy in legacy_titles)
             ):
-                # Title rewrite — older seeds named this page
+                # Title rewrite - older seeds named this page
                 # "Documented Incident Pro-Rata Credit" which only
                 # carries the `pro-rata` token in queryable
                 # properties. The agent ORs in `propertiestext ILIKE
@@ -1162,7 +1162,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
                 "A customer disputes a charge for a billing cycle in which "
                 "an internally-documented operational incident degraded a "
                 "feature on the tier they paid for. We credit pro-rata for "
-                "the SPECIFIC degraded days against the disputed charge — "
+                "the SPECIFIC degraded days against the disputed charge - "
                 "not the full cycle, and not zero. The customer pays for "
                 "the days they received the feature in working order; we "
                 "pay for the days we didn't deliver."
@@ -1197,7 +1197,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
             ),
             (
                 "4. If support promised the credit verbally in a Zendesk "
-                "ticket, honor that promise — even if no credit was ever "
+                "ticket, honor that promise - even if no credit was ever "
                 "issued."
             ),
             "",
@@ -1211,7 +1211,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
             ),
             (
                 "The customer's reported impact window is longer than "
-                "the documented incident window — only credit the "
+                "the documented incident window - only credit the "
                 "documented days, not the customer's claim."
             ),
             "",
@@ -1235,7 +1235,7 @@ def notion_seed_prorata_policy(client: httpx.Client) -> list[tuple[str, str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 7. PostHog — custom_reports_open events × 47 across 4 days
+# 7. PostHog - custom_reports_open events × 47 across 4 days
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1256,13 +1256,13 @@ PERSONAS = [
 def build_posthog_events() -> list[dict]:
     events: list[dict] = []
     # 47 custom_reports_open events scattered across 2026-04-12 through
-    # 2026-04-15 — the 4 days the customer used Premium before
+    # 2026-04-15 - the 4 days the customer used Premium before
     # downgrading. The agent queries
     #   posthog.events WHERE timestamp BETWEEN '2026-04-13' AND '2026-04-15'
     # AND properties::text ILIKE '%aperture%'.
     #
     # SQL BETWEEN with date-only bounds is inclusive of '2026-04-13
-    # 00:00:00' and '2026-04-15 00:00:00' — meaning events on 04-15
+    # 00:00:00' and '2026-04-15 00:00:00' - meaning events on 04-15
     # *after midnight* are EXCLUDED. We bias hours per-day so the
     # 04-15 events land in the 00:00-07:59 morning window (still
     # inside the incident window 04-13 08:00 → 04-15 08:00 UTC) and
@@ -1278,10 +1278,10 @@ def build_posthog_events() -> list[dict]:
     # events fall inside both `BETWEEN '2026-04-13' AND '2026-04-15'`
     # AND the documented incident window which ends at 04-15 08:00 UTC.
     hours_per_day = [
-        (8, 17),   # 04-12 — daytime
-        (8, 17),   # 04-13 — daytime, during incident
-        (8, 17),   # 04-14 — daytime, during incident
-        (0, 7),    # 04-15 — early morning, inside incident + BETWEEN
+        (8, 17),   # 04-12 - daytime
+        (8, 17),   # 04-13 - daytime, during incident
+        (8, 17),   # 04-14 - daytime, during incident
+        (0, 7),    # 04-15 - early morning, inside incident + BETWEEN
     ]
     rng = random.Random(20260412)
     for day_idx, (day, count) in enumerate(zip(days, per_day)):
@@ -1310,7 +1310,7 @@ def build_posthog_events() -> list[dict]:
                     ]),
                     "tier_required": "premium",
                     "company_slug": APERTURE_SLUG,
-                    # Explicit `aperture` token — the agent's
+                    # Explicit `aperture` token - the agent's
                     # `properties::text ILIKE '%aperture%'` predicate
                     # needs at least one substring match per row.
                     "company_name": APERTURE_NAME,
@@ -1366,7 +1366,7 @@ def posthog_seed() -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 8. Datadog — custom-reports-svc degradation monitor + event
+# 8. Datadog - custom-reports-svc degradation monitor + event
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1385,7 +1385,7 @@ def datadog_seed(stripe_customer_id: str, state: dict[str, Any]) -> dict[str, An
 def _datadog_seed_inner(
     client: httpx.Client, stripe_customer_id: str, state: dict[str, Any]
 ) -> dict[str, Any]:
-    # Monitor — name keyed for idempotency.
+    # Monitor - name keyed for idempotency.
     incident_start_iso = INCIDENT_START.isoformat()
     incident_end_iso = INCIDENT_END.isoformat()
     fix_iso = INCIDENT_FIX_TIME.isoformat()
@@ -1433,10 +1433,10 @@ def _datadog_seed_inner(
     except Exception as e:
         log(f"  [warn]  monitor upsert failed: {e}")
 
-    # Event — Datadog rejects date_happened > ~18h ago. The narrative
+    # Event - Datadog rejects date_happened > ~18h ago. The narrative
     # window is baked into the title + text; date_happened is recent.
     # NOTE: even when the event already exists, we still drop through
-    # to attempt the incident create — the two are independent and the
+    # to attempt the incident create - the two are independent and the
     # incident is the table the agent actually queries.
     if state.get("datadog_event_id"):
         log(f"  [reuse] datadog event id={state['datadog_event_id']}")
@@ -1467,7 +1467,7 @@ def _datadog_seed_inner(
         "rotation window; every custom_reports_open returned 504 for "
         "Premium tenants until worker restart. See linked Slack thread + "
         "Zendesk ticket. Customer is filing a Stripe dispute on the "
-        "April Premium charge — owner: ops-billing."
+        "April Premium charge - owner: ops-billing."
     )
     event_spec = DDEventSpec(
         title=event_title,
@@ -1511,14 +1511,14 @@ def _datadog_create_incident(
     """Create a Datadog v2 incident for the Custom Reports degradation.
 
     Datadog's incidents API is opt-in (Incident Management product). If
-    the account doesn't have it enabled, the POST returns 403/404 — we
+    the account doesn't have it enabled, the POST returns 403/404 - we
     log and continue (the monitor + event still carry the narrative).
     """
     if state.get("datadog_incident_id"):
         log(f"  [reuse] datadog incident id={state['datadog_incident_id']}")
         return state["datadog_incident_id"]
 
-    # First — check the v2 incidents API is reachable. If GET returns
+    # First - check the v2 incidents API is reachable. If GET returns
     # 404/403 we can skip the POST and surface a clearer warning.
     incident_title = (
         f"Custom Reports degradation INC-2026-04-13-customreports "
@@ -1538,7 +1538,7 @@ def _datadog_create_incident(
         )
         return None
 
-    # Idempotency — look for an existing incident with the same title.
+    # Idempotency - look for an existing incident with the same title.
     if list_res.status_code == 200:
         existing = (list_res.json().get("data") or [])
         for inc in existing:
@@ -1555,7 +1555,7 @@ def _datadog_create_incident(
             "attributes": {
                 "title": incident_title,
                 "customer_impact_scope": (
-                    "Premium tier Custom Reports users — primary impact "
+                    "Premium tier Custom Reports users - primary impact "
                     f"{APERTURE_DOMAIN} (Aperture Analytics). 48h of "
                     "intermittent timeouts on custom_reports_open."
                 ),
@@ -1655,7 +1655,7 @@ def _datadog_create_incident(
 def main() -> int:
     state = _load_state()
     c = aperture_company()
-    log(f"\nW7R Aperture Analytics seed — workflow target: "
+    log(f"\nW7R Aperture Analytics seed - workflow target: "
         f"{APERTURE_NAME} ({APERTURE_EMAIL})")
     log(f"Cycle: {CYCLE_START.date()} → {CYCLE_END.date()} · "
         f"April charge ${APRIL_CHARGE_USD} · "

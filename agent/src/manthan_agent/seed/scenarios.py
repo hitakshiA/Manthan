@@ -27,7 +27,7 @@ from typing import Any
 from .identity import CompanyIdentity
 
 # ────────────────────────────────────────────────────────────────────────
-# Canonical companies — one per scenario. Re-usable if a scenario expands.
+# Canonical companies - one per scenario. Re-usable if a scenario expands.
 # ────────────────────────────────────────────────────────────────────────
 
 NORTHSTAR = CompanyIdentity(
@@ -39,7 +39,7 @@ NORTHSTAR = CompanyIdentity(
     arr_usd=2_400,
     signup_date="2025-01-15",
     primary_billing_name="Maya Patel",
-    csm_email="",  # CSM-less — the point of this case
+    csm_email="",  # CSM-less - the point of this case
 )
 
 TINDARELL = CompanyIdentity(
@@ -101,8 +101,8 @@ class Scenario:
     """One billing-ops case to investigate.
 
     Read by:
-      - seed/<source>.py — for the source's slice in `seed_hints`
-      - eval/runner.py   — to fire the trigger at the agent and grade
+      - seed/<source>.py - for the source's slice in `seed_hints`
+      - eval/runner.py   - to fire the trigger at the agent and grade
                            the response against `expected_action`
                            and `must_cite_sources`.
     """
@@ -128,7 +128,7 @@ SCENARIOS: list[Scenario] = [
     # 1 ──────────────────────────────────────────────────────────────────
     Scenario(
         id="friendly-fraud-saas-annual-non-refundable",
-        title="Friendly fraud — annual SaaS, Visa 13.2 cancelled_recurring",
+        title="Friendly fraud - annual SaaS, Visa 13.2 cancelled_recurring",
         category="chargeback",
         research_case_id="case-1",
         company=NORTHSTAR,
@@ -158,7 +158,7 @@ SCENARIOS: list[Scenario] = [
             "Northstar Logistics renewed Jan 15 2026 at $2,400/yr. Used the "
             "product for 90 days (~40 logins, 3 exports). Filed Visa 13.2 "
             "on Feb 8 2026 claiming they 'never agreed to the annual "
-            "renewal.' No CSM relationship — only a TOS checkbox 13 months "
+            "renewal.' No CSM relationship - only a TOS checkbox 13 months "
             "earlier in the signup record."
         ),
         seed_hints={
@@ -205,7 +205,7 @@ SCENARIOS: list[Scenario] = [
     # 2 ──────────────────────────────────────────────────────────────────
     Scenario(
         id="expired-card-on-high-ARR-renewal",
-        title="Expired card on $48K annual renewal — ABU sync failing",
+        title="Expired card on $48K annual renewal - ABU sync failing",
         category="failed_payment",
         research_case_id="case-5",
         company=TINDARELL,
@@ -232,7 +232,7 @@ SCENARIOS: list[Scenario] = [
         ),
         narrative=(
             "Tindarell ($48K annual, billed upfront) renewal charge failed "
-            "Jan 12 — card expired Dec 31. Visa Account Updater pushed "
+            "Jan 12 - card expired Dec 31. Visa Account Updater pushed "
             "the new card Jan 4 but the merchant's ABU sync silently "
             "failed (Sentry error). CFO is on PTO; auto-reply going "
             "nowhere. CSM relationship exists but they don't know."
@@ -285,7 +285,7 @@ SCENARIOS: list[Scenario] = [
         trigger={
             "source": "intercom",
             "event": "conversation.opened",
-            "subject": "Full refund request — we never really used it",
+            "subject": "Full refund request - we never really used it",
             "received_at": "2026-04-18",
             "intent": "refund_request",
         },
@@ -304,8 +304,8 @@ SCENARIOS: list[Scenario] = [
             "Brillion Studios paid $4,800 annual on Jan 5 2026. Requested "
             "full refund Apr 18 (day 103). Refund policy says 30-day "
             "money-back, then nothing. Actual usage: 47 logins, 12 "
-            "projects, 3 invites — light but not zero. Customer hints at "
-            "chargeback if denied. Judgment call — no obvious right "
+            "projects, 3 invites - light but not zero. Customer hints at "
+            "chargeback if denied. Judgment call - no obvious right "
             "answer."
         ),
         seed_hints={
@@ -326,7 +326,7 @@ SCENARIOS: list[Scenario] = [
             },
             "notion": {
                 "create_runbook_page": True,
-                "runbook_title": "Refund policy — annual plans",
+                "runbook_title": "Refund policy - annual plans",
                 "runbook_body_excerpt": (
                     "30-day money-back guarantee from the date of charge. "
                     "After 30 days, no refunds except for service-credit "
@@ -344,7 +344,7 @@ SCENARIOS: list[Scenario] = [
     # 4 ──────────────────────────────────────────────────────────────────
     Scenario(
         id="high-mrr-30-days-past-due-no-csm",
-        title="$108K ARR account 30 days past due — AR emailing shared inbox",
+        title="$108K ARR account 30 days past due - AR emailing shared inbox",
         category="dunning",
         research_case_id="case-12",
         company=GOLDENROD,
@@ -374,7 +374,7 @@ SCENARIOS: list[Scenario] = [
             "Goldenrod Group ($108K ARR enterprise, Net 30). Invoice due "
             "Apr 1 still unpaid. AR has been emailing ap@goldenrod.example "
             "(shared inbox), no reply. Default rule would suspend at day "
-            "30 — but Goldenrod has an active product integration that "
+            "30 - but Goldenrod has an active product integration that "
             "their downstream insureds depend on. Suspension causes "
             "contagion. CSM doesn't know AR is escalating."
         ),
@@ -395,7 +395,7 @@ SCENARIOS: list[Scenario] = [
             },
             "linear": {
                 "issue": {
-                    "title": "Goldenrod Group — past-due, contains critical integration",
+                    "title": "Goldenrod Group - past-due, contains critical integration",
                     "priority": "Urgent",
                     "state": "open",
                 },
@@ -405,7 +405,7 @@ SCENARIOS: list[Scenario] = [
                     {
                         "text": (
                             "Goldenrod payment hasn't landed. ap@ inbox is "
-                            "silent. Daniela was their primary AR contact — "
+                            "silent. Daniela was their primary AR contact - "
                             "is she still there?"
                         ),
                         "ts_offset_days": -3,
@@ -417,7 +417,7 @@ SCENARIOS: list[Scenario] = [
     # 5 ──────────────────────────────────────────────────────────────────
     Scenario(
         id="champion-left-no-replacement",
-        title="Champion departed — 22% usage drop, renewal in 90 days",
+        title="Champion departed - 22% usage drop, renewal in 90 days",
         category="renewal_risk",
         research_case_id="case-15",
         company=VAUXLEY,
@@ -443,10 +443,10 @@ SCENARIOS: list[Scenario] = [
         ),
         narrative=(
             "Vauxley Analytics ($84K ARR, 18 months tenure). VP-Marketing "
-            "Marcus Reed — the original champion — stopped logging in 28 "
+            "Marcus Reed - the original champion - stopped logging in 28 "
             "days ago. Usage on his account dropped to zero; org-wide "
             "usage dropped 22%. CSM only noticed during QBR prep. "
-            "Renewal Jul 22 — 90 days away. ChurnZero data says 51% "
+            "Renewal Jul 22 - 90 days away. ChurnZero data says 51% "
             "churn risk; 33% renewal lift if acted on within 48 hours."
         ),
         seed_hints={

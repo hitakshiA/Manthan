@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 /**
- * Manthan mark — three right-facing concentric arcs emitting from a solid
+ * Manthan mark - three right-facing concentric arcs emitting from a solid
  * emerald core. Reads as a radar / sonar pulse, echoing the product
  * metaphor of an agent that listens, churns the signal, and emits insight.
  */

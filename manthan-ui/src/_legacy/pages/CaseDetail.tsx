@@ -101,7 +101,7 @@ function Header({
   fallbackId: string;
 }) {
   const title = caseData
-    ? `${caseData.customer_ref ?? "—"} · ${caseTypeLabel(caseData.case_type).toLowerCase()} investigation`
+    ? `${caseData.customer_ref ?? "-"} · ${caseTypeLabel(caseData.case_type).toLowerCase()} investigation`
     : "Loading case…";
   const status = caseData ? STATUS_TONE[caseData.status] : null;
   const shortId = caseData?.short_id ?? fallbackId;
@@ -252,21 +252,21 @@ function InvestigationTrace() {
             done
             source="intercom"
             title="Reviewed support history"
-            detail="Last ticket Jan 14: 'invoice amount too high' — closed as 'pricing question', 1 hr resolution"
+            detail="Last ticket Jan 14: 'invoice amount too high' - closed as 'pricing question', 1 hr resolution"
             tool="run_sql · intercom.conversations"
           />
           <TraceStep
             done
             source="posthog"
             title="Pulled product usage signal"
-            detail="Logged in 23 of last 30 days, 200+ events, core feature used daily — actively engaged"
+            detail="Logged in 23 of last 30 days, 200+ events, core feature used daily - actively engaged"
             tool="run_sql · posthog.events"
           />
           <TraceStep
             done
             source="slack"
             title="Checked internal mentions"
-            detail="CSM mentioned TechCorp in #cs-expansion 5 days ago — flagged for upsell convo"
+            detail="CSM mentioned TechCorp in #cs-expansion 5 days ago - flagged for upsell convo"
             tool="run_sql · slack.messages"
           />
           <TraceStep
@@ -377,7 +377,7 @@ function CitedBrief({
               <Cite>health 78</Cite>.
             </p>
             <p>
-              The dispute appears to be retaliation, not fraud — Alice flagged a
+              The dispute appears to be retaliation, not fraud - Alice flagged a
               pricing concern <Cite>Jan 14</Cite> that closed without
               resolution. Per policy this case is{" "}
               <Cite>ineligible for refund</Cite>, but the relationship value

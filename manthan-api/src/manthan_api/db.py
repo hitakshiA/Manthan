@@ -35,7 +35,7 @@ async def init_pool() -> asyncpg.Pool:
 
 
 async def _init_connection(conn: asyncpg.Connection) -> None:
-    """Per-connection setup — JSONB codec etc."""
+    """Per-connection setup - JSONB codec etc."""
     await conn.set_type_codec(
         "jsonb",
         encoder=json.dumps,
@@ -59,7 +59,7 @@ async def close_pool() -> None:
 
 def get_pool() -> asyncpg.Pool:
     if _pool is None:
-        raise RuntimeError("DB pool not initialised — call init_pool() first.")
+        raise RuntimeError("DB pool not initialised - call init_pool() first.")
     return _pool
 
 

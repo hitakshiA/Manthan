@@ -3,7 +3,7 @@
 Stores per-tenant connection credentials (connection strings, API
 keys, OAuth refresh tokens) encrypted at rest. The vault never
 returns plaintext to HTTP handlers unless they explicitly call
-:meth:`decrypt` — and even then the returned :class:`SecretStr`
+:meth:`decrypt` - and even then the returned :class:`SecretStr`
 masks itself in logs.
 
 Design:
@@ -50,7 +50,7 @@ class MasterKeyProvider:
 
     The contract: ``get_master_key()`` returns a 32-byte urlsafe-base64
     Fernet key. Implementations that wrap an HSM should cache
-    aggressively — this is called once per Vault instantiation.
+    aggressively - this is called once per Vault instantiation.
     """
 
     def get_master_key(self) -> bytes:
@@ -63,7 +63,7 @@ class EnvMasterKeyProvider(MasterKeyProvider):
     If the env var isn't set, we derive a deterministic key from the
     machine's hostname + a salt file so single-machine deployments
     "just work" out of the box. Production deployments MUST set the
-    env var explicitly — the derived fallback is a safety net, not a
+    env var explicitly - the derived fallback is a safety net, not a
     security control.
     """
 
@@ -112,7 +112,7 @@ class VaultRecord:
 class CredentialVault:
     """Envelope-encrypted credential store.
 
-    Thread-safe via a single mutex — writes are infrequent (one per
+    Thread-safe via a single mutex - writes are infrequent (one per
     connection setup) so contention is negligible.
     """
 
@@ -163,7 +163,7 @@ class CredentialVault:
                 (tenant_id,),
             ).fetchone()
             if row is None:
-                # First use — mint a fresh DK, wrap with MK, persist.
+                # First use - mint a fresh DK, wrap with MK, persist.
                 new_dk = Fernet.generate_key()
                 wrapped = self._master.encrypt(new_dk)
                 conn.execute(
@@ -227,7 +227,7 @@ class CredentialVault:
             secret = json.loads(dk.decrypt(blob).decode())
         except InvalidToken as exc:
             raise VaultError(
-                "Credential decryption failed — master key rotated?"
+                "Credential decryption failed - master key rotated?"
             ) from exc
         return VaultRecord(
             connection_id=connection_id,
@@ -239,7 +239,7 @@ class CredentialVault:
         )
 
     def list(self, *, tenant_id: str = DEFAULT_TENANT) -> list[dict[str, Any]]:
-        """Return metadata for every credential — never plaintext."""
+        """Return metadata for every credential - never plaintext."""
         with self._lock, sqlite3.connect(self._db_path) as conn:
             rows = conn.execute(
                 "SELECT connection_id, label, source_type, created_at, updated_at "

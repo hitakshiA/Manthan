@@ -1,4 +1,4 @@
-"""HubSpot adapter — attach a Note (engagement) to a Company."""
+"""HubSpot adapter - attach a Note (engagement) to a Company."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def create_note(payload: dict[str, Any], idempotency_key: str) -> ExecutionResul
             return ExecutionResult(
                 external_ref=ref,
                 summary=(
-                    "HubSpot note queued (demo): no company_id resolved — "
+                    "HubSpot note queued (demo): no company_id resolved - "
                     "would attach to the customer's company in production"
                 ),
                 raw={
@@ -51,7 +51,7 @@ def create_note(payload: dict[str, Any], idempotency_key: str) -> ExecutionResul
             )
         raise AdapterError("hubspot.create_note payload requires company_id")
 
-    body_with_key = f"{body}\n\n— Manthan {idempotency_key}"
+    body_with_key = f"{body}\n\n- Manthan {idempotency_key}"
 
     with _client() as c:
         try:

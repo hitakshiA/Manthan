@@ -8,9 +8,9 @@
 
 @theme {
   /* ═══════════════════════════════════════════════════════════════════
-     DARK theme (default) — warm-tinted, NOT pure black.
+     DARK theme (default) - warm-tinted, NOT pure black.
      LIGHT theme overrides are declared below as a [data-theme="light"]
-     selector on <html>. We never branch via prefers-color-scheme alone —
+     selector on <html>. We never branch via prefers-color-scheme alone -
      the user toggles explicitly and the choice is persisted.
      ═══════════════════════════════════════════════════════════════════ */
 
@@ -49,7 +49,7 @@
   --color-ink-faint:    oklch(0.60 0.006 75);
   --color-ink-ghost:    oklch(0.45 0.006 75);
 
-  /* ── Accent (desaturated emerald — actionable only, NO GLOW) ── */
+  /* ── Accent (desaturated emerald - actionable only, NO GLOW) ── */
   --color-accent:       oklch(0.62 0.15 150);
   --color-accent-hover: oklch(0.66 0.15 150);
   --color-accent-soft:  oklch(0.62 0.15 150 / 0.12);
@@ -72,7 +72,7 @@
   --ease-out-quart:  cubic-bezier(0.25, 1, 0.5, 1);
   --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* ── Radii — restrained, no bubble look ── */
+  /* ── Radii - restrained, no bubble look ── */
   --radius-xs: 3px;
   --radius-sm: 5px;
   --radius-md: 8px;
@@ -92,7 +92,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   LIGHT theme — warm-paper near-white. Activated by <html data-theme="light">.
+   LIGHT theme - warm-paper near-white. Activated by <html data-theme="light">.
    The hue (75) and chroma stay consistent with dark so the brand feels
    unified across themes. Ink direction flips: ink-strong becomes the
    warm near-black, surface tones step UP toward the page.
@@ -219,7 +219,7 @@ html[data-theme="light"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Utilities — typographic shortcuts that encode meaning
+   Utilities - typographic shortcuts that encode meaning
    ═══════════════════════════════════════════════════════════════════════ */
 
 @layer utilities {
@@ -228,7 +228,7 @@ html[data-theme="light"] {
   .font-mono    { font-family: 'Geist Mono', ui-monospace, monospace; font-feature-settings: "zero", "ss01"; }
   .font-sans    { font-family: 'Geist', system-ui, sans-serif; }
 
-  /* Display italic — the editorial accent voice. Spectral italic is a touch
+  /* Display italic - the editorial accent voice. Spectral italic is a touch
      darker than the roman; we drop the weight to 300 to keep the rhythm. */
   .display-italic {
     font-family: 'Spectral', serif;
@@ -237,10 +237,10 @@ html[data-theme="light"] {
     letter-spacing: 0;
   }
 
-  /* Tabular numerals — for any amount, count, %, or ID */
+  /* Tabular numerals - for any amount, count, %, or ID */
   .nums { font-variant-numeric: tabular-nums; }
 
-  /* Section eyebrow — Geist small-caps, NOT mono (no terminal vibes) */
+  /* Section eyebrow - Geist small-caps, NOT mono (no terminal vibes) */
   .eyebrow {
     font-family: 'Geist', system-ui, sans-serif;
     text-transform: uppercase;
@@ -250,11 +250,11 @@ html[data-theme="light"] {
     color: var(--color-ink-faint);
   }
 
-  /* Rule — the 1px horizontal divider that replaces card borders */
+  /* Rule - the 1px horizontal divider that replaces card borders */
   .rule { height: 1px; background: var(--color-rule); }
   .rule-soft { height: 1px; background: var(--color-rule-soft); }
 
-  /* Footnote marker — for cited claims */
+  /* Footnote marker - for cited claims */
   .ref {
     font-family: 'Geist Mono', ui-monospace, monospace;
     font-size: 0.75em;
@@ -265,7 +265,7 @@ html[data-theme="light"] {
     font-weight: 500;
   }
 
-  /* Hero spotlight — radial vignette over hero video */
+  /* Hero spotlight - radial vignette over hero video */
   .bg-spotlight {
     background:
       radial-gradient(85% 60% at 50% 0%, transparent 0%, oklch(0.135 0.006 75) 65%),
@@ -277,7 +277,7 @@ html[data-theme="light"] {
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
 
-  /* ── Card surface — hairline, restrained radius, no rounded-bubble shadow.
+  /* ── Card surface - hairline, restrained radius, no rounded-bubble shadow.
        Editorial direction: the surface is a 1px hairline over a slightly
        lifted background. Hover lifts the rule + nudges the bg, never the
        glow / shadow / scale circus. ── */
@@ -293,7 +293,7 @@ html[data-theme="light"] {
     border-color: var(--color-rule);
   }
 
-  /* ── Inbox case card — quiet by default, hover lifts the rule + nudges
+  /* ── Inbox case card - quiet by default, hover lifts the rule + nudges
        the bg. Urgent variant adds an amber left edge so the
        awaiting-nod pile is the first thing the eye finds. ── */
   .case-card {
@@ -323,7 +323,7 @@ html[data-theme="light"] {
     /* left border stays the amber urgency cue */
   }
 
-  /* ── Landing hero play overlay — the glyph brightens its shadow
+  /* ── Landing hero play overlay - the glyph brightens its shadow
        on hover via CSS, no JS motion. Quiet, restrained feedback. ── */
   .play-overlay-btn:hover .play-glyph {
     box-shadow:
@@ -338,7 +338,7 @@ html[data-theme="light"] {
       0 0 0 1px rgba(255,255,255,0.6);
   }
 
-  /* ── AppShell sidebar nav row. Resend-style — icons + larger text +
+  /* ── AppShell sidebar nav row. Resend-style - icons + larger text +
        subtle surface highlight on hover and active states. The active
        state's background comes from the inline `style` attribute on
        the NavLink so it works without :has(); this rule only adds the
@@ -394,7 +394,7 @@ html[data-theme="light"] {
     color: var(--color-ink-strong);
   }
 
-  /* Small "ⓘ" companion to the citation chip — opens the reasoning
+  /* Small "ⓘ" companion to the citation chip - opens the reasoning
      modal when the chip itself takes you to the source. Quiet by
      default; hover lifts to ink-strong. */
   .citation-info {
@@ -408,14 +408,14 @@ html[data-theme="light"] {
     background: var(--color-rule-soft);
   }
 
-  /* ── Hairline — the 1px row divider that replaces card padding. ── */
+  /* ── Hairline - the 1px row divider that replaces card padding. ── */
   .hairline {
     height: 1px;
     background: var(--color-rule-soft);
     width: 100%;
   }
 
-  /* ── Liquid glass pill — announcement banner above the hero headline ── */
+  /* ── Liquid glass pill - announcement banner above the hero headline ── */
   .liquid-glass {
     background: rgba(255, 255, 255, 0.01);
     background-blend-mode: luminosity;
@@ -444,7 +444,7 @@ html[data-theme="light"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Animations — restrained, purposeful only
+   Animations - restrained, purposeful only
    ═══════════════════════════════════════════════════════════════════════ */
 
 @keyframes fade-up {
@@ -466,7 +466,7 @@ html[data-theme="light"] {
 .animate-pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   Themed range slider — emerald accent on warm-dark track.
+   Themed range slider - emerald accent on warm-dark track.
    Pass `--fill: X%` inline to colour the filled portion of the track.
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -534,13 +534,13 @@ html[data-theme="light"] {
   cursor: not-allowed;
 }
 
-/* Floating bob — gentle sine-like rise + fall for orbiting chips */
+/* Floating bob - gentle sine-like rise + fall for orbiting chips */
 @keyframes float-bob {
   0%, 100% { transform: translate(-50%, -50%) translateY(0); }
   50%      { transform: translate(-50%, -50%) translateY(-4px); }
 }
 
-/* Compound chart latest-bar breath — subtle scale-Y pulse */
+/* Compound chart latest-bar breath - subtle scale-Y pulse */
 @keyframes compound-breathe {
   0%, 100% { transform: scaleY(1) translateY(0); }
   50%      { transform: scaleY(1.04) translateY(-1px); }

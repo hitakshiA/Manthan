@@ -1,5 +1,5 @@
 /**
- * Workspace page — the unified case workspace, replacing the older
+ * Workspace page - the unified case workspace, replacing the older
  * Dashboard + CaseDetail split. Matches the marketing showcase exactly.
  *
  * Data flow:
@@ -53,7 +53,7 @@ function toneFromStatus(s: CaseStatus): Tone {
   if (s === "awaiting_approval") return "awaiting";
   if (s === "acting") return "executing";
   if (s === "resolved") return "resolved";
-  // errored, escalated — display as drafted (no other better mapping)
+  // errored, escalated - display as drafted (no other better mapping)
   return "drafted";
 }
 
@@ -62,13 +62,13 @@ function caseRowFromApi(c: ApiCase, meEmail: string): WorkspaceCaseRow {
   const num = c.short_id.replace(/^CASE-/i, "") || c.short_id;
   return {
     num,
-    customer: c.customer_ref ?? "—",
+    customer: c.customer_ref ?? "-",
     type: caseTypeLabel(c.case_type),
     amount: (c.amount_minor ?? 0) / 100,
     status: toneFromStatus(c.status),
     ago: formatAge(c.created_at),
     drafts: 0, // backend doesn't expose drafted-action count yet; fill in v0.2
-    owner: meEmail, // placeholder — backend doesn't expose assigned member email yet
+    owner: meEmail, // placeholder - backend doesn't expose assigned member email yet
     watching: true,
     caseId: c.id,
     triggerSurface: c.trigger_surface,
@@ -101,7 +101,7 @@ function detailFromApi(c: ApiCase): WorkspaceCaseDetail {
     const cites = (f.citations ?? []).filter((x) => x);
 
     if (cites.length === 0) {
-      // No structured citation — sniff a source from the finding text so
+      // No structured citation - sniff a source from the finding text so
       // the chip isn't a dead "Finding N" placeholder.
       const sniffed = sniffSourceFromText(f.text);
       const idx = evidence.length;
@@ -146,12 +146,12 @@ function detailFromApi(c: ApiCase): WorkspaceCaseDetail {
   // pure when no actions have been fetched yet.
   const actions: WorkspaceCaseDetail["actions"] = [];
 
-  // Account snapshot from raw API shape — humanize all field values.
+  // Account snapshot from raw API shape - humanize all field values.
   const account: [string, React.ReactNode][] = [
-    ["Customer", c.customer_ref ?? "—"],
+    ["Customer", c.customer_ref ?? "-"],
     ["Status", humanizeStatus(c.status)],
     ["Trigger", humanizeTrigger(c.trigger_surface)],
-    ["Amount", c.amount_minor != null ? amountLabel : "—"],
+    ["Amount", c.amount_minor != null ? amountLabel : "-"],
     ["Opened", formatAge(c.created_at) + " ago"],
   ];
 
@@ -293,7 +293,7 @@ function sniffSourceFromText(t: string): string | null {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Memo adapters — convert the existing ApiCase / ApiActionRow shapes
+// Memo adapters - convert the existing ApiCase / ApiActionRow shapes
 // into the MemoCaseData / MemoFinding / MemoAction props the new
 // editorial-memo views accept. Used only on the post-investigation
 // stages (awaiting_approval, resolved, etc).
@@ -313,7 +313,7 @@ function memoCaseFromApi(c: ApiCase): MemoCaseData {
   } else if (c.case_type === "sla_credit") {
     caseLine = `seeking an SLA credit`;
   } else if (c.case_type === "failed_renewal") {
-    caseLine = `— renewal payment failed`;
+    caseLine = `- renewal payment failed`;
   }
 
   // Recommended-amount Spectral subtitle ("partial credit · 2 of 30…")
@@ -328,7 +328,7 @@ function memoCaseFromApi(c: ApiCase): MemoCaseData {
     const pct = Math.round((recommendedMinor / disputedMinor) * 100);
     recommendedSubtitle = `partial credit · ${pct}% of the disputed amount`;
   } else if (recommendedMinor === 0) {
-    recommendedSubtitle = "fight — concede nothing";
+    recommendedSubtitle = "fight - concede nothing";
   } else if (
     recommendedMinor != null &&
     recommendedMinor >= disputedMinor
@@ -343,11 +343,11 @@ function memoCaseFromApi(c: ApiCase): MemoCaseData {
 
   return {
     shortId: c.short_id,
-    customer: c.customer_ref ?? "—",
+    customer: c.customer_ref ?? "-",
     caseLine,
     disputedAmount: formatMoney(disputedMinor),
     recommendedAmount:
-      recommendedMinor != null ? formatMoney(recommendedMinor) : "—",
+      recommendedMinor != null ? formatMoney(recommendedMinor) : "-",
     recommendedSubtitle,
     status: c.status,
     policyMatched: c.policy_match?.rule_name ?? null,
@@ -572,7 +572,7 @@ export default function Workspace() {
       <div className="h-[calc(100vh-3.5rem)]">
         {status === "investigating" ? (
           // InvestigationMemo reads :id from useParams and subscribes
-          // to its own SSE stream — we don't need to thread anything
+          // to its own SSE stream - we don't need to thread anything
           // through; the existing useCaseEvents above + the one inside
           // the memo share the same caseId and Manthan's server-side
           // dedupes the subscription.

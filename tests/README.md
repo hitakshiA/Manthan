@@ -1,4 +1,4 @@
-# tests/ — 294 Tests
+# tests/ - 294 Tests
 
 Organized by module, mirroring the `src/` structure.
 
@@ -21,6 +21,6 @@ pytest tests/ -m "not slow" # Skip integration tests
 
 ## Fixtures
 
-- `conftest.py` — Isolated settings (test .env), DuckDB in-memory connection, sample DCD
+- `conftest.py` - Isolated settings (test .env), DuckDB in-memory connection, sample DCD
 - Tests use `monkeypatch` for environment isolation
 - `get_settings.cache_clear()` between tests that modify config

@@ -1,4 +1,4 @@
-"""Runtime ask_user — blocking human-in-the-loop clarification.
+"""Runtime ask_user - blocking human-in-the-loop clarification.
 
 When the agent hits ambiguity mid-task (e.g. ``"last month"`` could
 mean calendar month or trailing 30 days), it calls
@@ -15,7 +15,7 @@ The pattern:
 4. User: ``POST /ask_user/{id}/answer`` → server wakes up the waiting agent
 5. Agent: receives the answer, continues its tool loop
 
-Timeout without an answer is not an error — the agent just gets a
+Timeout without an answer is not an error - the agent just gets a
 ``timed_out=True`` result and can decide what to do (retry, give up,
 pick a default). This keeps the wait bounded so subagents can't
 deadlock the whole system.

@@ -1,5 +1,5 @@
 /**
- * Badge — editorial tag, not a pill.
+ * Badge - editorial tag, not a pill.
  *
  * The default form is a small-caps tracked text label in the tone colour,
  * with an optional leading dot. NO background fill, NO border. This kills

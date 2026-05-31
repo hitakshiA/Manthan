@@ -1,9 +1,9 @@
 /**
- * Sources — connected data sources, brand-tile grid.
+ * Sources - connected data sources, brand-tile grid.
  *
  * Each source is a square-ish tile dominated by its brand logo, with a
  * faint wash of the brand hex behind the icon. Hover lifts the tile
- * slightly. Click to drill into the source detail (not wired yet —
+ * slightly. Click to drill into the source detail (not wired yet -
  * `href={null}` for now). Wired to /api/sources.
  *
  * Layout: 4-column grid (auto-fits down at narrow widths). A short
@@ -190,7 +190,7 @@ export default function Sources() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// SourceCoralModal — click-through inspector for a single source.
+// SourceCoralModal - click-through inspector for a single source.
 // Shows the Coral logo (this is the data layer powering the agent's
 // SQL access) + the env vars Coral uses (censored) + the qualified
 // tables Coral exposes to the agent. Centered modal with backdrop blur.
@@ -307,12 +307,12 @@ function SourceCoralModal({
           <X size={16} strokeWidth={1.6} />
         </button>
 
-        {/* Header — Coral × Source crossover */}
+        {/* Header - Coral × Source crossover */}
         <header
           className="flex items-center gap-5 px-7 pt-7 pb-6"
           style={{ borderBottom: "1px solid var(--color-rule-soft)" }}
         >
-          {/* Coral logo on the left — this is what powers the connection */}
+          {/* Coral logo on the left - this is what powers the connection */}
           <img
             src="/coral-button.png"
             alt="Coral"
@@ -409,7 +409,7 @@ function SourceCoralModal({
 
           {detail && (
             <div className="flex flex-col gap-8">
-              {/* ENV VARS — censored credentials */}
+              {/* ENV VARS - censored credentials */}
               <section>
                 <div
                   className="flex items-center gap-2 mb-3"
@@ -434,7 +434,7 @@ function SourceCoralModal({
                       color: "var(--color-ink-faint)",
                     }}
                   >
-                    No env vars wired for this source — Coral falls back
+                    No env vars wired for this source - Coral falls back
                     to the in-process mock catalog.
                   </p>
                 ) : (
@@ -471,7 +471,7 @@ function SourceCoralModal({
                               : "Not configured"
                           }
                         >
-                          {v.present ? v.value_preview : "— not set —"}
+                          {v.present ? v.value_preview : "- not set -"}
                         </span>
                       </li>
                     ))}
@@ -479,7 +479,7 @@ function SourceCoralModal({
                 )}
               </section>
 
-              {/* TABLES — what Coral exposes */}
+              {/* TABLES - what Coral exposes */}
               <section>
                 <div
                   className="flex items-center gap-2 mb-3"
@@ -602,7 +602,7 @@ function SourceCoralModal({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PageHeader — title + subtitle + search + filter.
+// PageHeader - title + subtitle + search + filter.
 // ──────────────────────────────────────────────────────────────────────
 
 function PageHeader({
@@ -716,7 +716,7 @@ function PageHeader({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// SourceTile — one box per source. Logo dominates, brand-tinted wash
+// SourceTile - one box per source. Logo dominates, brand-tinted wash
 // behind, name + category + status pill below.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -724,7 +724,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
   const meta = getSource(source.id);
   const brandHex = meta?.simpleIcon?.hex;
   // Pure-black brands (Notion, GitHub) and pure-white brands (Resend)
-  // get rendered with our ink tokens by SourceIcon — but for the
+  // get rendered with our ink tokens by SourceIcon - but for the
   // background wash they read flat. Detect and swap to a neutral tint.
   const isExtremeBrand =
     !brandHex ||
@@ -766,7 +766,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
         opacity: isConnected ? 1 : 0.78,
       }}
     >
-      {/* Top — brand wash with the huge logo */}
+      {/* Top - brand wash with the huge logo */}
       <div
         className="relative flex items-center justify-center"
         style={{
@@ -777,7 +777,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
       >
         <BrandGlyph source={source} />
 
-        {/* Status pill — top-right */}
+        {/* Status pill - top-right */}
         <span
           className="absolute text-[10px] uppercase font-mono tabular-nums"
           style={{
@@ -795,7 +795,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
         </span>
       </div>
 
-      {/* Bottom — name + category + activity */}
+      {/* Bottom - name + category + activity */}
       <div className="flex flex-col gap-1.5 px-4 pt-3 pb-4">
         <div className="flex items-baseline justify-between gap-2">
           <span
@@ -828,7 +828,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
                 color: "var(--color-ink-muted)",
                 letterSpacing: "0.04em",
               }}
-              title={`${source.queries_total.toLocaleString()} queries · last ${source.last_query_at ? formatAge(source.last_query_at) + " ago" : "—"}`}
+              title={`${source.queries_total.toLocaleString()} queries · last ${source.last_query_at ? formatAge(source.last_query_at) + " ago" : "-"}`}
             >
               {compactNum(source.queries_total)}q
             </span>
@@ -847,7 +847,7 @@ function SourceTile({ source, onOpen }: { source: ApiSource; onOpen: () => void 
 }
 
 /**
- * BrandGlyph — the source logo, rendered LARGE and in its brand color.
+ * BrandGlyph - the source logo, rendered LARGE and in its brand color.
  * Uses the simple-icons SVG path directly so we can size it ourselves;
  * the smaller SourceIcon component is for inline use and tops out at
  * 24px. Pure-black / pure-white brands render with the ink token so
@@ -857,7 +857,7 @@ function BrandGlyph({ source }: { source: ApiSource }) {
   const meta = getSource(source.id);
   const icon = meta?.simpleIcon;
   if (!icon) {
-    // No SVG — show a stylized initial in mono with the source's id.
+    // No SVG - show a stylized initial in mono with the source's id.
     return (
       <span
         className="inline-flex items-center justify-center font-mono tabular-nums"

@@ -1,4 +1,4 @@
--- Policy engine — autonomous-execution gate.
+-- Policy engine - autonomous-execution gate.
 --
 -- After a brief drops, the policy engine evaluates rules in priority
 -- order. If a rule matches AND its mode is 'auto', the case skips the
@@ -7,8 +7,8 @@
 -- match (for the UI to surface) but require human approval.
 --
 -- Rules use a simple JSON DSL evaluated in services/policy.py:
---   {"all": [ {field: {op: value}}, ... ]}    — AND
---   {"any": [ ... ]}                          — OR
+--   {"all": [ {field: {op: value}}, ... ]}    - AND
+--   {"any": [ ... ]}                          - OR
 --   field paths: case.case_type, case.amount_minor, case.trigger_surface,
 --                case.decision_action, customer.has_prior_disputes, etc.
 

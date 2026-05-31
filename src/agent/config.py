@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AgentConfig(BaseSettings):
-    """Layer 2 agent settings — loaded from .env.
+    """Layer 2 agent settings - loaded from .env.
 
     Uses AGENT_ prefix for agent-specific settings. The Gemini key falls
     back to ``GEMINI_API_KEY`` (no prefix) if ``AGENT_GEMINI_API_KEY`` is
@@ -35,7 +35,7 @@ class AgentConfig(BaseSettings):
     model: str = Field(
         default="gemini-3-flash-preview",
         description=(
-            "Gemini model for agent reasoning. Default is Gemini 3 Flash — "
+            "Gemini model for agent reasoning. Default is Gemini 3 Flash - "
             "benchmarked 2.5x faster than Pro on Manthan's hard-question suite "
             "with comparable answer quality. Override via AGENT_MODEL env var."
         ),

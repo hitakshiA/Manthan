@@ -1,12 +1,12 @@
-"""``compute_metric`` — the governed happy-path for named business metrics.
+"""``compute_metric`` - the governed happy-path for named business metrics.
 
 Instead of asking the agent to hand-roll SQL for ``revenue`` (and risk
 dropping the ``status='delivered'`` filter that defines it), the
 agent names the metric + dimensions + filters and this module
 composes the SQL from the declared :class:`DcdMetric` contract.
 
-Everything the metric's definition guarantees — the aggregation
-expression, the baked-in filter, the aggregation_semantics — is
+Everything the metric's definition guarantees - the aggregation
+expression, the baked-in filter, the aggregation_semantics - is
 applied automatically. Two agents, two sessions, two models produce
 the same number for the same metric call.
 
@@ -108,7 +108,7 @@ def _find_metric(entity: DcdEntity, metric_slug: str) -> DcdMetric:
     available = [m.slug for m in entity.metrics]
     raise ComputeMetricError(
         f"Metric '{metric_slug}' is not declared on entity '{entity.slug}'. "
-        f"Declared: {available or '(none — add one via the schema editor)'}."
+        f"Declared: {available or '(none - add one via the schema editor)'}."
     )
 
 
@@ -166,7 +166,7 @@ def _sql_literal(value: Any, dtype: str) -> str:
         return "TRUE" if value else "FALSE"
     if isinstance(value, (int, float)):
         return str(value)
-    # Strings, dates, timestamps — always quote and escape single-quotes.
+    # Strings, dates, timestamps - always quote and escape single-quotes.
     escaped = str(value).replace("'", "''")
     return f"'{escaped}'"
 
@@ -199,7 +199,7 @@ def compose_sql(
         1. Select: metric expression aliased with metric slug (+
            optional temporal grain + dimensions).
         2. From: the entity's physical_table. Rollups aren't used
-           here — rollups are an optimization, not a semantic
+           here - rollups are an optimization, not a semantic
            boundary. Phase 5 plumbing can add a rollup-router.
         3. Where: the metric's declared filter + any user-supplied
            filters (ANDed).
@@ -211,7 +211,7 @@ def compose_sql(
 
     # Only bucket by time if the caller explicitly asked for a grain.
     # ``metric.default_grain`` is a HINT surfaced to the UI, not a
-    # silent default — if it auto-fired when the agent asked for a
+    # silent default - if it auto-fired when the agent asked for a
     # scalar total, every "what's our revenue?" would come back as
     # a 33-row monthly series the agent then has to re-summarize.
     grain = request.grain
@@ -270,7 +270,7 @@ def compute_metric(state: AppState, request: MetricRequest) -> MetricExecution:
     """Resolve, compose, validate, execute.
 
     All four steps live here so the agent loop has one clean entry
-    point — it never sees a partial result, and the returned object
+    point - it never sees a partial result, and the returned object
     carries everything needed for the Phase 3 ``numeric_claim`` event.
     """
     import time
@@ -280,7 +280,7 @@ def compute_metric(state: AppState, request: MetricRequest) -> MetricExecution:
 
     # Validate that requested dimensions are either dimension columns
     # or temporal columns on the entity (any declared column name is OK
-    # — the validator won't see our composed SQL because we trust
+    # - the validator won't see our composed SQL because we trust
     # ourselves to build it correctly, so we pre-check here).
     declared = {c.name.lower() for c in dcd.dataset.columns}
     for dim in request.dimensions:

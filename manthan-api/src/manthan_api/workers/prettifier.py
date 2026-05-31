@@ -1,4 +1,4 @@
-"""worker.prettifier — turns raw events into one-line human summaries.
+"""worker.prettifier - turns raw events into one-line human summaries.
 
 Polls events with NULL summary in (tool_call, tool_result, finding_recorded,
 reflexion, brief_drafted), batches up to N, calls a fast/cheap model
@@ -23,7 +23,7 @@ from uuid import UUID
 import httpx
 from dotenv import load_dotenv
 
-# Load .env BEFORE reading MODEL — otherwise the module-level constant
+# Load .env BEFORE reading MODEL - otherwise the module-level constant
 # locks in the in-code default (gemini-3.1-flash-lite) and the
 # MANTHAN_PRETTIFIER_MODEL override in manthan-api/.env never takes
 # effect. Tried this once before, missed it because the main() block
@@ -44,7 +44,7 @@ POLL_INTERVAL = 2.0
 
 SYSTEM_PROMPT = """You translate one step of a behind-the-scenes billing-dispute investigation into ONE plain-English sentence for a FINANCE PERSON (a Director of Revenue Accounting). They do NOT know what schemas, tables, queries, or APIs are. They DO know about customers, charges, refunds, support tickets, sales contacts, billing records, etc.
 
-For each raw event you'll be given a TYPE and DATA. Write ONE sentence (max 14 words) that names what the agent is trying to learn about the CUSTOMER OR CASE — in the language a CFO would use over coffee. No quotes. No emoji. No trailing period unless natural.
+For each raw event you'll be given a TYPE and DATA. Write ONE sentence (max 14 words) that names what the agent is trying to learn about the CUSTOMER OR CASE - in the language a CFO would use over coffee. No quotes. No emoji. No trailing period unless natural.
 
 FORBIDDEN words (rewrite around them):
   schema, table, column, query, SQL, API, endpoint, payload, JSON,
@@ -64,9 +64,9 @@ Good full-sentence examples:
   "Checking whether the customer cancelled in writing anywhere."
   "Counting prior chargebacks on this customer in the last year."
   "Pulling their support history to confirm what was promised."
-  "Drafted the recommendation — fight this dispute, submit evidence."
+  "Drafted the recommendation - fight this dispute, submit evidence."
   "Found 6 conversations in support, none mentioning cancellation."
-  "Couldn't find a match — empty result from our records."
+  "Couldn't find a match - empty result from our records."
   "Confirming the customer is still using the product after disputing."
 
 If the raw event is a finding the agent recorded, translate the finding directly into one line a CFO would understand.
@@ -97,7 +97,7 @@ class PrettifierWorker:
     async def run(self) -> None:
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key:
-            logger.error("OPENROUTER_API_KEY missing — prettifier idle")
+            logger.error("OPENROUTER_API_KEY missing - prettifier idle")
             return
         self._http = httpx.AsyncClient(
             base_url="https://openrouter.ai/api/v1",
@@ -178,7 +178,7 @@ class PrettifierWorker:
         )
         assert self._http is not None
         # Reasoning models (Mercury, GPT-5, o3, etc.) burn 100-200 tokens
-        # thinking BEFORE writing the answer — at max_tokens=64 they finish
+        # thinking BEFORE writing the answer - at max_tokens=64 they finish
         # mid-reasoning with empty content. Detect by model id and bump
         # both the budget and disable reasoning emission.
         is_reasoning = any(
@@ -194,7 +194,7 @@ class PrettifierWorker:
             ],
         }
         if is_reasoning:
-            # OpenRouter unified flag — tells the upstream to suppress
+            # OpenRouter unified flag - tells the upstream to suppress
             # the reasoning trace in the response, keeping only the
             # final answer. Cheaper + matches the 1-line UX we want.
             payload["reasoning"] = {"exclude": True}
@@ -224,7 +224,7 @@ def _normalize(s: str) -> str:
 
 
 def _fallback_summary(type_: str, data: Any) -> str:
-    """If the LLM call fails, write something sane — but better than
+    """If the LLM call fails, write something sane - but better than
     "Calling coral_sql". Extract the SQL's source tables when we can
     so multi-source joins read as joins, not as a generic tool name."""
     if not isinstance(data, dict):
@@ -251,7 +251,7 @@ def _fallback_summary(type_: str, data: Any) -> str:
         return "Reflexion checkpoint"
     if type_ == "brief_drafted":
         dec = data.get("decision") or {}
-        return f"Drafted brief — decision: {dec.get('action', 'unknown')}"
+        return f"Drafted brief - decision: {dec.get('action', 'unknown')}"
     if type_ == "case_closed":
         return f"Case closed ({data.get('reason', 'concluded')})"
     if type_ == "error":
@@ -259,7 +259,7 @@ def _fallback_summary(type_: str, data: Any) -> str:
     return type_
 
 
-# Mirror of the frontend KNOWN_SOURCES set — kept in sync by hand
+# Mirror of the frontend KNOWN_SOURCES set - kept in sync by hand
 # because there's no cross-language registry. Sources we recognize in
 # a `<source>.<table>` token; anything else is treated as a catalog
 # table (coral.tables, etc.).

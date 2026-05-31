@@ -1,16 +1,16 @@
-"""Inbound email webhook — Resend delivers parsed messages here.
+"""Inbound email webhook - Resend delivers parsed messages here.
 
-Routing rule (per the design sketch — "email doesn't have to be in the
+Routing rule (per the design sketch - "email doesn't have to be in the
 same thread, but same email of user; main identifier is email of user"):
 
   1. Dedupe by message_id (skip exact replays).
   2. **Lookup any open email-originated case for this sender email.**
      If found → append `human_followup` event to that case. The agent's
      chat_loop replies via Resend. The fact that the customer started a
-     new email thread doesn't matter — we identify them by address.
+     new email thread doesn't matter - we identify them by address.
   3. Otherwise open a new case.
   4. Either way: schedule an immediate Manthan-branded ack email back
-     to the customer (only on new-case path — follow-ups don't get
+     to the customer (only on new-case path - follow-ups don't get
      re-acked because the agent will produce a real reply shortly).
 
 Resend signs payloads with svix (svix-id / svix-timestamp / svix-signature
@@ -31,7 +31,7 @@ Inbound payload shape (Resend):
       }
     }
 
-For dev mode (no signature secret set), we accept any payload — useful for
+For dev mode (no signature secret set), we accept any payload - useful for
 local testing via curl.
 """
 
@@ -76,7 +76,7 @@ async def receive_email(
             detail="RESEND_INBOUND_WEBHOOK_SECRET not configured",
         )
     else:
-        logger.warning("RESEND_INBOUND_WEBHOOK_SECRET unset — skipping signature check (dev only)")
+        logger.warning("RESEND_INBOUND_WEBHOOK_SECRET unset - skipping signature check (dev only)")
 
     try:
         payload = json.loads(body.decode("utf-8"))
@@ -103,7 +103,7 @@ async def receive_email(
             raise HTTPException(status_code=404, detail="org not found")
         org_id = org_row["id"]
 
-        # Dedupe by message_id (defensive — Resend usually doesn't
+        # Dedupe by message_id (defensive - Resend usually doesn't
         # redeliver, but the SLA contract says we never double-process).
         if msg_id:
             already = await conn.fetchval(
@@ -122,7 +122,7 @@ async def receive_email(
         # ── Email-as-identifier routing ──
         # Look for any open case with this sender as the customer_ref.
         # "Open" = anything not in a terminal state. If there's a
-        # resolved-recently case (last 7 days) we ALSO match — the
+        # resolved-recently case (last 7 days) we ALSO match - the
         # customer is likely following up on the same issue.
         case_row = await conn.fetchrow(
             """
@@ -141,7 +141,7 @@ async def receive_email(
         )
 
         if case_row is not None:
-            # Same customer, open or recent case — append a follow-up.
+            # Same customer, open or recent case - append a follow-up.
             await _append_event_with_retry(
                 conn,
                 org_id=org_id,
@@ -226,7 +226,7 @@ async def receive_email(
 
     logger.info("email opened case %s from=%s subject=%r", short_id, from_addr, subject[:60])
 
-    # Schedule the auto-ack email — runs after we return the 200 to
+    # Schedule the auto-ack email - runs after we return the 200 to
     # Resend so the webhook latency stays small.
     background.add_task(
         _send_auto_ack,
@@ -335,7 +335,7 @@ def _verify_svix(body: bytes, headers: dict[str, str], secret: str) -> bool:
     try:
         key = b64decode(secret)
     except Exception:
-        # Some secrets aren't base64 — use raw bytes.
+        # Some secrets aren't base64 - use raw bytes.
         key = secret.encode()
     base = f"{msg_id}.{ts}.".encode() + body
     expected = hmac.new(key, base, hashlib.sha256).digest()

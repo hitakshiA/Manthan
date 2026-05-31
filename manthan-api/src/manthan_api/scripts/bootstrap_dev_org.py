@@ -4,7 +4,7 @@ Run once after `docker compose up postgres`:
 
     uv run python -m manthan_api.scripts.bootstrap_dev_org
 
-Idempotent — re-running detects the existing org and skips.
+Idempotent - re-running detects the existing org and skips.
 """
 
 from __future__ import annotations
@@ -109,10 +109,10 @@ async def main() -> None:
                        'TechCorp account healthy: NPS 9, plan Growth Annual, no prior disputes in 14 months.',
                        0.95, $3::jsonb),
                       ($1, $2, 2,
-                       'Last support conversation 14 days ago — unrelated onboarding question, resolved.',
+                       'Last support conversation 14 days ago - unrelated onboarding question, resolved.',
                        0.88, $4::jsonb),
                       ($1, $2, 3,
-                       'Amount $1,200 exceeds $500 auto-refund threshold per refunds.yaml — held for approval.',
+                       'Amount $1,200 exceeds $500 auto-refund threshold per refunds.yaml - held for approval.',
                        0.99, $5::jsonb)
                     """,
                     org_id,
@@ -130,7 +130,7 @@ async def main() -> None:
                 )
                 print(f"seeded sample case: CASE-4821 ({case_row['id']})")
             else:
-                print(f"dev org already has {existing_case} case(s) — skipping sample seed")
+                print(f"dev org already has {existing_case} case(s) - skipping sample seed")
 
         print()
         print("done. start the API with:")

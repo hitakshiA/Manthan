@@ -1,5 +1,5 @@
 /**
- * DraftSources — Connected Sources, editorial-memo direction (DRAFT).
+ * DraftSources - Connected Sources, editorial-memo direction (DRAFT).
  *
  * Each connected source is a MINI-PROFILE memo, stacked. Mirrors the
  * Case Workspace memo vocabulary (HeaderStrip, Eyebrow, SourceWord),
@@ -18,14 +18,14 @@
  * No glow, no gradients, no glassmorphism. Hairlines + Spectral italic
  * + Geist Mono tabular. The reference is print, not Discord.
  *
- * Throwaway draft — route /app/drafts/sources.
+ * Throwaway draft - route /app/drafts/sources.
  */
 
 import type { ReactNode } from "react";
 import { SourceIcon } from "@/components/ui/SourceIcon";
 
 // ──────────────────────────────────────────────────────────────────────
-// Mock data — six connected sources, written to feel like a real stack.
+// Mock data - six connected sources, written to feel like a real stack.
 // ──────────────────────────────────────────────────────────────────────
 
 type Health = "healthy" | "degraded" | "down";
@@ -33,9 +33,9 @@ type Health = "healthy" | "degraded" | "down";
 interface ActivityEntry {
   /** Time-ago label, mono tabular. */
   age: string;
-  /** The verb — muted; reads as the action class. */
+  /** The verb - muted; reads as the action class. */
   verb: string;
-  /** The object — normal weight; reads as the specific subject. */
+  /** The object - normal weight; reads as the specific subject. */
   object: ReactNode;
 }
 
@@ -51,7 +51,7 @@ interface SourceProfile {
   capCount: number;
   /** "OAuth" or "API key". */
   authMethod: "OAuth" | "API key";
-  /** "scoped" or "read-only" — appears after the auth method. */
+  /** "scoped" or "read-only" - appears after the auth method. */
   scopeNote: "scoped" | "read-only";
   activity: ActivityEntry[];
 }
@@ -263,7 +263,7 @@ const SOURCES: SourceProfile[] = [
                 color: "rgba(255,182,77,0.82)",
               }}
             >
-              slow — 14.2s
+              slow - 14.2s
             </em>
           </span>
         ),
@@ -281,7 +281,7 @@ const SOURCES: SourceProfile[] = [
                 color: "rgba(255,182,77,0.82)",
               }}
             >
-              slow — 9.4s
+              slow - 9.4s
             </em>
           </span>
         ),
@@ -311,7 +311,7 @@ export default function DraftSources() {
     >
       <div className="mx-auto px-6 py-9" style={{ maxWidth: 1280 }}>
         {/* ─────────────────────────────────────────────────────────
-            Page header — eyebrow + Spectral italic title + subtitle.
+            Page header - eyebrow + Spectral italic title + subtitle.
             Hairline below, matched to the source-card top edge below.
             ───────────────────────────────────────────────────────── */}
         <header className="mb-9">
@@ -366,7 +366,7 @@ export default function DraftSources() {
           ))}
         </div>
 
-        {/* Footer breath — small mono index line in the editorial style. */}
+        {/* Footer breath - small mono index line in the editorial style. */}
         <div
           className="mt-10 pt-5 flex items-center justify-between"
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
@@ -400,7 +400,7 @@ export default function DraftSources() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// SourceProfileCard — one source memo. HeaderStrip + two-column canvas.
+// SourceProfileCard - one source memo. HeaderStrip + two-column canvas.
 // ──────────────────────────────────────────────────────────────────────
 
 function SourceProfileCard({ source }: { source: SourceProfile }) {
@@ -422,7 +422,7 @@ function SourceProfileCard({ source }: { source: SourceProfile }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// SourceHeaderStrip — identity strip. Icon · NAME · italic category,
+// SourceHeaderStrip - identity strip. Icon · NAME · italic category,
 // right side: health word + "·" + sync stamp.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -443,7 +443,7 @@ function SourceHeaderStrip({ source }: { source: SourceProfile }) {
         background: "oklch(0.135 0.006 75)",
       }}
     >
-      {/* Source icon — 24px tinted glyph, baseline-aligned with mono. */}
+      {/* Source icon - 24px tinted glyph, baseline-aligned with mono. */}
       <span
         aria-hidden
         className="inline-flex items-center justify-center mr-4"
@@ -452,7 +452,7 @@ function SourceHeaderStrip({ source }: { source: SourceProfile }) {
         <SourceIcon id={source.id} size={24} tinted />
       </span>
 
-      {/* Name — big mono uppercase, the editorial "byline." */}
+      {/* Name - big mono uppercase, the editorial "byline." */}
       <span
         className="font-mono text-[16px] uppercase tabular-nums"
         style={{
@@ -472,7 +472,7 @@ function SourceHeaderStrip({ source }: { source: SourceProfile }) {
         ·
       </span>
 
-      {/* Category — Spectral italic, the editorial "section." */}
+      {/* Category - Spectral italic, the editorial "section." */}
       <span
         className="text-[14px]"
         style={{
@@ -485,7 +485,7 @@ function SourceHeaderStrip({ source }: { source: SourceProfile }) {
         {source.category}
       </span>
 
-      {/* Right side — health (color on text) · sync stamp (mono muted). */}
+      {/* Right side - health (color on text) · sync stamp (mono muted). */}
       <div className="ml-auto inline-flex items-baseline gap-3">
         <span
           className="text-[12.5px] uppercase"
@@ -518,7 +518,7 @@ function SourceHeaderStrip({ source }: { source: SourceProfile }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// SourceCanvas — left (capabilities) | right (recent activity).
+// SourceCanvas - left (capabilities) | right (recent activity).
 // ──────────────────────────────────────────────────────────────────────
 
 function SourceCanvas({ source }: { source: SourceProfile }) {
@@ -529,7 +529,7 @@ function SourceCanvas({ source }: { source: SourceProfile }) {
         gridTemplateColumns: "minmax(0, 1.3fr) minmax(0, 1fr)",
       }}
     >
-      {/* LEFT — what Manthan can do here */}
+      {/* LEFT - what Manthan can do here */}
       <div className="px-9 pt-7 pb-7 flex flex-col gap-5">
         <Eyebrow>What Manthan can do here</Eyebrow>
 
@@ -573,7 +573,7 @@ function SourceCanvas({ source }: { source: SourceProfile }) {
             </p>
           </div>
 
-          {/* Writes row — suppressed entirely for read-only sources. */}
+          {/* Writes row - suppressed entirely for read-only sources. */}
           {source.writes.length > 0 && (
             <div className="flex items-baseline gap-3">
               <span
@@ -615,7 +615,7 @@ function SourceCanvas({ source }: { source: SourceProfile }) {
           )}
         </div>
 
-        {/* Capabilities meta — hairline above, mono muted line. */}
+        {/* Capabilities meta - hairline above, mono muted line. */}
         <div
           className="pt-4 mt-1"
           style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
@@ -636,7 +636,7 @@ function SourceCanvas({ source }: { source: SourceProfile }) {
         </div>
       </div>
 
-      {/* RIGHT — recent activity */}
+      {/* RIGHT - recent activity */}
       <div
         className="px-9 pt-7 pb-7 flex flex-col gap-5"
         style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
@@ -686,7 +686,7 @@ function SourceCanvas({ source }: { source: SourceProfile }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Editorial primitives — Eyebrow + inline Mono helper.
+// Editorial primitives - Eyebrow + inline Mono helper.
 // Mirrors the WorkspaceMemo / LandingHeroDemo primitives.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -713,7 +713,7 @@ function Eyebrow({
   );
 }
 
-/** Inline mono span — used to wrap ids, amounts, codes in activity lines. */
+/** Inline mono span - used to wrap ids, amounts, codes in activity lines. */
 function Mono({ children }: { children: ReactNode }) {
   return (
     <span

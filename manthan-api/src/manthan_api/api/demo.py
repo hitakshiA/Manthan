@@ -1,4 +1,4 @@
-"""Demo trigger endpoints — fire pre-seeded scenarios with one click.
+"""Demo trigger endpoints - fire pre-seeded scenarios with one click.
 
 This route exists so the demo presenter can launch each of the 3 baked
 scenarios without running shell commands. UI hits it; backend synthesizes
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/demo", tags=["demo"])
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Pre-baked scenario triggers — match the seeded fixture data
+# Pre-baked scenario triggers - match the seeded fixture data
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -41,7 +41,7 @@ SCENARIOS = {
         "trigger_text": (
             "Stripe chargeback opened: Quill Logistics filed a $9,000 dispute "
             "on charge ch_3Tc27rCNe0SBMhzI0YNVF6dn (dispute du_1Tc27tCNe0SBMhzIZtlzYANU). "
-            "Reason: product_not_received. Their CFO says service was down during Q1 — "
+            "Reason: product_not_received. Their CFO says service was down during Q1 - "
             "investigate across our 11 connected systems and recommend fight vs. refund."
         ),
         "trigger_payload": {
@@ -67,7 +67,7 @@ SCENARIOS = {
         "amount_minor": 450000,
         "currency": "usd",
         "trigger_text": (
-            "@manthan — Vermillion Studios just filed a chargeback for $4,500 on "
+            "@manthan - Vermillion Studios just filed a chargeback for $4,500 on "
             "charge ch_3Tc2QNCNe0SBMhzI1ZxM1yrK (dispute du_1Tc2QQCNe0SBMhzImPgJOJiO). "
             "Their CFO says we billed for 25 seats but they only have 15. Look into it "
             "across the connected systems and recommend fight vs. refund."
@@ -92,12 +92,12 @@ SCENARIOS = {
         # documented 48h Custom Reports degradation against a 30-day
         # Premium cycle → pro-rata partial credit (not full refund, not
         # fight). The IDs below match the resources seeded by
-        # agent/scripts/patch_w7r_aperture_prorata.py — re-run that
+        # agent/scripts/patch_w7r_aperture_prorata.py - re-run that
         # script first if the state file is stale or wiped.
         "trigger_text": (
             "Stripe chargeback opened: Aperture Analytics filed an $8,400 dispute "
             "on charge ch_3Tch1LCNe0SBMhzI0FIYdCkF (dispute du_1Tch1OCNe0SBMhzIAppAdJjT). "
-            "Reason: product_not_as_described — customer claims Custom Reports was "
+            "Reason: product_not_as_described - customer claims Custom Reports was "
             "degraded for ~2 days during their April Premium cycle "
             "(2026-04-12 → 2026-05-11). Investigate across the 8 connected systems "
             "(Stripe, HubSpot, Intercom, Zendesk, Slack, Notion, PostHog, Datadog) "
@@ -146,7 +146,7 @@ SCENARIOS = {
         # emails, and HubSpot/Slack posts. The actual delivery address
         # comes from trigger_payload.from_addr (the inbound-email handler
         # source-of-truth) and gets rewritten by MANTHAN_DEMO_EMAIL_OVERRIDE
-        # for demo deliveries — see resend.py.
+        # for demo deliveries - see resend.py.
         "customer_ref": "Maya Patel",
         "amount_minor": 8900,
         "currency": "usd",
@@ -155,19 +155,19 @@ SCENARIOS = {
         # a stripe_refund action against the right charge.
         "trigger_text": (
             "Customer email from Maya Patel <hitakshi220@gmail.com> to support@manthan.quest:\n\n"
-            "Subject: Charged twice for Caldera Pro — please refund\n\n"
+            "Subject: Charged twice for Caldera Pro - please refund\n\n"
             "Hi, I was charged $89 twice on 2026-05-22 for my Caldera Pro subscription. "
             "Please refund the duplicate. Thanks, Maya\n\n"
-            "—— enriched context (added by inbound handler) ——\n"
+            "-- enriched context (added by inbound handler) --\n"
             "Resolved customer: cus_UbF7BXDTnXgUCt (Maya Patel Design)\n"
             "Original charge:   ch_3Tc2dRCNe0SBMhzI1z6GoLeI  (2026-05-22 14:21:03 UTC, $89, succeeded)\n"
-            "Duplicate charge:  ch_3Tc2dTCNe0SBMhzI0vIpjd62  (2026-05-22 14:25:09 UTC, $89, succeeded — refund this one)"
+            "Duplicate charge:  ch_3Tc2dTCNe0SBMhzI0vIpjd62  (2026-05-22 14:25:09 UTC, $89, succeeded - refund this one)"
         ),
         "trigger_payload": {
             "message_id": f"<demo-maya-{uuid.uuid4()}@gmail.com>",
             "from_addr": "hitakshi220@gmail.com",
             "from_name": "Maya Patel",
-            "subject": "Charged twice for Caldera Pro — please refund",
+            "subject": "Charged twice for Caldera Pro - please refund",
             "duplicate_charge_id": "ch_3Tc2dTCNe0SBMhzI0vIpjd62",
             "original_charge_id": "ch_3Tc2dRCNe0SBMhzI1z6GoLeI",
             "customer_id": "cus_UbF7BXDTnXgUCt",
@@ -181,11 +181,11 @@ SCENARIOS = {
 class TriggerRequest(BaseModel):
     """Per-trigger overrides.
 
-    `demo_email_to` — when set, the customer_email action delivers to
+    `demo_email_to` - when set, the customer_email action delivers to
     this address (the operator's own login inbox in the demo flow)
     instead of the simulated customer's address or the env-level
     `MANTHAN_DEMO_EMAIL_OVERRIDE`. Also forces the case to require
-    manual approval — policy auto-approval is skipped so the operator
+    manual approval - policy auto-approval is skipped so the operator
     gets to see + approve the brief before the email fires.
     """
     demo_email_to: str | None = None
@@ -249,7 +249,7 @@ async def trigger_scenario(
                 RETURNING id
                 """,
                 ctx.org_id, thread_id, short_id, scenario["surface"],
-                # asyncpg's JSONB codec already serializes dicts — DON'T json.dumps
+                # asyncpg's JSONB codec already serializes dicts - DON'T json.dumps
                 # (would double-encode → data->>'x' returns NULL).
                 trigger_payload,
                 scenario["case_type"], scenario["customer_ref"],

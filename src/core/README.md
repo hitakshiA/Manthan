@@ -1,6 +1,6 @@
-# core/ — Shared Infrastructure
+# core/ - Shared Infrastructure
 
-Foundation module imported by everything else. **Zero imports from other `src/` modules** — dependency flow is strictly one-directional:
+Foundation module imported by everything else. **Zero imports from other `src/` modules** - dependency flow is strictly one-directional:
 
 ```
 api → tools → materialization → profiling → ingestion → core
@@ -10,7 +10,7 @@ api → tools → materialization → profiling → ingestion → core
 
 | File | Purpose |
 |------|---------|
-| `config.py` | `Settings` class via pydantic-settings — all config from `.env` |
+| `config.py` | `Settings` class via pydantic-settings - all config from `.env` |
 | `llm.py` | Gemini client (Google AI Studio · OpenAI-compat) with model cascade, per-model retry, 429 instant failover |
 | `state.py` | `AppState` singleton: DuckDB connection, DCD registry, dataset rehydration |
 | `memory.py` | Cross-session key-value store backed by SQLite WAL |

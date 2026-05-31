@@ -1,32 +1,32 @@
-"""Patch Q1R — Quill Logistics alleged-Q1-outage chargeback.
+"""Patch Q1R - Quill Logistics alleged-Q1-outage chargeback.
 
 Seeds evidence across all 11 connected sources so the Manthan agent
 investigating the $9k chargeback can recommend FIGHT with overwhelming
 corroboration:
 
-  Stripe       — $9k test-mode dispute on a Pro Annual charge with
+  Stripe       - $9k test-mode dispute on a Pro Annual charge with
                  metadata semantic_reason=service_outage_claim and the
                  disputed-window dates.
-  Salesforce   — "Quill Logistics" account, Pro Annual, $40k ARR,
+  Salesforce   - "Quill Logistics" account, Pro Annual, $40k ARR,
                  CSM=Amelia, renewal Mar 2027, healthy account notes.
-  HubSpot      — Company record, last-contact note about VP Eng asking
+  HubSpot      - Company record, last-contact note about VP Eng asking
                  about Standard tier ("evaluating, not cancelling").
-  Intercom     — 4 Q1 conversations, none about outage or cancellation.
+  Intercom     - 4 Q1 conversations, none about outage or cancellation.
                  Latest about onboarding new team members.
-  Zendesk      — Zero tickets in the alleged-outage Q1 window; 2 older
+  Zendesk      - Zero tickets in the alleged-outage Q1 window; 2 older
                  feature-request tickets from 2025, both solved.
-  Slack        — One post in #cs-escalations from Amelia (CSM) about
-                 the April downgrade conversation — NOT about outage.
-  Notion       — "Chargeback Response Playbook v3" codifying the FIGHT
+  Slack        - One post in #cs-escalations from Amelia (CSM) about
+                 the April downgrade conversation - NOT about outage.
+  Notion       - "Chargeback Response Playbook v3" codifying the FIGHT
                  path when ops data is clean AND PostHog shows usage,
                  plus a "Pro Annual Refund Policy 2026" page.
-  PostHog      — Q1 activity: 22 logins, 8 distinct users, 47 critical-
+  PostHog      - Q1 activity: 22 logins, 8 distinct users, 47 critical-
                  path actions (create_shipment, generate_invoice).
-  Sentry       — Q1 baseline ~0.4% error rate tagged to Quill's tenant,
+  Sentry       - Q1 baseline ~0.4% error rate tagged to Quill's tenant,
                  no spikes.
-  Datadog      — Synthetic monitor "us-east-1 Quill region uptime" with
+  Datadog      - Synthetic monitor "us-east-1 Quill region uptime" with
                  a Q1 narrative of 99.97% uptime, p95 within SLA.
-  PagerDuty    — Zero P1/P2 incidents in Q1 touching Quill's region.
+  PagerDuty    - Zero P1/P2 incidents in Q1 touching Quill's region.
 
 Idempotent: every resource is looked up by name/idem-key before creation.
 
@@ -157,7 +157,7 @@ from seed_world import (  # noqa: E402
 )
 
 
-# Salesforce is optional — only seed it if the access token is valid.
+# Salesforce is optional - only seed it if the access token is valid.
 SALESFORCE_AVAILABLE = bool(
     os.getenv("SALESFORCE_API_URL") and os.getenv("SALESFORCE_ACCESS_TOKEN")
 )
@@ -172,7 +172,7 @@ if SALESFORCE_AVAILABLE:
         SALESFORCE_AVAILABLE = False
 
 
-# Stripe is required — bail loudly if not configured.
+# Stripe is required - bail loudly if not configured.
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 if not stripe.api_key or not stripe.api_key.startswith("sk_test_"):
     raise SystemExit("STRIPE_API_KEY must be a sk_test_... key in agent/.env")
@@ -214,7 +214,7 @@ def log(msg: str = "") -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 1. Stripe — customer, subscription, charge, dispute
+# 1. Stripe - customer, subscription, charge, dispute
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -264,7 +264,7 @@ def stripe_find_pro_annual_price() -> stripe.Price:
                 and md.get("price_key") == "pro_annual_current"):
             return pr
     raise SystemExit(
-        "ERROR: no Pro Annual current price found in Stripe — "
+        "ERROR: no Pro Annual current price found in Stripe - "
         "run seed_stripe.py first."
     )
 
@@ -443,13 +443,13 @@ def stripe_create_disputed_charge_and_dispute(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 2. Salesforce — Quill Logistics account (optional)
+# 2. Salesforce - Quill Logistics account (optional)
 # ──────────────────────────────────────────────────────────────────────
 
 
 def salesforce_seed(c: Company, stripe_customer_id: str) -> str | None:
     if not SALESFORCE_AVAILABLE:
-        log("\n[SALESFORCE]  SKIP — SALESFORCE_ACCESS_TOKEN not configured.")
+        log("\n[SALESFORCE]  SKIP - SALESFORCE_ACCESS_TOKEN not configured.")
         return None
     log("\n[SALESFORCE]  ensuring Quill Logistics account…")
     try:
@@ -466,7 +466,7 @@ def salesforce_seed(c: Company, stripe_customer_id: str) -> str | None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 3. HubSpot — company + contacts + the "VP Eng pricing" note
+# 3. HubSpot - company + contacts + the "VP Eng pricing" note
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -497,7 +497,7 @@ def hubspot_upsert_company(
         "Pro Annual customer. Renewed normally in March 2026. "
         "Expanded usage in Q1 2026 across the shipment + invoicing "
         "modules. Last contact 2026-04-29: VP Engineering asked about "
-        "Standard tier pricing — explicitly framed as 'evaluating, not "
+        "Standard tier pricing - explicitly framed as 'evaluating, not "
         "cancelling.' Filed a $9,000 chargeback on the March renewal "
         "in late March 2026 claiming a Q1 outage; operational data shows "
         "no such outage and product usage continued throughout Q1. "
@@ -552,12 +552,12 @@ def hubspot_upsert_company(
 
 HUBSPOT_NOTE_SIGNATURE = "[manthan_patch_q1_quill_outage]"
 HUBSPOT_NOTE_BODY = (
-    f"{HUBSPOT_NOTE_SIGNATURE} 2026-04-29 — VP Engineering at Quill "
+    f"{HUBSPOT_NOTE_SIGNATURE} 2026-04-29 - VP Engineering at Quill "
     "Logistics asked our AE about Standard tier pricing for comparison. "
     "They explicitly framed it as 'evaluating, not cancelling.' "
     "Renewed normally a few weeks earlier on Pro Annual. No outage "
     "complaint at any point in Q1. Filed a $9k chargeback on the March "
-    "renewal claiming Q1 outage — ops data (Sentry/Datadog/PagerDuty) "
+    "renewal claiming Q1 outage - ops data (Sentry/Datadog/PagerDuty) "
     "shows clean operations, PostHog shows active usage. Fight per the "
     "Chargeback Response Playbook v3."
 )
@@ -631,7 +631,7 @@ def hubspot_seed(c: Company, stripe_customer_id: str) -> tuple[str | None, str |
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 4. Intercom — 4 Q1 conversations (none about outage or cancel)
+# 4. Intercom - 4 Q1 conversations (none about outage or cancel)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -678,7 +678,7 @@ Q1R_INTERCOM_CONVOS = [
     {
         "subject": "Onboarding new team members",
         "body": (
-            "Hi — we've got 3 new analysts joining the logistics team "
+            "Hi - we've got 3 new analysts joining the logistics team "
             "next week and I'd like them invited to our workspace with "
             "viewer access. Do you have a self-serve flow for that or "
             "do I send the list to support?"
@@ -686,7 +686,7 @@ Q1R_INTERCOM_CONVOS = [
         "created_at": _epoch(2026, 1, 18, 14, 22),
         "final_state": "closed",
         "admin_reply": (
-            "Hi Amelia — you can invite them yourself from "
+            "Hi Amelia - you can invite them yourself from "
             "Settings → Team. Need anything more, just shout."
         ),
         "tag": "Q1R.onboarding",
@@ -701,7 +701,7 @@ Q1R_INTERCOM_CONVOS = [
         "created_at": _epoch(2026, 2, 6, 10, 5),
         "final_state": "closed",
         "admin_reply": (
-            "Configurable in Settings → Billing → Invoice template — "
+            "Configurable in Settings → Billing → Invoice template - "
             "just add the PO field there. Let me know if you can't see it."
         ),
         "tag": "Q1R.invoice",
@@ -725,14 +725,14 @@ Q1R_INTERCOM_CONVOS = [
     {
         "subject": "Onboarding new team members (round 2)",
         "body": (
-            "Following up — the second batch of analysts is starting "
+            "Following up - the second batch of analysts is starting "
             "next Monday. Can you confirm the invite flow handles 6 "
             "users at once or should I stagger?"
         ),
         "created_at": _epoch(2026, 3, 21, 13, 18),
         "final_state": "closed",
         "admin_reply": (
-            "All 6 in one go is fine. Looking forward to a busy Q2 — "
+            "All 6 in one go is fine. Looking forward to a busy Q2 - "
             "your usage growth is great."
         ),
         "tag": "Q1R.onboarding2",
@@ -781,7 +781,7 @@ def intercom_seed() -> tuple[str | None, list[str]]:
             pass
 
         for spec in Q1R_INTERCOM_CONVOS:
-            # Match on the first 60 chars of the body — distinct enough
+            # Match on the first 60 chars of the body - distinct enough
             # across our 4 Q1R specs to avoid cross-matches.
             body_key = spec["body"][:60]
             if any(body_key in existing for existing in existing_bodies):
@@ -836,7 +836,7 @@ def intercom_seed() -> tuple[str | None, list[str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 5. Zendesk — org + 2 older feature-request tickets (zero in Q1)
+# 5. Zendesk - org + 2 older feature-request tickets (zero in Q1)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -844,7 +844,7 @@ Q1R_ZENDESK_TICKETS = [
     {
         "subject": "Feature request: route optimization heat map",
         "body": (
-            "Hi team — would love a heat-map overlay on the route "
+            "Hi team - would love a heat-map overlay on the route "
             "optimization view. Right now we eyeball the dense corridors. "
             "Happy to be a beta tester."
         ),
@@ -859,7 +859,7 @@ Q1R_ZENDESK_TICKETS = [
         "subject": "Feature request: per-warehouse rate cards in API",
         "body": (
             "Our rate cards differ per warehouse. The current API treats "
-            "them as account-level — could you add a warehouse_id "
+            "them as account-level - could you add a warehouse_id "
             "qualifier so we can model differential rates per site?"
         ),
         "priority": "low",
@@ -918,7 +918,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
         else:
             log(f"  user [reuse] id={user_id}")
 
-        # Tickets — idempotency via state['q1r_quill_tickets']
+        # Tickets - idempotency via state['q1r_quill_tickets']
         existing_tids = state.get("q1r_quill_tickets", [])
         if existing_tids:
             # Verify each one still exists; if all good, skip create.
@@ -950,7 +950,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
             try:
                 tid = zendesk_import_ticket(client, ticket_spec)
             except TrialCapHit:
-                log("  ! Zendesk trial cap hit — stopping ticket creation")
+                log("  ! Zendesk trial cap hit - stopping ticket creation")
                 break
             if tid:
                 new_tids.append(tid)
@@ -963,12 +963,12 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 6. Slack — one post in #cs-escalations about the April downgrade convo
+# 6. Slack - one post in #cs-escalations about the April downgrade convo
 # ──────────────────────────────────────────────────────────────────────
 
 
 SLACK_Q1R_MESSAGE = (
-    "Q1R / Quill Logistics — quick CSM note. Had a call yesterday "
+    "Q1R / Quill Logistics - quick CSM note. Had a call yesterday "
     "(2026-04-15) with Quill's VP Eng on downgrade options. They want "
     "to compare Standard tier pricing against current Pro Annual but "
     "explicitly framed it as 'evaluating, not cancelling.' Renewed "
@@ -1019,7 +1019,7 @@ def slack_seed() -> tuple[str | None, str | None]:
                 break
         if not channel_id:
             # Try to create it.
-            log("  cs-escalations not found — creating…")
+            log("  cs-escalations not found - creating…")
             create = slack_call(
                 client, "conversations.create",
                 json={"name": "cs-escalations", "is_private": False},
@@ -1095,7 +1095,7 @@ def slack_seed() -> tuple[str | None, str | None]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 7. Notion — Chargeback Response Playbook v3 + Pro Annual Refund Policy
+# 7. Notion - Chargeback Response Playbook v3 + Pro Annual Refund Policy
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1107,7 +1107,7 @@ Q1R_NOTION_PAGES = [
         headings=[(2, "Chargeback Response Playbook v3")],
         paragraphs=[
             "Owner: RevOps (priya@miny-labs.com) + Billing Engineering. "
-            "Status: CURRENT — authoritative. Doc version 3.1 (2026-05). "
+            "Status: CURRENT - authoritative. Doc version 3.1 (2026-05). "
             "Last reviewed 2026-05-20. Supersedes Playbook v2 (2024).",
 
             "Scope: this playbook governs how we respond to Stripe "
@@ -1118,12 +1118,12 @@ Q1R_NOTION_PAGES = [
             "centers on 'we couldn't access the product.'",
 
             "",
-            "Section 1 — The corroboration test.",
+            "Section 1 - The corroboration test.",
             "Before responding to any outage-claim chargeback, the "
             "investigator MUST corroborate the alleged unavailability "
             "across BOTH the operational stack and the usage signal:",
 
-            "(a) Operational stack — Sentry, Datadog, and PagerDuty.",
+            "(a) Operational stack - Sentry, Datadog, and PagerDuty.",
             "  - Sentry: pull error events for the customer's tenant in "
             "    the alleged-outage window. A real outage shows a clear "
             "    spike above the customer's tenant baseline (typically "
@@ -1136,7 +1136,7 @@ Q1R_NOTION_PAGES = [
             "    that touched the customer's region. Real outages declare "
             "    at least one P1; zero P1 = no outage.",
 
-            "(b) Usage signal — PostHog.",
+            "(b) Usage signal - PostHog.",
             "  - Pull distinct_user_id activity for the customer in the "
             "    disputed window. Count logins, distinct users, and "
             "    critical-path actions (e.g. create_shipment, "
@@ -1145,7 +1145,7 @@ Q1R_NOTION_PAGES = [
             "    framing.",
 
             "",
-            "Section 2 — The FIGHT decision rule.",
+            "Section 2 - The FIGHT decision rule.",
             "Fight chargebacks where the customer alleges outage but "
             "Sentry/Datadog/PagerDuty show clean operations during the "
             "disputed window AND the customer continued using the "
@@ -1163,21 +1163,21 @@ Q1R_NOTION_PAGES = [
             "notes.",
 
             "",
-            "Section 3 — The REFUND decision rule.",
+            "Section 3 - The REFUND decision rule.",
             "Refund chargebacks where the operational stack confirms an "
             "outage OR the customer's PostHog activity is consistent "
             "with the 'couldn't access' claim. In vendor-failure cases "
             "see also 'Vendor failure refund policy.'",
 
             "",
-            "Section 4 — Repeat-dispute pattern.",
+            "Section 4 - Repeat-dispute pattern.",
             "If the customer has prior won-by-customer disputes in the "
             "trailing 14 months, escalate to RD-2026 SOP (Refunds & "
-            "Disputes — 2026 SOP) regardless of operational data. "
+            "Disputes - 2026 SOP) regardless of operational data. "
             "First-time disputers with clean ops + active usage = FIGHT.",
 
             "",
-            "Section 5 — Communication.",
+            "Section 5 - Communication.",
             "On FIGHT: submit Stripe evidence with the corroboration "
             "package; do NOT email the customer until evidence is "
             "filed. On REFUND: refund full + apologize via the "
@@ -1195,14 +1195,14 @@ Q1R_NOTION_PAGES = [
         signal_id="Q1R",
         headings=[(2, "Pro Annual Refund Policy 2026")],
         paragraphs=[
-            "Owner: RevOps + Finance. Status: CURRENT — authoritative. "
+            "Owner: RevOps + Finance. Status: CURRENT - authoritative. "
             "Last reviewed 2026-03-01.",
 
             "Scope: refund rules for Pro Annual subscriptions, including "
             "the 30-day post-charge window and chargeback handling.",
 
             "",
-            "Section 1 — Refund window.",
+            "Section 1 - Refund window.",
             "Refunds on Pro Annual subscriptions are granted in full "
             "ONLY within 30 days of the charge date. After 30 days the "
             "subscription is considered consumed for the prepaid year; "
@@ -1212,11 +1212,11 @@ Q1R_NOTION_PAGES = [
 
             "Exceptions: vendor-failure cases (see VFR-2026), SLA-breach "
             "cases (see SLA-2026-04), and post-acquisition migration "
-            "cleanup (PAM-2026) override this default — refund per the "
+            "cleanup (PAM-2026) override this default - refund per the "
             "specific policy.",
 
             "",
-            "Section 2 — Chargeback handling.",
+            "Section 2 - Chargeback handling.",
             "If a customer files a Stripe chargeback after the 30-day "
             "refund window has closed and outside of the exception "
             "categories above, the default position is to fight per the "
@@ -1225,11 +1225,11 @@ Q1R_NOTION_PAGES = [
             "Specifically: a chargeback filed more than 30 days after "
             "the charge that alleges product non-delivery / outage "
             "without any prior outage complaint in support channels "
-            "(Intercom, Zendesk) is a candidate for FIGHT — corroborate "
+            "(Intercom, Zendesk) is a candidate for FIGHT - corroborate "
             "via the operational stack and PostHog before submitting.",
 
             "",
-            "Section 3 — Communication template.",
+            "Section 3 - Communication template.",
             "When fighting, do NOT engage the customer directly until "
             "evidence is submitted. When refunding (within policy), use "
             "the standard 'refund issued' email template.",
@@ -1273,7 +1273,7 @@ def notion_seed() -> list[tuple[str, str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 8. PostHog — Q1 usage events for Quill
+# 8. PostHog - Q1 usage events for Quill
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1335,7 +1335,7 @@ def build_posthog_events(stripe_customer_id: str) -> list[dict]:
         "$lib": "manthan-q1r-patch",
     }
 
-    # 1) $identify per persona — establishes the Person row in PostHog.
+    # 1) $identify per persona - establishes the Person row in PostHog.
     for p in QUILL_POSTHOG_PERSONAS:
         events.append({
             "event": "$identify",
@@ -1438,7 +1438,7 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
     with httpx.Client(headers=POSTHOG_HEADERS, timeout=POSTHOG_TIMEOUT) as client:
         project_key = fetch_project_api_key(client)
         if not project_key:
-            log("  ! PostHog project key unavailable — skipping ingestion.")
+            log("  ! PostHog project key unavailable - skipping ingestion.")
             return out
         events = build_posthog_events(stripe_customer_id)
         log(f"  persons={len(QUILL_POSTHOG_PERSONAS)}  events={len(events)}")
@@ -1453,7 +1453,7 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 9. Sentry — Q1 baseline error events tagged to Quill's tenant
+# 9. Sentry - Q1 baseline error events tagged to Quill's tenant
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1461,7 +1461,7 @@ Q1R_SENTRY_PROJECT_SLUG = "api-gateway"
 Q1R_SENTRY_TEAM_SLUG = "platform"
 Q1R_SENTRY_TITLE = (
     "ValueError: Optional warehouse_id missing on inbound shipment "
-    "payload — backfilled with account default"
+    "payload - backfilled with account default"
 )
 
 
@@ -1528,7 +1528,7 @@ def sentry_seed(stripe_customer_id: str) -> int:
                     "note": (
                         "Routine baseline error tagged to Quill's tenant "
                         "during the Q1 2026 disputed-outage window. Part of "
-                        "normal baseline noise — no spike, no outage."
+                        "normal baseline noise - no spike, no outage."
                     ),
                 },
             )
@@ -1567,7 +1567,7 @@ def sentry_seed(stripe_customer_id: str) -> int:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 10. Datadog — synthetic monitor for us-east-1 region (Q1 uptime 99.97%)
+# 10. Datadog - synthetic monitor for us-east-1 region (Q1 uptime 99.97%)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1619,7 +1619,7 @@ def q1r_datadog_monitor(stripe_customer_id: str) -> DDMonitorSpec:
 def q1r_datadog_event(stripe_customer_id: str) -> DDEventSpec:
     return DDEventSpec(
         title=(
-            f"Q1 2026 regional health summary — {QUILL_REGION} "
+            f"Q1 2026 regional health summary - {QUILL_REGION} "
             f"(workflow:Q1R Quill Logistics)"
         ),
         text=(
@@ -1627,9 +1627,9 @@ def q1r_datadog_event(stripe_customer_id: str) -> DDEventSpec:
             f"the chargeback Q1R disputed window "
             f"({DISPUTED_WINDOW_START} → {DISPUTED_WINDOW_END}).\n\n"
             "Narrative summary:\n"
-            "  - Synthetic uptime: 99.97% (SLA: 99.9%) — clean.\n"
-            "  - p95 latency: 247ms (SLA: 800ms) — clean.\n"
-            "  - p99 latency: 612ms (SLA: 1.5s) — clean.\n"
+            "  - Synthetic uptime: 99.97% (SLA: 99.9%) - clean.\n"
+            "  - p95 latency: 247ms (SLA: 800ms) - clean.\n"
+            "  - p99 latency: 612ms (SLA: 1.5s) - clean.\n"
             "  - Zero SEV-1 incidents touching this region.\n"
             "  - Two routine sub-5-minute SEV-3 blips on auth-service "
             "    (2026-02-14 and 2026-03-08), each resolved < 5 min, "
@@ -1677,7 +1677,7 @@ def datadog_seed(stripe_customer_id: str) -> tuple[int | None, int | None]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 11. PagerDuty — zero P1/P2 incidents in Q1 touching Quill's region.
+# 11. PagerDuty - zero P1/P2 incidents in Q1 touching Quill's region.
 #
 # We can't seed "zero incidents" directly. Instead we make the absence
 # corroborable by seeding a LOW-urgency "Q1 regional incident summary"
@@ -1694,7 +1694,7 @@ Q1R_PD_SERVICE_DESC = (
     "rate limiting, request signing, mTLS termination."
 )
 Q1R_PD_TITLE = (
-    f"api-gateway: Q1 2026 regional health summary — us-east-1 "
+    f"api-gateway: Q1 2026 regional health summary - us-east-1 "
     "(workflow:Q1R Quill Logistics no-outage corroboration)"
 )
 
@@ -1718,7 +1718,7 @@ def q1r_pd_body(stripe_customer_id: str) -> str:
         f"tenant-tagged events) and neither qualifies as an outage by "
         f"any reasonable definition.\n"
         f"  - Synthetic uptime monitor (Datadog) shows 99.97% over the "
-        f"window — well above SLA.\n\n"
+        f"window - well above SLA.\n\n"
         f"Conclusion: no outage in {QUILL_REGION} during Q1 2026 that "
         f"could plausibly support Quill's chargeback claim. Recommend "
         f"FIGHT per Chargeback Response Playbook v3 (CRP-2026-V3-S2).\n\n"
@@ -1749,7 +1749,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
         if not ep_id:
             ep_id = pd_first_escalation_policy_id(client)
         if not ep_id:
-            log("  ! no escalation policy in PagerDuty — cannot seed")
+            log("  ! no escalation policy in PagerDuty - cannot seed")
             return None
 
         # 2. Service.
@@ -1801,7 +1801,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
 
 def main() -> int:
     log("=" * 72)
-    log("Manthan Q1R patch — Quill Logistics alleged-outage chargeback")
+    log("Manthan Q1R patch - Quill Logistics alleged-outage chargeback")
     log("=" * 72)
 
     c = quill_company()
@@ -1811,14 +1811,14 @@ def main() -> int:
     log(f"  plan    : {c.plan}")
     log(f"  region  : {QUILL_REGION}")
 
-    # 1. Stripe — required (drives the chargeback)
+    # 1. Stripe - required (drives the chargeback)
     cust = stripe_ensure_customer(c)
     price = stripe_find_pro_annual_price()
     sub = stripe_ensure_subscription(cust, price.id)
     ch, disp = stripe_create_disputed_charge_and_dispute(cust)
     stripe_customer_id = cust.id
 
-    # 2. Salesforce — best-effort
+    # 2. Salesforce - best-effort
     sf_account_id = salesforce_seed(c, stripe_customer_id)
 
     # 3. HubSpot

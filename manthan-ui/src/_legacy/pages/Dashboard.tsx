@@ -49,7 +49,7 @@ function fromApi(c: ApiCase): Case {
   return {
     id: c.id,
     shortId: c.short_id,
-    customer: c.customer_ref ?? "—",
+    customer: c.customer_ref ?? "-",
     type: caseTypeLabel(c.case_type),
     source: triggerToSource(c.trigger_surface),
     status: mapStatus(c.status),

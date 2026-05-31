@@ -14,8 +14,8 @@ Run with:
     .venv/bin/python scripts/smoke_agent.py
 
 Exit codes:
-    0 — agent loop ran end-to-end (concluded or asked human)
-    1 — OPENROUTER_API_KEY missing, or loop errored
+    0 - agent loop ran end-to-end (concluded or asked human)
+    1 - OPENROUTER_API_KEY missing, or loop errored
 
 What "green" looks like:
     case opened → agent calls coral_list_catalog or coral_sql
@@ -45,7 +45,7 @@ from manthan_agent.types import Brief, CaseTrigger
 console = Console()
 
 
-# A real-feeling TechCorp $1,200 chargeback case — the canonical
+# A real-feeling TechCorp $1,200 chargeback case - the canonical
 # Case 4821 from the marketing site. The mock Coral returns one row
 # matching this; the agent should investigate, record findings, draft
 # a refund decision, and conclude.
@@ -70,7 +70,7 @@ async def main() -> int:
             Panel(
                 "[yellow]OPENROUTER_API_KEY not set.[/yellow]\n\n"
                 "Add it to manthanv2/agent/.env and re-run.",
-                title="Smoke 3 — skipped",
+                title="Smoke 3 - skipped",
                 border_style="yellow",
             )
         )
@@ -81,7 +81,7 @@ async def main() -> int:
             f"[bold]model[/bold]  {cfg.model}\n"
             "[bold]coral[/bold]  MOCK (step 1; step 3 wires real MCP)\n"
             "[bold]case[/bold]   CASE-SMK-001 · TechCorp $1,200 chargeback",
-            title="Manthan smoke — agent end-to-end",
+            title="Manthan smoke - agent end-to-end",
             border_style="cyan",
         )
     )
@@ -96,7 +96,7 @@ async def main() -> int:
 
     # Drive the agent. The async generator yields Event objects.
     # Python disallows return-value on async generators (PEP 525), so the
-    # final event is always kind="case_closed" — its data tells us why.
+    # final event is always kind="case_closed" - its data tells us why.
     event_count = 0
     final_brief: Brief | None = None
     closed_reason: str | None = None
@@ -129,13 +129,13 @@ async def main() -> int:
     console.print()
 
     if closed_reason is None:
-        console.print("[red]Loop exited without a case_closed event — this is a bug.[/red]")
+        console.print("[red]Loop exited without a case_closed event - this is a bug.[/red]")
         return 1
 
     # Report the outcome
     if closed_reason == "concluded" and final_brief is not None:
         brief = final_brief
-        tbl = Table(title=f"Brief — {brief.case_id}", show_header=False)
+        tbl = Table(title=f"Brief - {brief.case_id}", show_header=False)
         tbl.add_row("[bold]TL;DR[/bold]", brief.tldr or "(empty)")
         tbl.add_row(
             "[bold]Decision[/bold]",
@@ -163,7 +163,7 @@ async def main() -> int:
         )
         tbl.add_row(
             "[bold]Drafted actions[/bold]",
-            "\n".join(f"{a.kind} — {a.description}" for a in brief.drafted_actions)
+            "\n".join(f"{a.kind} - {a.description}" for a in brief.drafted_actions)
             or "(none)",
         )
         tbl.add_row("[bold]HITL question[/bold]", brief.hitl_question or "(empty)")
@@ -178,7 +178,7 @@ async def main() -> int:
         console.print(
             Panel(
                 f"[bold]Question:[/bold] {closed_detail or '(see hitl_pause event above)'}\n\n"
-                "(Agent paused for HITL. Loop ended cleanly — this is the\n"
+                "(Agent paused for HITL. Loop ended cleanly - this is the\n"
                 "ask_human happy path. Step 3 wires the resume flow.)",
                 title="Agent asked for human help",
                 border_style="yellow",
@@ -189,7 +189,7 @@ async def main() -> int:
     console.print(
         Panel(
             f"reason: {closed_reason}\ndetail: {closed_detail}",
-            title="Case closed — non-success",
+            title="Case closed - non-success",
             border_style="red",
         )
     )
@@ -205,7 +205,7 @@ def _summarize(event) -> str:
         r = d.get("result", {})
         return f"status={r.get('status')} rows={r.get('total_matches', '-')} +{d.get('evidence_added', 0)} evidence"
     if event.kind == "finding_recorded":
-        return f"[{d.get('idx')}] conf {d.get('confidence'):.2f} — {(d.get('text') or '')[:60]}"
+        return f"[{d.get('idx')}] conf {d.get('confidence'):.2f} - {(d.get('text') or '')[:60]}"
     if event.kind == "agent_thought":
         t = (d.get("text") or "").replace("\n", " ")
         return t[:80] + ("…" if len(t) > 80 else "")

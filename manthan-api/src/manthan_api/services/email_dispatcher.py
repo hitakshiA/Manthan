@@ -1,4 +1,4 @@
-"""Email dispatcher — single send path for Manthan-branded customer email.
+"""Email dispatcher - single send path for Manthan-branded customer email.
 
 Used by:
   - api/email_webhook.py        → send_ack_email (auto-ack on case open)
@@ -118,7 +118,7 @@ async def send_welcome_email(
     Clerk user, we no-op. Otherwise we render, send, and mark sent.
     Returns True if an email was actually sent this call.
     """
-    # 1. Dedup check — INSERT ... ON CONFLICT means we claim the slot
+    # 1. Dedup check - INSERT ... ON CONFLICT means we claim the slot
     #    atomically. If we lose the race we return False without sending.
     async with get_pool().acquire() as conn:
         row = await conn.fetchrow(
@@ -255,11 +255,11 @@ async def _send_via_resend(
     tag: str,
 ) -> str | None:
     """Direct Resend call. Returns the email id on success, None on
-    failure (logged, not raised — callers proceed with case open even
+    failure (logged, not raised - callers proceed with case open even
     if the ack fails to send)."""
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key:
-        logger.warning("RESEND_API_KEY missing — email send skipped (%s)", tag)
+        logger.warning("RESEND_API_KEY missing - email send skipped (%s)", tag)
         return None
     try:
         import resend  # local import keeps webhook startup light

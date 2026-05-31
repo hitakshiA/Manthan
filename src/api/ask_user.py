@@ -30,7 +30,7 @@ class AskRequest(BaseModel):
     options: list[str] = Field(default_factory=list)
     allow_free_text: bool = True
     context: str | None = None
-    # Propose-first structure — analyst's working interpretation and
+    # Propose-first structure - analyst's working interpretation and
     # why-this-matters, rendered prominently by the UI
     proposed_interpretation: str | None = None
     why_this_matters: str | None = None

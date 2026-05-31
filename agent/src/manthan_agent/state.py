@@ -69,7 +69,7 @@ class EventStore:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Thread serializer — turns events into an LLM-readable prompt
+# Thread serializer - turns events into an LLM-readable prompt
 # ──────────────────────────────────────────────────────────────────────
 
 

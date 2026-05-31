@@ -6,17 +6,17 @@ all-hands, engineering docs, HR/company/brand, customer-facing drafts).
 The three workflow targets get specific authoritative policy docs +
 account-history pages baked in:
 
-  W1 — "Refunds & Disputes — 2026 SOP (CURRENT)" : daisy-chained
+  W1 - "Refunds & Disputes - 2026 SOP (CURRENT)" : daisy-chained
        chargebacks. Repeat-disputer pattern → fight + force-cancel.
        Account page for Acme Genomics documents the 2 prior
        won-by-customer disputes.
 
-  W2 — "Vendor failure refund policy (CURRENT)" : when webhook /
+  W2 - "Vendor failure refund policy (CURRENT)" : when webhook /
        internal system caused the issue, refund full + apology.
        Account page for Northwind Logistics documents the
        Enterprise upgrade that never activated.
 
-  W3 — "Post-Acquisition Migration Cleanup SOP (CURRENT)" : when
+  W3 - "Post-Acquisition Migration Cleanup SOP (CURRENT)" : when
        customers are billed on BOTH legacy entity and Stripe, refund
        legacy side, force-cancel legacy, consolidate to Stripe.
        Account page for Mockingbird Media documents the March cutover.
@@ -221,7 +221,7 @@ def find_parent_page(client: httpx.Client) -> tuple[str, str]:
     if r.status_code != 200:
         sys.exit(f"ERROR: search failed {r.status_code}: {r.text[:300]}")
     results = r.json().get("results", [])
-    # Allow either "ManthanOps" or "Manthan Ops" — user may have either.
+    # Allow either "ManthanOps" or "Manthan Ops" - user may have either.
     candidates = []
     for x in results:
         title_parts = x.get("properties", {}).get("title", {}).get("title", [])
@@ -274,7 +274,7 @@ def list_existing_children(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Page catalog — author the ~95 pages here
+# Page catalog - author the ~95 pages here
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -285,24 +285,24 @@ def _pages_policies_sops() -> list[NotionPage]:
 
     # ── W1: THE authoritative refunds & disputes SOP (CURRENT, latest) ──
     pages.append(NotionPage(
-        title="Refunds & Disputes — 2026 SOP (CURRENT)",
+        title="Refunds & Disputes - 2026 SOP (CURRENT)",
         category="Policy & SOP",
         signal_id="W1",
-        headings=[(2, "Refunds & Disputes — 2026 SOP")],
+        headings=[(2, "Refunds & Disputes - 2026 SOP")],
         paragraphs=[
             "Owner: RevOps (priya@miny-labs.com). Doc version 2026.05. "
-            "Status: CURRENT — authoritative. Last reviewed 2026-05-18. "
-            "Supersedes: 'Refunds policy — DEPRECATED 2024 version'. "
-            "Internal — do not share externally; see 'Refunds customer-"
+            "Status: CURRENT - authoritative. Last reviewed 2026-05-18. "
+            "Supersedes: 'Refunds policy - DEPRECATED 2024 version'. "
+            "Internal - do not share externally; see 'Refunds customer-"
             "facing FAQ' for the public-safe version.",
 
             "Scope: this SOP covers chargebacks, voluntary refunds, "
             "billing-bug refunds, and disputes raised through Stripe, "
             "PayPal, or our legacy billing entity. It does NOT cover "
-            "SLA credits — see 'SLA credit calculation runbook'.",
+            "SLA credits - see 'SLA credit calculation runbook'.",
 
             "",
-            "Section 1 — Standard subscription_canceled chargebacks.",
+            "Section 1 - Standard subscription_canceled chargebacks.",
             "When a customer disputes a charge with reason "
             "'subscription_canceled', the default position is to FIGHT "
             "if and only if (a) there is no formal cancel request on "
@@ -317,11 +317,11 @@ def _pages_policies_sops() -> list[NotionPage]:
             "An informal message like 'we're evaluating other vendors' "
             "or 'considering downgrade' is NOT a formal cancel. A "
             "formal cancel is an explicit, written request to terminate "
-            "the subscription, with a date — anything ambiguous goes to "
+            "the subscription, with a date - anything ambiguous goes to "
             "RevOps for review, not auto-canceled.",
 
             "",
-            "Section 2 — REPEAT-DISPUTER pattern (daisy-chained "
+            "Section 2 - REPEAT-DISPUTER pattern (daisy-chained "
             "chargebacks).",
             "If the SAME customer (matched by Stripe customer ID OR by "
             "primary contact email) has one or more prior disputes that "
@@ -342,12 +342,12 @@ def _pages_policies_sops() -> list[NotionPage]:
             "id RD-2026-S2 in the dispute submission.",
 
             "This is the right answer even when sales pushes back to "
-            "preserve the logo — bad-faith customers cost more than "
+            "preserve the logo - bad-faith customers cost more than "
             "they're worth and they prime other AEs to learn the same "
             "bad pattern.",
 
             "",
-            "Section 3 — Vendor-failure refunds.",
+            "Section 3 - Vendor-failure refunds.",
             "If our internal systems (webhook handlers, entitlement "
             "service, billing platform, identity service, etc.) caused "
             "the customer to be billed without receiving the value "
@@ -357,14 +357,14 @@ def _pages_policies_sops() -> list[NotionPage]:
             "evidence-collection checklist.",
 
             "",
-            "Section 4 — Post-acquisition double-billing.",
+            "Section 4 - Post-acquisition double-billing.",
             "Customers migrated from a legacy billing entity onto "
             "Stripe in the 2025-2026 cleanup project are at risk of "
             "being billed on both sides. See 'Post-Acquisition "
             "Migration Cleanup SOP' for the full procedure.",
 
             "",
-            "Section 5 — Escalation matrix.",
+            "Section 5 - Escalation matrix.",
             "Disputes >$10,000: route to VP Finance. "
             "Disputes from accounts on the strategic list: notify the "
             "AE owner in Slack before submitting evidence. "
@@ -379,11 +379,11 @@ def _pages_policies_sops() -> list[NotionPage]:
 
     # ── DEPRECATED 2024 version ──
     pages.append(NotionPage(
-        title="Refunds policy — DEPRECATED 2024 version",
+        title="Refunds policy - DEPRECATED 2024 version",
         category="Policy & SOP",
         paragraphs=[
             "Status: ARCHIVED 2026-01-12. Do not follow this doc. "
-            "Superseded by 'Refunds & Disputes — 2026 SOP (CURRENT)'.",
+            "Superseded by 'Refunds & Disputes - 2026 SOP (CURRENT)'.",
             "",
             "Original 2024 policy: refund any dispute under $500 "
             "without investigation. Fight anything above $500 if there "
@@ -399,7 +399,7 @@ def _pages_policies_sops() -> list[NotionPage]:
         title="Refunds customer-facing FAQ",
         category="Customer-facing draft",
         paragraphs=[
-            "Public, customer-safe version. Sanitised — do NOT cite "
+            "Public, customer-safe version. Sanitised - do NOT cite "
             "internal policy IDs here.",
             "",
             "Q: How do I request a refund?",
@@ -412,7 +412,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "case-by-case basis. Monthly plans are non-refundable once "
             "the period has started.",
             "",
-            "Q: I was charged twice — what do I do?",
+            "Q: I was charged twice - what do I do?",
             "A: Send us both charge IDs and we'll investigate the "
             "duplicate and refund the extra charge within five business "
             "days.",
@@ -436,7 +436,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "within 30 minutes.",
             "Common runbook entries: webhook handler restart, "
             "entitlement re-sync, Stripe webhook replay (see "
-            "'Webhook reliability project — post-mortems').",
+            "'Webhook reliability project - post-mortems').",
         ],
     ))
 
@@ -465,9 +465,9 @@ def _pages_policies_sops() -> list[NotionPage]:
         signal_id="W2",
         headings=[(2, "Vendor-Failure Refund Policy")],
         paragraphs=[
-            "Owner: Engineering + RevOps jointly. Status: CURRENT — "
+            "Owner: Engineering + RevOps jointly. Status: CURRENT - "
             "authoritative. Doc version 2026.04. Last reviewed "
-            "2026-05-09. Referenced from 'Refunds & Disputes — 2026 "
+            "2026-05-09. Referenced from 'Refunds & Disputes - 2026 "
             "SOP (CURRENT)' Section 3.",
 
             "Scope: any case where the customer was charged but did "
@@ -483,7 +483,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "NOT fight these disputes, even when the customer's "
             "framing of the issue is technically wrong. The customer "
             "was billed by us, did not get the product, and it was "
-            "our fault — we owe them their money back regardless of "
+            "our fault - we owe them their money back regardless of "
             "what they wrote in the dispute reason.",
 
             "",
@@ -512,7 +512,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "2. Issue a manual entitlement upgrade in the admin tool "
             "to match what the customer paid for.",
             "3. Send the customer an apology email from "
-            "billing@miny-labs.com — template VFR-2026 in the "
+            "billing@miny-labs.com - template VFR-2026 in the "
             "templates folder. CC the AE owner.",
             "4. Open a Linear ticket in the `billing_engineering` "
             "project linking the Sentry issue, the Datadog alert, "
@@ -542,11 +542,11 @@ def _pages_policies_sops() -> list[NotionPage]:
         signal_id="W3",
         headings=[(2, "Post-Acquisition Migration Cleanup SOP")],
         paragraphs=[
-            "Owner: Billing Engineering + RevOps. Status: CURRENT — "
+            "Owner: Billing Engineering + RevOps. Status: CURRENT - "
             "authoritative. Doc version 2026.03. Last reviewed "
-            "2026-05-20. Referenced from 'Refunds & Disputes — 2026 "
+            "2026-05-20. Referenced from 'Refunds & Disputes - 2026 "
             "SOP (CURRENT)' Section 4 and the 'Billing platform "
-            "migration — runbook & timeline' project doc.",
+            "migration - runbook & timeline' project doc.",
 
             "Background: in Q4 2025 we acquired a smaller competitor "
             "and inherited their Chargebee-based legacy billing "
@@ -565,7 +565,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "active subscription with at least one paid invoice "
             "dated after the same cutover date, for the same product "
             "tier. The migration log in 'Billing platform migration "
-            "— runbook & timeline' is authoritative for cutover "
+            "- runbook & timeline' is authoritative for cutover "
             "dates.",
 
             "",
@@ -573,7 +573,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "reported by the customer or caught by the monthly "
             "reconciliation job):",
             "1. Always refund the LEGACY-side charges in full for "
-            "the duplicate period — never the Stripe charges. "
+            "the duplicate period - never the Stripe charges. "
             "Stripe is our source-of-truth post-migration; the "
             "legacy entity should not be charging anyone past "
             "their cutover date.",
@@ -581,7 +581,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "effective at the cutover date (back-dated). Note the "
             "cancellation reason as `post_acquisition_cleanup`.",
             "3. Consolidate all future billing onto the Stripe "
-            "entity — verify the Stripe sub is on the correct plan "
+            "entity - verify the Stripe sub is on the correct plan "
             "for what the customer was paying on the legacy side.",
             "4. Issue a credit memo for the duplicate-period amount "
             "as a customer-trust gesture. Apply to the next Stripe "
@@ -615,7 +615,7 @@ def _pages_policies_sops() -> list[NotionPage]:
 
     # ── AE off-contract promises ──
     pages.append(NotionPage(
-        title="AE off-contract promises — RevOps SOP",
+        title="AE off-contract promises - RevOps SOP",
         category="Policy & SOP",
         paragraphs=[
             "Owner: RevOps. Status: CURRENT. Last updated 2026-02-10.",
@@ -626,7 +626,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "support or by us catching it in a QBR) is the AE's "
             "responsibility to escalate to RevOps for write-off or "
             "ratification before the next renewal.",
-            "Do NOT honour off-contract promises silently — that "
+            "Do NOT honour off-contract promises silently - that "
             "creates inconsistent customer experience and rewards "
             "the AE's mistake.",
         ],
@@ -690,7 +690,7 @@ def _pages_policies_sops() -> list[NotionPage]:
 
     # ── Unrelated noise SOPs ──
     pages.append(NotionPage(
-        title="HR — PTO policy 2026",
+        title="HR - PTO policy 2026",
         category="HR / company",
         paragraphs=[
             "Owner: People Ops. Status: CURRENT. Effective 2026-01-01.",
@@ -714,7 +714,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "SEC-1 response: page CISO immediately, contain within 1 "
             "hour, notify Legal + DPO, prepare regulator notification "
             "draft within 24 hours per GDPR Article 33.",
-            "Tabletop exercises quarterly. Last exercise: 2026-04-11 — "
+            "Tabletop exercises quarterly. Last exercise: 2026-04-11 - "
             "see post-exercise notes in the Security Linear project.",
         ],
     ))
@@ -734,7 +734,7 @@ def _pages_policies_sops() -> list[NotionPage]:
     ))
 
     pages.append(NotionPage(
-        title="Hiring rubric — Senior Software Engineer",
+        title="Hiring rubric - Senior Software Engineer",
         category="HR / company",
         paragraphs=[
             "Owner: Engineering hiring committee. Updated 2026-03-02.",
@@ -772,7 +772,7 @@ def _pages_policies_sops() -> list[NotionPage]:
             "support volume (Zendesk + Intercom), invoice payment "
             "behaviour (Stripe), and CSM-supplied qualitative input.",
             "Green: trending toward expansion. Yellow: stable but "
-            "missing engagement signal. Red: actively at risk — "
+            "missing engagement signal. Red: actively at risk - "
             "weekly CSM check-in required.",
         ],
     ))
@@ -799,12 +799,12 @@ def _pages_customer_accounts() -> list[NotionPage]:
     targets get specific detailed account histories that bake in signals."""
     pages: list[NotionPage] = []
 
-    # ── W1: Acme Genomics — daisy-chain history ──
+    # ── W1: Acme Genomics - daisy-chain history ──
     pages.append(NotionPage(
-        title="Account: Acme Genomics — health notes",
+        title="Account: Acme Genomics - health notes",
         category="Customer account",
         signal_id="W1",
-        headings=[(2, "Acme Genomics — account health & dispute history")],
+        headings=[(2, "Acme Genomics - account health & dispute history")],
         paragraphs=[
             "Customer: Acme Genomics. Stripe customer "
             "cus_test_acme_genomics. Plan: Pro Annual, $42,000 ARR. "
@@ -813,21 +813,21 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "after dispute history pattern).",
 
             "Last formal customer contact: data export inquiry in "
-            "March 2026 — see Intercom thread. NOT a cancel request. "
+            "March 2026 - see Intercom thread. NOT a cancel request. "
             "Renewal completed normally on May 12, 2026 at the "
             "$42,000 list price (May renewal invoice "
             "in_acme_2026_05).",
 
             "",
-            "Dispute history (this is the important section — see "
-            "'Refunds & Disputes — 2026 SOP (CURRENT)' Section 2 for "
+            "Dispute history (this is the important section - see "
+            "'Refunds & Disputes - 2026 SOP (CURRENT)' Section 2 for "
             "the policy that applies):",
 
             "Dispute #1: filed 2025-08-22. Stripe dispute id "
             "dp_acme_v1. Reason: subscription_canceled. Amount: "
             "$4,200 (one month of the prior Pro Annual cycle). "
             "Outcome: WON BY CUSTOMER. We refunded. No formal cancel "
-            "request was on file — customer claimed in the dispute "
+            "request was on file - customer claimed in the dispute "
             "narrative that they had 'asked to cancel' but Intercom "
             "and Zendesk have no such thread.",
 
@@ -841,7 +841,7 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "Pattern: Acme has filed 2 prior subscription_canceled "
             "disputes within a 14-month window (2025-08 and 2026-01), "
             "BOTH won by customer, BOTH refunded by us. Customer never "
-            "actually followed through on the supposed cancel — they "
+            "actually followed through on the supposed cancel - they "
             "kept using the product, kept paying the next invoice, "
             "kept generating active-user signal. Per the RevOps SOP "
             "(policy id RD-2026-S2) this is a textbook daisy-chained-"
@@ -864,12 +864,12 @@ def _pages_customer_accounts() -> list[NotionPage]:
         ],
     ))
 
-    # ── W2: Northwind Logistics — webhook ghost-paid ──
+    # ── W2: Northwind Logistics - webhook ghost-paid ──
     pages.append(NotionPage(
-        title="Account: Northwind Logistics — Q2 2026 enterprise upgrade",
+        title="Account: Northwind Logistics - Q2 2026 enterprise upgrade",
         category="Customer account",
         signal_id="W2",
-        headings=[(2, "Northwind Logistics — Q2 2026 enterprise upgrade")],
+        headings=[(2, "Northwind Logistics - Q2 2026 enterprise upgrade")],
         paragraphs=[
             "Customer: Northwind Logistics. Stripe customer "
             "cus_test_northwind_logi. Plan: previously Standard, "
@@ -878,7 +878,7 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "the remaining year). Industry: logistics. Country: USA. "
             "CSM: Wei. AE: Marcus. Health: GREEN (strategic).",
 
-            "Renewal cycle: November. Strategic account — see brand-"
+            "Renewal cycle: November. Strategic account - see brand-"
             "name list in the Sales playbook.",
 
             "",
@@ -886,7 +886,7 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "Northwind purchased the Enterprise upgrade on 2026-05-12 "
             "for $9,000 (Stripe invoice in_northwind_2026_05_upgrade, "
             "payment_intent pi_northwind_2026_05_upgrade). Customer "
-            "reports the upgrade never activated on their tenant — "
+            "reports the upgrade never activated on their tenant - "
             "they are still on Standard-tier feature flags, no "
             "Enterprise-only features visible, and their analytics "
             "behaviour in PostHog confirms the entitlement did NOT "
@@ -895,7 +895,7 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "Engineering investigation in progress in the "
             "billing_engineering Linear project. Initial finding from "
             "Wei's check of Datadog: a SEV-1 incident occurred in the "
-            "webhook handler around 2026-05-12 14:00-15:30 UTC — "
+            "webhook handler around 2026-05-12 14:00-15:30 UTC - "
             "PagerDuty page id pd_alert_2026_05_12. The "
             "invoice.payment_succeeded handler crashed with an "
             "unhandled exception in the entitlement-flip path. Sentry "
@@ -920,13 +920,13 @@ def _pages_customer_accounts() -> list[NotionPage]:
         ],
     ))
 
-    # ── W3: Mockingbird Media — migration cutover ──
+    # ── W3: Mockingbird Media - migration cutover ──
     pages.append(NotionPage(
-        title="Account: Mockingbird Media — Migration cutover March 2026",
+        title="Account: Mockingbird Media - Migration cutover March 2026",
         category="Customer account",
         signal_id="W3",
         headings=[
-            (2, "Mockingbird Media — billing-entity migration"),
+            (2, "Mockingbird Media - billing-entity migration"),
         ],
         paragraphs=[
             "Customer: Mockingbird Media. Stripe customer "
@@ -940,14 +940,14 @@ def _pages_customer_accounts() -> list[NotionPage]:
             "Mockingbird migrated from our legacy billing entity "
             "(Chargebee) onto our Stripe entity on 2026-03-12 as part "
             "of the post-acquisition cleanup project (see 'Billing "
-            "platform migration — runbook & timeline'). Per the "
+            "platform migration - runbook & timeline'). Per the "
             "migration runbook, their legacy Chargebee subscription "
             "was supposed to terminate at end-of-March cutover "
             "(2026-03-31 23:59 UTC).",
 
             "However: the legacy subscription was NOT actually "
             "terminated at cutover. Mockingbird has been billed on "
-            "both sides since April — Stripe invoice "
+            "both sides since April - Stripe invoice "
             "in_mockingbird_2026_04 for $5,500, and legacy Chargebee "
             "invoice cb_inv_mockingbird_2026_04 also for $5,500. "
             "Same for May (in_mockingbird_2026_05 + "
@@ -980,20 +980,20 @@ def _pages_customer_accounts() -> list[NotionPage]:
 
     # ── Other (noise) customer account pages ──
     noise_accounts = [
-        ("acme-logistics", "Different from Acme Genomics. Currently churning — high support volume, low DAU. Probably non-renew at next cycle. AE: Marcus.", "RED"),
+        ("acme-logistics", "Different from Acme Genomics. Currently churning - high support volume, low DAU. Probably non-renew at next cycle. AE: Marcus.", "RED"),
         ("helix-bio", "AR escalation in progress. 47 days past due on the Q1 invoice. Finance is working with their AP team. Strategic logo despite the AR pain.", "RED"),
         ("globex-software", "Healthy expansion candidate. Two new seats added in March. CSM-led upsell motion for the team plan.", "GREEN"),
         ("stellar-ai", "Top 10 ARR account. Quarterly business review scheduled for June. Renewal cycle November. AE: David.", "GREEN"),
         ("phoenix-fund", "Top 5 ARR account. CRO sponsors the relationship directly. Renewal cycle March 2027.", "GREEN"),
-        ("cascade-cloud", "Heavy API user. Reliability sensitive — any SEV-1 affecting them is a relationship risk. Renewal cycle August.", "GREEN"),
+        ("cascade-cloud", "Heavy API user. Reliability sensitive - any SEV-1 affecting them is a relationship risk. Renewal cycle August.", "GREEN"),
         ("hydra-finance", "Singapore-based fintech. KYC documentation completed Feb 2026. Renewal cycle May 2027.", "GREEN"),
-        ("nexus-data", "Embedded with our data platform team — joint roadmap discussion ongoing. Expansion likely Q3.", "GREEN"),
-        ("voyager-shipping", "Netherlands-based. EU VAT exemption applied. Mid-cycle expansion attempt failed in March — customer paused.", "YELLOW"),
+        ("nexus-data", "Embedded with our data platform team - joint roadmap discussion ongoing. Expansion likely Q3.", "GREEN"),
+        ("voyager-shipping", "Netherlands-based. EU VAT exemption applied. Mid-cycle expansion attempt failed in March - customer paused.", "YELLOW"),
         ("solstice-care", "Healthcare. HIPAA BAA on file. Strategic vertical. CSM: Wei. Renewal August 2027.", "GREEN"),
-        ("orion-labs", "UK research lab. Renewal cycle Sept. Recently flagged in Intercom about pricing sensitivity — CSM follow-up scheduled.", "YELLOW"),
+        ("orion-labs", "UK research lab. Renewal cycle Sept. Recently flagged in Intercom about pricing sensitivity - CSM follow-up scheduled.", "YELLOW"),
         ("summit-payments", "Fintech with seasonal usage spikes. SLA-sensitive. Renewal cycle Feb 2027.", "YELLOW"),
         ("delta-payments", "Fintech, smaller than Summit. Currently in retention play after a downgrade attempt. CSM weekly check-ins.", "YELLOW"),
-        ("vertex-mining", "Australia-based. Bandwidth-sensitive — they have intermittent connectivity issues in remote sites. CS-led adoption coaching.", "YELLOW"),
+        ("vertex-mining", "Australia-based. Bandwidth-sensitive - they have intermittent connectivity issues in remote sites. CS-led adoption coaching.", "YELLOW"),
     ]
 
     for slug, summary, health in noise_accounts:
@@ -1005,7 +1005,7 @@ def _pages_customer_accounts() -> list[NotionPage]:
         except KeyError:
             display_name = slug.replace("-", " ").title()
         pages.append(NotionPage(
-            title=f"Account: {display_name} — health notes",
+            title=f"Account: {display_name} - health notes",
             category="Customer account",
             paragraphs=[
                 f"Customer: {display_name}. Health: {health}.",
@@ -1030,7 +1030,7 @@ def _pages_meetings() -> list[NotionPage]:
                 "wins (Stellar AI expansion, Phoenix Fund renewal at "
                 "+18% ARR). Engineering shipped the new entitlement service "
                 "(GA in February).",
-                "Q&A: someone asked about the increase in disputes in Q1 — "
+                "Q&A: someone asked about the increase in disputes in Q1 - "
                 "Priya (RevOps) noted it correlates with the inbound surge "
                 "and that the new SOP is reducing the refund-on-default "
                 "behaviour from the old policy. Not a system-wide issue.",
@@ -1056,7 +1056,7 @@ def _pages_meetings() -> list[NotionPage]:
             category="Meeting notes",
             paragraphs=[
                 "Engineering planning meeting. Date: 2026-03-28.",
-                "Priority projects: (1) webhook reliability project — "
+                "Priority projects: (1) webhook reliability project - "
                 "see post-mortems doc; (2) post-acquisition billing "
                 "migration cleanup; (3) entitlement service v2 "
                 "(idempotency + replay).",
@@ -1074,12 +1074,12 @@ def _pages_meetings() -> list[NotionPage]:
                 "118%. Logo retention 94%. Two-quarter trailing dispute "
                 "rate trending DOWN after the 2026 SOP rollout.",
                 "Lowlights: post-acquisition migration is delayed by "
-                "two months — billing engineering capacity-constrained.",
+                "two months - billing engineering capacity-constrained.",
                 "Next board: May 2026.",
             ],
         ),
         NotionPage(
-            title="RevOps weekly — 2026-05-15",
+            title="RevOps weekly - 2026-05-15",
             category="Meeting notes",
             paragraphs=[
                 "RevOps weekly. Attendance: Priya, Wei, Marcus, Sara, "
@@ -1097,12 +1097,12 @@ def _pages_meetings() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Customer Success weekly — 2026-05-08",
+            title="Customer Success weekly - 2026-05-08",
             category="Meeting notes",
             paragraphs=[
                 "CS weekly. Attendance: CS team + Wei (CSM lead).",
                 "Portfolio health: 4 yellow accounts moved back to green "
-                "this week. 1 new red (Acme Logistics — confirmed churn "
+                "this week. 1 new red (Acme Logistics - confirmed churn "
                 "at next renewal). QBRs scheduled with top-10 ARR.",
                 "Action items: refresh health-score model with the new "
                 "PostHog feature-usage cohorts.",
@@ -1121,7 +1121,7 @@ def _pages_meetings() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="AE off-site notes — March 2026",
+            title="AE off-site notes - March 2026",
             category="Meeting notes",
             paragraphs=[
                 "AE off-site. Date: 2026-03-21 to 2026-03-23.",
@@ -1132,7 +1132,7 @@ def _pages_meetings() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Town hall — March 2026",
+            title="Town hall - March 2026",
             category="Meeting notes",
             paragraphs=[
                 "Monthly town hall. Date: 2026-03-31.",
@@ -1144,7 +1144,7 @@ def _pages_meetings() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Engineering planning Q3 2026 — draft",
+            title="Engineering planning Q3 2026 - draft",
             category="Meeting notes",
             paragraphs=[
                 "Draft. Date: 2026-05-22. Not yet finalised.",
@@ -1164,7 +1164,7 @@ def _pages_meetings() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Compliance review — SOC2 2026",
+            title="Compliance review - SOC2 2026",
             category="Meeting notes",
             paragraphs=[
                 "Compliance review meeting. Date: 2026-02-12.",
@@ -1181,9 +1181,9 @@ def _pages_meetings() -> list[NotionPage]:
 def _pages_engineering() -> list[NotionPage]:
     """Project & engineering docs (~18 pages)."""
     return [
-        # The webhook-reliability project — explicit W2 corroboration
+        # The webhook-reliability project - explicit W2 corroboration
         NotionPage(
-            title="Webhook reliability project — post-mortems",
+            title="Webhook reliability project - post-mortems",
             category="Engineering doc",
             signal_id="W2",
             paragraphs=[
@@ -1191,7 +1191,7 @@ def _pages_engineering() -> list[NotionPage]:
                 "Last updated 2026-05-21.",
                 "Background: throughout late 2025 and early 2026 we "
                 "have had recurring incidents in the webhook handler "
-                "stack — specifically the invoice.payment_succeeded "
+                "stack - specifically the invoice.payment_succeeded "
                 "handler that owns flipping internal entitlements. "
                 "Each crash leaves customers in a ghost-paid state.",
 
@@ -1213,7 +1213,7 @@ def _pages_engineering() -> list[NotionPage]:
                 "exception in the entitlement-flip path during a "
                 "feature-flag rollout. PagerDuty page "
                 "pd_alert_2026_05_12. Customers affected: Northwind "
-                "Logistics (Enterprise upgrade $9,000) — confirmed "
+                "Logistics (Enterprise upgrade $9,000) - confirmed "
                 "ghost-paid. Possibly 1-2 others not yet identified. "
                 "Sentry issue BILL-2451. Datadog dashboard "
                 "wh_2026_05_12. Resolution: feature flag rolled back, "
@@ -1229,9 +1229,9 @@ def _pages_engineering() -> list[NotionPage]:
                 "idempotency v1 by 2026-06-30.",
             ],
         ),
-        # The migration project doc — explicit W3 corroboration
+        # The migration project doc - explicit W3 corroboration
         NotionPage(
-            title="Billing platform migration — runbook & timeline",
+            title="Billing platform migration - runbook & timeline",
             category="Engineering doc",
             signal_id="W3",
             paragraphs=[
@@ -1272,7 +1272,7 @@ def _pages_engineering() -> list[NotionPage]:
                 "issue credit memo.",
 
                 "Status of the 6 affected customers (as of 2026-05-19):",
-                "- Mockingbird Media: cleanup pending — awaiting "
+                "- Mockingbird Media: cleanup pending - awaiting "
                 "dispute resolution.",
                 "- 5 other accounts: cleanup completed by AR team in "
                 "April-May. Reconciliation confirmed.",
@@ -1284,7 +1284,7 @@ def _pages_engineering() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Entitlement service v2 — design doc",
+            title="Entitlement service v2 - design doc",
             category="Engineering doc",
             paragraphs=[
                 "Owner: Platform Engineering. Status: in design.",
@@ -1298,7 +1298,7 @@ def _pages_engineering() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Database migration plans — Q3 2026",
+            title="Database migration plans - Q3 2026",
             category="Engineering doc",
             paragraphs=[
                 "Owner: Data Platform. Status: planning.",
@@ -1380,7 +1380,7 @@ def _pages_engineering() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="SSO integrations — supported IdPs",
+            title="SSO integrations - supported IdPs",
             category="Engineering doc",
             paragraphs=[
                 "Owner: Identity. Last updated 2026-04-30.",
@@ -1405,7 +1405,7 @@ def _pages_engineering() -> list[NotionPage]:
             paragraphs=[
                 "Owner: Product + Mobile. Last updated 2026-03-22.",
                 "iOS-first, Android Q4. Native (Swift) for iOS, "
-                "Kotlin for Android. Read-only at launch — focus on "
+                "Kotlin for Android. Read-only at launch - focus on "
                 "alerts and approvals.",
             ],
         ),
@@ -1420,13 +1420,13 @@ def _pages_engineering() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Stripe webhook handler — architecture",
+            title="Stripe webhook handler - architecture",
             category="Engineering doc",
             paragraphs=[
                 "Owner: Billing Engineering. Last updated 2026-04-25.",
                 "Inbound webhooks → Cloudflare worker → SQS queue → "
                 "Lambda consumer → entitlement service. Idempotency "
-                "currently weak — see 'Entitlement service v2 — "
+                "currently weak - see 'Entitlement service v2 - "
                 "design doc' for the v2 replacement.",
             ],
         ),
@@ -1460,18 +1460,18 @@ def _pages_engineering() -> list[NotionPage]:
                 "Sections: timeline, contributing factors (not 'root "
                 "cause'), customer impact, what went well, what we "
                 "want to change, action items with owners and due "
-                "dates. Action-item DRI must be a named person — "
+                "dates. Action-item DRI must be a named person - "
                 "never a team.",
             ],
         ),
         NotionPage(
-            title="Cost optimisation review — 2026 Q1",
+            title="Cost optimisation review - 2026 Q1",
             category="Engineering doc",
             paragraphs=[
                 "Owner: Platform + Finance. Quarterly cost review.",
                 "Q1 spend: down 8% vs. Q4 driven by S3 lifecycle "
                 "rules and reserved-instance commitments. Q2 watch "
-                "items: ClickHouse migration (Q3 — expect spend "
+                "items: ClickHouse migration (Q3 - expect spend "
                 "increase before consolidation savings).",
             ],
         ),
@@ -1482,7 +1482,7 @@ def _pages_hr_company() -> list[NotionPage]:
     """HR / company / brand pages (~9 pages, noise)."""
     return [
         NotionPage(
-            title="Security training — 2026 annual refresh",
+            title="Security training - 2026 annual refresh",
             category="HR / company",
             paragraphs=[
                 "Owner: Security + People Ops. Required for all "
@@ -1494,7 +1494,7 @@ def _pages_hr_company() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Equity refresh — 2026 grants",
+            title="Equity refresh - 2026 grants",
             category="HR / company",
             paragraphs=[
                 "Owner: People Ops + Finance. Annual refresh "
@@ -1578,7 +1578,7 @@ def _pages_hr_company() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Onboarding playbook — first 30 days",
+            title="Onboarding playbook - first 30 days",
             category="HR / company",
             paragraphs=[
                 "Owner: People Ops. Last updated 2026-02-20.",
@@ -1625,19 +1625,19 @@ def _pages_hr_company() -> list[NotionPage]:
 
 
 def _pages_customer_facing() -> list[NotionPage]:
-    """Customer-facing drafts (~5 pages). Red herrings — they mention
+    """Customer-facing drafts (~5 pages). Red herrings - they mention
     refunds in marketing terms."""
     return [
         NotionPage(
-            title="Blog post draft — 'Why we changed our refund policy in 2026'",
+            title="Blog post draft - 'Why we changed our refund policy in 2026'",
             category="Customer-facing draft",
             paragraphs=[
-                "DRAFT — do not publish without Comms approval. "
+                "DRAFT - do not publish without Comms approval. "
                 "Author: Marketing.",
                 "Lede: 'Earlier this year we updated our refunds and "
                 "disputes policy to better balance fairness for "
                 "customers with fairness for our team.' (Soft "
-                "framing — internal policy details NOT in this post.)",
+                "framing - internal policy details NOT in this post.)",
                 "The post is meant as a transparency gesture and "
                 "should NOT reference internal SOP identifiers, dispute "
                 "patterns, or specific customers.",
@@ -1645,7 +1645,7 @@ def _pages_customer_facing() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Help center article — 'Understanding your invoice'",
+            title="Help center article - 'Understanding your invoice'",
             category="Customer-facing draft",
             paragraphs=[
                 "Public help-center article. Last updated 2026-03-15.",
@@ -1658,7 +1658,7 @@ def _pages_customer_facing() -> list[NotionPage]:
             ],
         ),
         NotionPage(
-            title="Sales deck — Q2 2026 enterprise pitch",
+            title="Sales deck - Q2 2026 enterprise pitch",
             category="Customer-facing draft",
             paragraphs=[
                 "Owner: Marketing + Sales. Refresh cycle quarterly.",
@@ -1667,24 +1667,24 @@ def _pages_customer_facing() -> list[NotionPage]:
                 "calc, security, integration map, pricing tiers, "
                 "next steps.",
                 "Note for AEs: customer story slides require "
-                "permission from the named customer — keep the "
+                "permission from the named customer - keep the "
                 "approved list updated.",
             ],
         ),
         NotionPage(
-            title="Customer story — Northwind Logistics (draft)",
+            title="Customer story - Northwind Logistics (draft)",
             category="Customer-facing draft",
             paragraphs=[
-                "DRAFT — pending Northwind approval.",
+                "DRAFT - pending Northwind approval.",
                 "Hero: Northwind reduced their logistics "
                 "reconciliation time by 60% using our platform.",
                 "Hold until the Q2 upgrade incident is fully "
-                "resolved — Marcus (AE) flagged the timing.",
+                "resolved - Marcus (AE) flagged the timing.",
                 "Last updated: 2026-05-19 by marketing@miny-labs.com.",
             ],
         ),
         NotionPage(
-            title="Pricing page — refresh notes",
+            title="Pricing page - refresh notes",
             category="Customer-facing draft",
             paragraphs=[
                 "Owner: Product + Marketing. Refresh cycle every "
@@ -1717,7 +1717,7 @@ def all_pages() -> list[NotionPage]:
 
 def main() -> None:
     print("=" * 70)
-    print("Manthan seed_notion — Notion seeder")
+    print("Manthan seed_notion - Notion seeder")
     print("=" * 70)
 
     pages = all_pages()
@@ -1737,7 +1737,7 @@ def main() -> None:
     # for a freshly-created page, so creating the authoritative SOPs
     # last achieves that.
     signal_titles_last = {
-        "Refunds & Disputes — 2026 SOP (CURRENT)",
+        "Refunds & Disputes - 2026 SOP (CURRENT)",
         "Vendor failure refund policy",
         "Post-Acquisition Migration Cleanup SOP",
     }
@@ -1800,16 +1800,16 @@ def main() -> None:
         print(f"  {cat}: {n}")
 
     print()
-    print("Signal verification — authoritative SOPs:")
+    print("Signal verification - authoritative SOPs:")
     for workflow_id in ("W1", "W2", "W3"):
         matches = {k: v for k, v in signal_ids.items() if k.startswith(f"{workflow_id}:")}
         if matches:
             for k, v in matches.items():
                 title = k.split(":", 1)[1]
-                print(f"  {workflow_id} — {title}")
+                print(f"  {workflow_id} - {title}")
                 print(f"        page_id={v}")
         else:
-            print(f"  {workflow_id} — MISSING (signal not produced)")
+            print(f"  {workflow_id} - MISSING (signal not produced)")
 
 
 if __name__ == "__main__":

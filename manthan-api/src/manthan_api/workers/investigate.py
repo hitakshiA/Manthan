@@ -1,4 +1,4 @@
-"""worker.investigate — listens on PG NOTIFY, runs the agent brain per case.
+"""worker.investigate - listens on PG NOTIFY, runs the agent brain per case.
 
 Flow per case:
     case_opened event arrives → fetch trigger text + org context →
@@ -6,7 +6,7 @@ Flow per case:
     for each Event the agent yields, write a row to PG events +
     update derived projections (cases.status, findings table).
 
-This wraps the existing agent brain — no logic changes. The brain is
+This wraps the existing agent brain - no logic changes. The brain is
 package `manthan_agent` from /Users/akshmnd/Dev Projects/manthanv2/agent.
 """
 
@@ -79,7 +79,7 @@ class InvestigateWorker:
     async def run(self) -> None:
         """Subscribe to manthan_event channel and dispatch."""
         pool = get_pool()
-        # Hold a dedicated listener connection (not from the pool — listener
+        # Hold a dedicated listener connection (not from the pool - listener
         # connections shouldn't be returned mid-use).
         conn = await asyncpg.connect(dsn=get_settings().database_url)
 
@@ -88,7 +88,7 @@ class InvestigateWorker:
             logger.info("worker.investigate listening on manthan_event")
 
             # Catch up on any case_opened events that landed before we
-            # started — process them now.
+            # started - process them now.
             await self._catch_up_pending()
 
             await self._stop.wait()
@@ -186,7 +186,7 @@ class InvestigateWorker:
                 thread_id,
             )
         if opened is None or case_row is None:
-            log.warning("no case row or case_opened event — skipping")
+            log.warning("no case row or case_opened event - skipping")
             return
 
         case_id = case_row["id"]
@@ -205,7 +205,7 @@ class InvestigateWorker:
                 org_id, thread_id,
             )
         if already:
-            log.info("already in flight (investigation_started exists) — skipping")
+            log.info("already in flight (investigation_started exists) - skipping")
             return
 
         # Mark investigation_started so catch-up + NOTIFY don't race.
@@ -278,7 +278,7 @@ class InvestigateWorker:
     async def _followup(self, org_id: UUID, thread_id: UUID) -> None:
         """User asked a follow-up. Hand off to the toolful chat loop which
         can re-run Coral queries, record new findings, amend the brief, and
-        reply — the operator is talking to the same agent that wrote the
+        reply - the operator is talking to the same agent that wrote the
         brief, with the same tool surface."""
         log = logger.getChild(str(thread_id)[:8] + ".chat")
 
@@ -297,7 +297,7 @@ class InvestigateWorker:
                 org_id, thread_id,
             )
         if case_row is None or followup is None:
-            log.warning("no case or followup event — skipping")
+            log.warning("no case or followup event - skipping")
             return
 
         case_id = case_row["id"]
@@ -311,7 +311,7 @@ class InvestigateWorker:
             {"about": "human_followup_toolful"},
         )
 
-        # Delegate to the chat loop — spawns Coral session, runs ReAct with
+        # Delegate to the chat loop - spawns Coral session, runs ReAct with
         # coral_sql/record_finding/amend_brief/reply tools, emits all
         # tool_call/tool_result/finding_recorded/brief_amended/agent_reply
         # events back into the same thread.
@@ -440,7 +440,7 @@ class InvestigateWorker:
                 "description": f"Submit fight evidence to Stripe dispute {dispute_id}",
                 "payload": {
                     "dispute": dispute_id,
-                    "submit": False,  # safe demo default — don't auto-submit
+                    "submit": False,  # safe demo default - don't auto-submit
                     "evidence": {
                         "uncategorized_text": (
                             f"Manthan investigation brief for case {short_id}: "
@@ -465,12 +465,12 @@ class InvestigateWorker:
                 },
             })
 
-        # 2. Customer email (Resend) — every case ends with a comms touchpoint
+        # 2. Customer email (Resend) - every case ends with a comms touchpoint
         email_subject = {
-            "refund": f"Refund processed — case {short_id}",
-            "fight": f"Update on your dispute — case {short_id}",
-            "partial_credit": f"Credit applied — case {short_id}",
-            "escalate": f"We're looking into your request — case {short_id}",
+            "refund": f"Refund processed - case {short_id}",
+            "fight": f"Update on your dispute - case {short_id}",
+            "partial_credit": f"Credit applied - case {short_id}",
+            "escalate": f"We're looking into your request - case {short_id}",
         }.get(decision_action or "", f"Update on your case {short_id}")
         # Resolve customer email:
         # - If customer_ref looks like an email (e.g. from inbound_email surface
@@ -485,11 +485,11 @@ class InvestigateWorker:
                 "MANTHAN_FALLBACK_CUSTOMER_EMAIL", "ops@manthan.quest",
             )
 
-        # Body — keep autonomous-refund tone distinct from HITL tone
+        # Body - keep autonomous-refund tone distinct from HITL tone
         if decision_action == "refund":
             body_text = (
                 f"Hi,\n\n"
-                f"Confirmed the duplicate charge on your account — we've issued a "
+                f"Confirmed the duplicate charge on your account - we've issued a "
                 f"refund of {_dollars(amount_minor)}. You should see it back on your card "
                 f"within 5-10 business days.\n\n"
                 f"For transparency: our records show the charge was retried due to "
@@ -497,7 +497,7 @@ class InvestigateWorker:
                 f"internal ticket to harden that path.\n\n"
                 f"If you don't see the refund land or have any other questions, just "
                 f"reply to this email.\n\n"
-                f"— Caldera Support\n"
+                f"- Caldera Support\n"
                 f"(handled autonomously by Manthan · case {short_id} · policy: small-refund-auto)"
             )
         elif decision_action == "fight":
@@ -505,18 +505,18 @@ class InvestigateWorker:
                 f"Hi,\n\nWe've reviewed the dispute on your account and we're "
                 f"submitting evidence to your bank that the charge was valid. "
                 f"Our records show active product usage during the period in "
-                f"question.\n\n— Caldera Support\n(case {short_id})"
+                f"question.\n\n- Caldera Support\n(case {short_id})"
             )
         elif decision_action == "partial_credit":
             body_text = (
                 f"Hi,\n\nWe've credited {_dollars(amount_minor)} back to your account. "
                 f"Reach out if you'd like to discuss further.\n\n"
-                f"— Caldera Support\n(case {short_id})"
+                f"- Caldera Support\n(case {short_id})"
             )
         else:
             body_text = (
                 f"Hi,\n\nWe're looking into your request. A team member will be "
-                f"in touch shortly.\n\n— Caldera Support\n(case {short_id})"
+                f"in touch shortly.\n\n- Caldera Support\n(case {short_id})"
             )
 
         actions.append({
@@ -529,7 +529,7 @@ class InvestigateWorker:
             },
         })
 
-        # 3. Notion decision log — internal audit trail
+        # 3. Notion decision log - internal audit trail
         notion_parent = os.environ.get("NOTION_DECISION_LOG_PARENT_ID")
         if notion_parent:
             actions.append({
@@ -580,7 +580,7 @@ class InvestigateWorker:
           2. Extracts canonical identifiers (charge_id, dispute_id,
              customer_email, hubspot_company_id)
           3. For each drafted action, fills in required fields the agent
-             omitted — agent-supplied fields always win.
+             omitted - agent-supplied fields always win.
 
         Returns the modified list (same shape as input, payloads enriched).
         """
@@ -695,14 +695,14 @@ class InvestigateWorker:
         amount_str = _dollars(amount_minor)
         decision_label = (decision_action or "update").replace("_", " ")
         brief_html = (
-            f"<p><strong>{short_id} — {decision_label} ({amount_str})</strong></p>"
+            f"<p><strong>{short_id} - {decision_label} ({amount_str})</strong></p>"
             f"<p>{(decision_rationale or '').strip() or 'See case findings.'}</p>"
         )
         brief_text = (
-            f"{short_id} — {decision_label} ({amount_str}). "
+            f"{short_id} - {decision_label} ({amount_str}). "
             f"{(decision_rationale or '').strip() or 'See case findings.'}"
         )
-        # Customer-facing email — properly templated per decision_action.
+        # Customer-facing email - properly templated per decision_action.
         # We DELIBERATELY do not pipe `decision_rationale` straight into
         # the email body: that field is the agent's operator-facing
         # narrative ("Per Notion policy [2][3]: credit = degraded_days /
@@ -712,7 +712,7 @@ class InvestigateWorker:
         # Treat the case as a duplicate-charge refund when the
         # trigger-time signal (case_type, trigger_text) says so. The
         # template uses this to swap "we approved your dispute" wording
-        # for "we caught the duplicate charge" wording — the dispute
+        # for "we caught the duplicate charge" wording - the dispute
         # framing is wrong for inbound-email refund requests that never
         # went through Stripe Disputes.
         is_duplicate_charge = (
@@ -764,7 +764,7 @@ class InvestigateWorker:
                     if agent_dispute:
                         payload["dispute"] = agent_dispute
                 if "submit" not in payload:
-                    # Safe demo default — draft, don't auto-submit.
+                    # Safe demo default - draft, don't auto-submit.
                     payload["submit"] = False
                 if "evidence" not in payload:
                     payload["evidence"] = {
@@ -777,7 +777,7 @@ class InvestigateWorker:
             elif kind == "customer_email":
                 # Per-case demo override: if the trigger plumbed an
                 # operator email (`demo_email_to`) the email delivers
-                # there directly — no env-level rewrite, no [demo →]
+                # there directly - no env-level rewrite, no [demo →]
                 # subject prefix, no "to" hijack downstream. This is the
                 # Aperture-from-the-empty-state path: the operator wants
                 # to see the email land in their own inbox.
@@ -802,7 +802,7 @@ class InvestigateWorker:
                 payload["subject"] = email_subject_default
                 # Resend's raw path reads `body_html` (with `html` as a
                 # fallback we've added in the adapter). Set BOTH so the
-                # branded HTML actually ships — without `body_html` the
+                # branded HTML actually ships - without `body_html` the
                 # adapter sends a text-only email and the customer sees
                 # an unstyled plain-text wall.
                 payload["body_html"] = email_html_default
@@ -814,7 +814,7 @@ class InvestigateWorker:
                 if not payload.get("company_id"):
                     if hubspot_company_id:
                         payload["company_id"] = str(hubspot_company_id)
-                    # else: leave blank — adapter will fail and surface the
+                    # else: leave blank - adapter will fail and surface the
                     # missing-lookup gap rather than silently mis-routing.
                 if not payload.get("body") and not payload.get("body_html"):
                     payload["body_html"] = brief_html
@@ -859,10 +859,10 @@ class InvestigateWorker:
             "You are Manthan, a billing-ops investigator. You already drafted "
             "a case brief earlier in this thread. The operator is now asking a "
             "follow-up question or pushing back. Answer directly and "
-            "specifically using the findings and decision below — cite finding "
+            "specifically using the findings and decision below - cite finding "
             "numbers when relevant. Keep replies 2-6 sentences. If the user "
             "asks you to amend the drafted actions, describe the exact change "
-            "in plain English — don't pretend to have actually edited the action."
+            "in plain English - don't pretend to have actually edited the action."
         )
         messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
 
@@ -1107,7 +1107,7 @@ class InvestigateWorker:
         """Update the cases projection with the final state.
 
         After the brief drops, we evaluate policy rules. If a rule matches
-        with mode=auto, the case skips awaiting_approval — its drafted
+        with mode=auto, the case skips awaiting_approval - its drafted
         actions are auto-approved and the actor will execute them. The
         UI surfaces the policy match so it's clear who decided.
         """
@@ -1124,7 +1124,7 @@ class InvestigateWorker:
         # ── Policy evaluation ────────────────────────────────────────
         # Only if we drafted a brief AND aren't already errored/escalated.
         # Demo cases with an operator-routed email (`demo_email_to` in
-        # trigger_payload) ALWAYS require manual approval — we want the
+        # trigger_payload) ALWAYS require manual approval - we want the
         # operator to see the brief and click Approve before any action
         # fires against their own inbox.
         policy_match = None
@@ -1204,7 +1204,7 @@ class InvestigateWorker:
 
 def _dollars(amount_minor: int | None) -> str:
     if amount_minor is None:
-        return "—"
+        return "-"
     return f"${amount_minor / 100:,.2f}"
 
 
@@ -1237,7 +1237,7 @@ def _build_customer_email(
 ) -> tuple[str, str, str]:
     """Return (subject, html, text) for the customer-facing email.
 
-    Designed for Resend — fully-styled responsive HTML email with a
+    Designed for Resend - fully-styled responsive HTML email with a
     branded header bar, headline, a summary "card" for the resolution
     amount, and a clean signature + reference block. Inline styles
     only (Gmail strips <style> blocks). Max width 600px.
@@ -1245,11 +1245,11 @@ def _build_customer_email(
     Tone: plain English, second-person, no internal citation markers,
     no [Finding N] or [Cites: ...] tags, no engineering jargon, no
     policy formulas. The agent's operator-facing rationale never
-    reaches this function — by the time we render, all that's left is
+    reaches this function - by the time we render, all that's left is
     the decision plus a small set of resolution-context flags.
 
     `is_duplicate_charge` swaps "approved your dispute" framing for
-    "caught a duplicate charge" framing — the latter is correct for
+    "caught a duplicate charge" framing - the latter is correct for
     inbound-email refund requests that never went through Stripe
     Disputes (e.g. Maya scenario).
     """
@@ -1273,7 +1273,7 @@ def _build_customer_email(
             paragraphs = [
                 f"We caught the duplicate charge on your account and have already "
                 f"refunded <strong>{amount_str}</strong> back to your original card.",
-                f"The cause was a retry bug on our payment system — we've fixed it, "
+                f"The cause was a retry bug on our payment system - we've fixed it, "
                 f"and you won't see the duplicate again. The refund should land in "
                 f"your account within 5–10 business days, depending on your bank.",
                 f"If anything still looks off once the refund lands, just reply to "
@@ -1294,7 +1294,7 @@ def _build_customer_email(
                 f"The funds should land within 5–10 business days, depending on "
                 f"your bank.",
                 f"If anything still looks off once the refund arrives, just reply "
-                f"to this email — we'll take another look.",
+                f"to this email - we'll take another look.",
             ]
             summary_label = "Refund"
             summary_caption = "Back to your original payment method"
@@ -1319,7 +1319,7 @@ def _build_customer_email(
         paragraphs = [
             f"We've finished reviewing the dispute on your account. Based on the "
             f"records we have, the charge was for service you actively used during "
-            f"the period — so we've submitted evidence to your bank that the "
+            f"the period - so we've submitted evidence to your bank that the "
             f"charge was valid.",
             f"Your bank will make the final decision, usually within a couple of "
             f"weeks. We'll let you know as soon as we hear back. If there's "
@@ -1348,7 +1348,7 @@ def _build_customer_email(
         summary_label = None
         summary_caption = None
 
-    # ── HTML body — table-based for Outlook/Gmail compat ───────────
+    # ── HTML body - table-based for Outlook/Gmail compat ───────────
     summary_card_html = ""
     if summary_label and amount_str:
         summary_card_html = (
@@ -1424,7 +1424,7 @@ def _build_customer_email(
         f'width="100%" style="margin-top:32px;border-top:1px solid {RULE};">'
         f'<tr><td style="padding-top:20px;font-family:-apple-system,'
         f'BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;'
-        f'color:{INK_MUTED};">— Caldera Support</td></tr></table>'
+        f'color:{INK_MUTED};">- Caldera Support</td></tr></table>'
         f'</td></tr>'
 
         # Footer
@@ -1439,7 +1439,7 @@ def _build_customer_email(
         f'</td></tr></table></body></html>'
     )
 
-    # Plain-text fallback — strip HTML tags + bullet the summary card.
+    # Plain-text fallback - strip HTML tags + bullet the summary card.
     text_paragraphs = "\n\n".join(
         _strip_html_tags(p) for p in paragraphs
     )
@@ -1454,7 +1454,7 @@ def _build_customer_email(
         f"Hi {safe_name},\n\n"
         f"{text_paragraphs}"
         f"{summary_text}\n\n"
-        f"— Caldera Support\n"
+        f"- Caldera Support\n"
         f"Case ref: {short_id}"
         + (f" · dispute {dispute_id}" if dispute_id else "")
         + "\n"

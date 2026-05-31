@@ -1,5 +1,5 @@
 /**
- * CreatePolicyRuleModal — visual condition builder for new policy rules.
+ * CreatePolicyRuleModal - visual condition builder for new policy rules.
  *
  * Lets an operator compose a rule like:
  *   IF case.trigger_surface = inbound_email
@@ -39,7 +39,7 @@ interface ConditionRow {
   id: string;
   field: FieldKey;
   op: Op;
-  value: string; // Raw text — parsed at submit time
+  value: string; // Raw text - parsed at submit time
 }
 
 const FIELDS: { key: FieldKey; label: string; type: "string" | "number" | "bool" }[] = [

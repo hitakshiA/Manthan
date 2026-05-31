@@ -1,8 +1,8 @@
 # Fly.io deployment for manthan-api.
 #
 # Two process groups:
-#   web      — uvicorn FastAPI (the public API)
-#   workers  — supervisord-managed investigate + actor + prettifier
+#   web      - uvicorn FastAPI (the public API)
+#   workers  - supervisord-managed investigate + actor + prettifier
 #
 # Provision before first deploy:
 #   fly postgres create --name manthan-db --region iad

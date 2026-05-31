@@ -80,7 +80,7 @@ class TestDetectTemporalGrain:
             connection,
             ["2024-01-01", "2024-01-05", "2024-02-17", "2024-03-04"],
         )
-        # Too few rows for a dominant mode — gaps are all different
+        # Too few rows for a dominant mode - gaps are all different
         result = detect_temporal_grain(connection, "t", "d")
         assert result in ("irregular", "daily")  # mode may pick one
 

@@ -1,8 +1,8 @@
 /**
- * Button — editorial pill, not a candy gum.
+ * Button - editorial pill, not a candy gum.
  *
  * Radius is restrained (3px / --radius-xs). No glow shadow on the accent
- * variant — solid colour, hairline border, that's it. Ghost is text-only.
+ * variant - solid colour, hairline border, that's it. Ghost is text-only.
  */
 
 import { forwardRef } from "react";
@@ -20,12 +20,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
-  // The print "press here" colour — high-contrast neutral. Lives at the top
+  // The print "press here" colour - high-contrast neutral. Lives at the top
   // of the hierarchy: one per surface, ideally.
   primary:
     "text-[var(--color-bg)] hover:opacity-90 " +
     "[background:var(--color-ink-strong)]",
-  // Default — hairline neutral.
+  // Default - hairline neutral.
   secondary:
     "text-[var(--color-ink)] hover:text-[var(--color-ink-strong)] " +
     "border border-[var(--color-rule)] hover:border-[var(--color-rule-strong)] " +
@@ -34,7 +34,7 @@ const variantStyles: Record<Variant, string> = {
   ghost:
     "text-[var(--color-ink-muted)] hover:text-[var(--color-ink-strong)] " +
     "bg-transparent border border-transparent hover:bg-[var(--color-surface)]",
-  // The verb of intent — confirm, ship, fire.
+  // The verb of intent - confirm, ship, fire.
   accent:
     "text-[var(--color-accent-ink)] hover:opacity-90 " +
     "[background:var(--color-accent)]",

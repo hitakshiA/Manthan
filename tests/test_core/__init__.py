@@ -1,1 +1,1 @@
-"""Tests for src.core — configuration, logging, database, LLM, exceptions."""
+"""Tests for src.core - configuration, logging, database, LLM, exceptions."""

@@ -38,13 +38,13 @@ class Settings(BaseSettings):
     # for production quotas.
     gemini_api_key: SecretStr = Field(
         ...,
-        description="Google AI Studio API key. No default — must be provided via env.",
+        description="Google AI Studio API key. No default - must be provided via env.",
     )
     gemini_model: str = Field(
         default="gemini-3-flash-preview",
         description=(
             "Primary Gemini model for Layer 1 classification + Layer 2 reasoning. "
-            "Default is Gemini 3 Flash — fastest of the public Gemini 3.x family "
+            "Default is Gemini 3 Flash - fastest of the public Gemini 3.x family "
             "with quality comparable to Pro on the analyst workloads Manthan runs."
         ),
     )

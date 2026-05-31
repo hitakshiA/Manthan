@@ -1,7 +1,7 @@
 """SSE event types for streaming agent output to Layer 3.
 
 Every decision point in the agent loop emits an event. Layer 3
-renders these as a live activity feed — the user sees exactly
+renders these as a live activity feed - the user sees exactly
 what the agent is doing, thinking, and waiting on at all times.
 
 The alias-catalog context variable lets each /agent/query request
@@ -65,7 +65,7 @@ def _strip_empty_link_md(text: str) -> str:
     in the conversation stream. That preprocessor never runs inside
     ``emit_visual`` or ``artifact`` HTML (those render in iframes),
     so any surviving ``[70.9%]()`` would render as literal brackets
-    to the exec. Strip them here — the iframe gets clean text.
+    to the exec. Strip them here - the iframe gets clean text.
     """
     return _EMPTY_LINK_MD.sub(lambda m: m.group(1), text)
 
@@ -93,7 +93,7 @@ def _close_unclosed_try(code: str) -> str:
         # Bail if a catch/finally clause exists in the same script
         if re.search(r"\}\s*(catch|finally)\b", body):
             return match.group(0)
-        # Quick brace count — string/comment literals may throw off the
+        # Quick brace count - string/comment literals may throw off the
         # math, so only act when the mismatch is unambiguous (>0).
         opens = body.count("{")
         closes = body.count("}")
@@ -253,7 +253,7 @@ def tool_call_starting(
     """Fired the first time a streaming tool_call slot shows up in the
     LLM stream. The frontend opens a live ``tool_call`` step in the
     thinking ladder so subsequent ``tool_arg_delta`` fragments can
-    append into a growing SQL / Python preview — instead of having
+    append into a growing SQL / Python preview - instead of having
     the entire query block pop in after the response completes.
     """
     return AgentEvent(
@@ -269,7 +269,7 @@ def tool_call_starting(
 def tool_arg_delta(tool_call_id: str, fragment: str) -> AgentEvent:
     """One fragment of a streaming tool call's ``arguments`` field.
 
-    Fragments are raw JSON-string pieces (not parsed JSON) — the
+    Fragments are raw JSON-string pieces (not parsed JSON) - the
     frontend concatenates them in order and best-effort extracts the
     ``sql`` / ``code`` field on the fly for a live preview. Masking is
     applied per fragment so physical names never reach the wire.
@@ -440,11 +440,11 @@ def sql_result(
 
 
 def narrative(text: str) -> AgentEvent:
-    """Agent's out-loud commentary — shown as bold text between thinking groups.
+    """Agent's out-loud commentary - shown as bold text between thinking groups.
 
     Masked through the active AliasCatalog so the exec never sees
     physical table names (``gold_orders_16b49dbd39``) inside the agent's
-    own prose — only the business slug/name.
+    own prose - only the business slug/name.
     """
     return AgentEvent(
         type="narrative",
@@ -456,7 +456,7 @@ def narrative_delta(text: str) -> AgentEvent:
     """Incremental delta of narrative content as it streams from the LLM.
 
     The frontend reducer appends ``text`` to the in-progress narrative
-    block instead of creating a new one — so a long final answer appears
+    block instead of creating a new one - so a long final answer appears
     typed-in rather than dumped after a 20s wall-clock pause. Masked
     through the active AliasCatalog so physical names are scrubbed
     on the fly, before the exec sees a single character.
@@ -504,7 +504,7 @@ def artifact_created(
 ) -> AgentEvent:
     """A self-contained HTML artifact (dashboard, report, interactive tool).
 
-    Title + HTML body are masked through the active AliasCatalog —
+    Title + HTML body are masked through the active AliasCatalog -
     any ``gold_orders_16b49dbd39`` that sneaks into embedded SQL or
     display text is rewritten to the business slug before the artifact
     reaches the exec's screen.
@@ -567,7 +567,7 @@ def _format_variants(value: float | int, unit: str | None) -> list[str]:
         out.append(f"{value:.1f}%")
         out.append(f"{value:.2f}%")
     else:
-        # Numeric — emit both bare and common suffix forms. Many
+        # Numeric - emit both bare and common suffix forms. Many
         # dataset numeric columns represent dollars without a unit
         # column (e.g. gov-finance Totals.Revenue), so $ forms widen
         # the audit net without harming non-money cases (narrative
@@ -617,11 +617,11 @@ def numeric_claim(
     exact query that produced it.
 
     ``description`` is a plain-English one-liner the drawer renders
-    as "What this measures" — sourced from the DCD metric's
+    as "What this measures" - sourced from the DCD metric's
     ``description`` field when the claim came from ``compute_metric``,
     or generated from the SQL when it came from ``run_sql``.
 
-    ``formatted_variants`` widens the matcher — the same raw value
+    ``formatted_variants`` widens the matcher - the same raw value
     may be rendered as ``$706K``, ``$0.7M``, or ``706,532``; the UI
     tries all of them so the click-to-audit underline survives a
     format mismatch between tool output and prose.
@@ -675,7 +675,7 @@ def artifact_updated(
 
 
 def building_artifact(artifact_id: str, title: str, filename: str) -> AgentEvent:
-    """Emitted IMMEDIATELY when ``create_artifact`` starts — before
+    """Emitted IMMEDIATELY when ``create_artifact`` starts - before
     validation, repair, or disk write. The UI opens the artifact panel
     with a skeleton state so the exec sees work-in-progress instead of
     a silent 30s–3m gap while ``node --check`` and the repair LLM run."""

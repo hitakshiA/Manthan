@@ -195,7 +195,7 @@ class TestClassifyColumns:
     async def test_llm_bad_json_falls_back_to_heuristic(self) -> None:
         """Malformed LLM output no longer raises; heuristic fallback kicks in.
 
-        Silver stage should stay robust if the model sends back garbage —
+        Silver stage should stay robust if the model sends back garbage -
         the DCD must still be produced so Gold materialization can proceed.
         Provenance is tracked via the ``heuristic-fallback:`` reasoning
         prefix so the miss is auditable.

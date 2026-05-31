@@ -1,4 +1,4 @@
-"""Worker entry point — `uv run python -m manthan_api.workers.main`."""
+"""Worker entry point - `uv run python -m manthan_api.workers.main`."""
 
 from manthan_api.workers.investigate import main as investigate_main
 

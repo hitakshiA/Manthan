@@ -62,12 +62,12 @@ async def agent_query(request: QueryRequest, config: AgentConfigDep):
                 recoverable=False,
             ).to_sse()
             yield agent_events.done(
-                summary="Agent run failed — see logs.",
+                summary="Agent run failed - see logs.",
                 turns=0,
                 tool_calls=0,
                 elapsed=0.0,
             ).to_sse()
-            # Print to stderr too — the supervisor log captures this.
+            # Print to stderr too - the supervisor log captures this.
             print(f"[agent.stream] CRASH {type(exc).__name__}: {exc}\n{tb}", flush=True)
 
     return StreamingResponse(

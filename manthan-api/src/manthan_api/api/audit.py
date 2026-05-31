@@ -1,4 +1,4 @@
-"""Audit log endpoint — flat stream of high-signal events across all cases.
+"""Audit log endpoint - flat stream of high-signal events across all cases.
 
 Filters down to the events that matter for compliance/transparency review:
   case_opened, policy_matched, human_approved, action_executed, action_failed,

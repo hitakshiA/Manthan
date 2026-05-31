@@ -5,7 +5,7 @@ endpoint, report:
   - OK + a 1-line identity (e.g. "Stripe acct_xxx, livemode=false")
   - ERR + the specific error (HTTP status + body snippet)
 
-Never echoes the key itself to console — only the response.
+Never echoes the key itself to console - only the response.
 
 Run:
     cd manthanv2/agent
@@ -163,7 +163,7 @@ def probe_sentry() -> tuple[bool, str]:
     if not (tok and org):
         return False, "SENTRY_TOKEN/ORG missing"
     # Decode the sntrys_ token payload to find which region shard hosts
-    # this org. New SaaS orgs are on us.sentry.io or eu.sentry.io —
+    # this org. New SaaS orgs are on us.sentry.io or eu.sentry.io -
     # calling the bare sentry.io endpoint returns 403 from the wrong shard.
     import base64
     import json as _json
@@ -251,7 +251,7 @@ def probe_salesforce() -> tuple[bool, str]:
         return True, f"instance={url.split('//')[1].split('.')[0]} sample_accounts={n}"
     if r.status_code == 401:
         return False, (
-            "401 — access token expired. Refresh with: "
+            "401 - access token expired. Refresh with: "
             ".venv/bin/python scripts/refresh_salesforce_token.py"
         )
     return False, f"{r.status_code} {_short(r.text)}"

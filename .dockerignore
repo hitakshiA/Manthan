@@ -1,4 +1,4 @@
-# Root build context — keep this MINIMAL because the Coral source is
+# Root build context - keep this MINIMAL because the Coral source is
 # ~200MB without exclusions.
 
 # Always-junk
@@ -19,7 +19,7 @@
 **/node_modules
 manthan-ui/dist
 
-# Rust build cache for Coral — we rebuild in the Docker stage
+# Rust build cache for Coral - we rebuild in the Docker stage
 coral/target
 coral/.git
 coral/CACHEDIR.TAG

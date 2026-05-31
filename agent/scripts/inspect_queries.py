@@ -159,7 +159,7 @@ async def main() -> int:
         )
     console.print()
 
-    # Depth + decision summary — the part we actually care about
+    # Depth + decision summary - the part we actually care about
     summary = Table(title="Outcome", show_header=False, border_style="cyan")
     summary.add_row("[bold]closed_reason[/bold]", closed_reason or "(no case_closed)")
     summary.add_row("[bold]decision[/bold]", decision_action or "(no brief)")

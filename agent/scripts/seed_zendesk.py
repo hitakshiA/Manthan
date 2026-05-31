@@ -4,7 +4,7 @@ Drives the Manthan billing-dispute investigation agent. Reads from
 seed_world.py for canonical company identity so cross-source JOINs stay
 consistent.
 
-Idempotent — uses Zendesk's `create_or_update` endpoints (which key off
+Idempotent - uses Zendesk's `create_or_update` endpoints (which key off
 `external_id` for orgs and `external_id` for users). Tickets don't have
 a natural idempotency key, so a local JSON file at
 `.manthan/zendesk_seed_state.json` tracks which workflow-signal tickets
@@ -13,12 +13,12 @@ re-run if the state file shows them done.
 
 Workflow signals baked in:
 
-  W1 — Acme Genomics: 2-3 tickets, NONE cancel-related. Tests that the
+  W1 - Acme Genomics: 2-3 tickets, NONE cancel-related. Tests that the
        agent JOINs through zendesk.users to confirm "no formal cancel"
        rather than assuming silence means cancel.
-  W2 — Northwind Logistics: urgent open ticket about paid Enterprise
+  W2 - Northwind Logistics: urgent open ticket about paid Enterprise
        upgrade still on Standard tier.
-  W3 — Mockingbird Media: urgent open ticket about double-billing across
+  W3 - Mockingbird Media: urgent open ticket about double-billing across
        the migration cutover.
 
 Plus ~30-50 red-herring "cancel" / "refund" tickets from random other
@@ -67,7 +67,7 @@ AUTH = (EMAIL_WITH_TOKEN, API_TOKEN)
 TIMEOUT = httpx.Timeout(60.0, connect=15.0)
 
 # Pace ourselves comfortably under the trial limit (~700 req/min).
-# Slightly cautious value — we only really need this for non-bulk calls.
+# Slightly cautious value - we only really need this for non-bulk calls.
 REQ_SLEEP = 0.05
 
 # State file for tracking what tickets we've already created (idempotency).
@@ -166,7 +166,7 @@ def _name_from_email(email: str, fallback: str = "Customer") -> str:
 
 
 def _isoformat(dt: datetime) -> str:
-    """ISO-8601 with Z suffix, no microseconds — Zendesk's preferred form."""
+    """ISO-8601 with Z suffix, no microseconds - Zendesk's preferred form."""
     return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
@@ -224,7 +224,7 @@ def _user_plan(c: Company) -> list[tuple[str, str, str]]:
     users: list[tuple[str, str, str]] = [
         (primary_email, _name_from_email(primary_email), "end-user"),
     ]
-    # Extras based on ARR — bigger account → more users.
+    # Extras based on ARR - bigger account → more users.
     if c.arr_usd >= 100_000:
         extras_n = 4
     elif c.arr_usd >= 50_000:
@@ -285,7 +285,7 @@ def upsert_user(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Ticket content — pools of subject/body templates by category
+# Ticket content - pools of subject/body templates by category
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -445,7 +445,7 @@ PLAN_TICKETS = [
 OTHER_NOISE_TICKETS = [
     (
         "Need to download all our data",
-        "GDPR request — we need a full export of all data associated with our workspace. "
+        "GDPR request - we need a full export of all data associated with our workspace. "
         "What's the process and how long does it usually take?",
     ),
     (
@@ -484,7 +484,7 @@ NON_BILLING_POOLS = [
     ("other", OTHER_NOISE_TICKETS),
 ]
 
-# Billing-flavored but NOT workflow-target — these are noise tickets that
+# Billing-flavored but NOT workflow-target - these are noise tickets that
 # the agent should learn to deprioritize compared to W1/W2/W3.
 BILLING_NOISE_TICKETS = [
     (
@@ -510,16 +510,16 @@ BILLING_NOISE_TICKETS = [
     ),
     (
         "Question about overage charges",
-        "We went over the included quota last month — what's the per-unit overage rate? "
+        "We went over the included quota last month - what's the per-unit overage rate? "
         "Trying to estimate the bill before it lands.",
     ),
 ]
 
-# Noise "cancel" / "refund" tickets — RED HERRINGS for non-workflow companies.
+# Noise "cancel" / "refund" tickets - RED HERRINGS for non-workflow companies.
 CANCEL_NOISE_TICKETS = [
     (
         "Cancel one of my seats",
-        "We have a teammate leaving next week — can you cancel just their seat "
+        "We have a teammate leaving next week - can you cancel just their seat "
         "and refund prorated? Account: {company}.",
     ),
     (
@@ -535,7 +535,7 @@ CANCEL_NOISE_TICKETS = [
     (
         "Refund for accidental upgrade",
         "Last Friday I clicked the wrong button and upgraded our plan to Enterprise. "
-        "We don't actually need Enterprise — can you downgrade us back and refund the diff?",
+        "We don't actually need Enterprise - can you downgrade us back and refund the diff?",
     ),
     (
         "Refund: duplicate charge",
@@ -549,7 +549,7 @@ CANCEL_NOISE_TICKETS = [
     ),
     (
         "Cancel one subscription only",
-        "We have two workspaces under our billing — please cancel the 'Staging' one "
+        "We have two workspaces under our billing - please cancel the 'Staging' one "
         "but keep 'Production' active. Confused by the UI on this.",
     ),
     (
@@ -563,7 +563,7 @@ CANCEL_NOISE_TICKETS = [
         "moving to a competitor. Please confirm cancel date.",
     ),
     (
-        "Refund request — never used",
+        "Refund request - never used",
         "We bought this 6 months ago and never ended up rolling it out. Pretty rough "
         "to have paid for nothing. Any chance of a goodwill refund?",
     ),
@@ -581,12 +581,12 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
     Each dict has: subject, body, priority, status, days_ago, type.
     """
     if slug == "acme-genomics":
-        # W1 — 2 tickets, NEITHER cancel-related.
+        # W1 - 2 tickets, NEITHER cancel-related.
         return [
             {
                 "subject": "Add new viewer-role user",
                 "body": (
-                    "Hi team — we'd like to invite analytics@acme-genomics.test as a "
+                    "Hi team - we'd like to invite analytics@acme-genomics.test as a "
                     "viewer-role user on our workspace. They only need read-only access "
                     "to the dashboards, no admin permissions. Can you set that up or "
                     "point me to where I can do it myself?"
@@ -599,7 +599,7 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
             {
                 "subject": "Webhook delivery question",
                 "body": (
-                    "Quick question — we're seeing some webhook deliveries arrive 2-3 "
+                    "Quick question - we're seeing some webhook deliveries arrive 2-3 "
                     "minutes after the underlying event. Is that within the expected "
                     "delivery window or should we file a bug? Most deliveries are sub-second "
                     "so the slow ones stand out."
@@ -611,7 +611,7 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
             },
         ]
     if slug == "northwind-logi":
-        # W2 — urgent open ticket + older context ticket.
+        # W2 - urgent open ticket + older context ticket.
         return [
             {
                 "subject": "Paid Enterprise upgrade but still on Standard tier",
@@ -629,7 +629,7 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
             {
                 "subject": "Demo follow-up Q1",
                 "body": (
-                    "Following up on our demo from January — we walked through the "
+                    "Following up on our demo from January - we walked through the "
                     "Enterprise tier features. Any chance of access to the analytics "
                     "dashboard previews or a recording of that session?"
                 ),
@@ -640,12 +640,12 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
             },
         ]
     if slug == "mockingbird-media":
-        # W3 — urgent open ticket + older migration confirmation.
+        # W3 - urgent open ticket + older migration confirmation.
         return [
             {
                 "subject": "Why are we being charged twice?",
                 "body": (
-                    "We see TWO charges this month — one $5,500 from Stripe and one "
+                    "We see TWO charges this month - one $5,500 from Stripe and one "
                     "$5,500 from your legacy billing platform. The legacy entity was "
                     "supposed to be cancelled when we migrated in March. We've already "
                     "paid the Stripe one. Please refund the legacy and consolidate."
@@ -656,9 +656,9 @@ def workflow_tickets_for(slug: str) -> list[dict[str, Any]]:
                 "type": "problem",
             },
             {
-                "subject": "Migration to Stripe — confirmation needed",
+                "subject": "Migration to Stripe - confirmation needed",
                 "body": (
-                    "Following our migration kickoff call — can you confirm that the "
+                    "Following our migration kickoff call - can you confirm that the "
                     "legacy billing subscription will be terminated as of end-of-March "
                     "once we cut over to Stripe? Our finance team wants written confirmation "
                     "before they sign off on the new payment method."
@@ -705,7 +705,7 @@ def _ticket_created_at(rng: random.Random, c: Company) -> datetime:
     """Pick a random ticket creation timestamp between company signup and now."""
     start_year = max(c.signup_year, 2024)
     start = datetime(start_year, 1, 5, tzinfo=timezone.utc)
-    # "now" — use 2026-05-27 as anchor (matches today per env context).
+    # "now" - use 2026-05-27 as anchor (matches today per env context).
     end = datetime(2026, 5, 27, 0, 0, tzinfo=timezone.utc)
     if end <= start:
         end = start + timedelta(days=30)
@@ -772,7 +772,7 @@ def _build_workflow_ticket(
     requester_email: str,
     spec: dict[str, Any],
 ) -> dict[str, Any]:
-    """Build a workflow-target ticket spec dict — exact content, dated."""
+    """Build a workflow-target ticket spec dict - exact content, dated."""
     created_at = datetime(2026, 5, 27, tzinfo=timezone.utc) - timedelta(days=spec["days_ago"])
     if spec["status"] in ("solved", "closed"):
         updated_at = created_at + timedelta(days=2)
@@ -831,7 +831,7 @@ class TrialCapHit(Exception):
 def import_tickets_bulk(
     client: httpx.Client, specs: list[dict[str, Any]]
 ) -> list[int]:
-    """POST a batch via /imports/tickets/create_many.json — max 100 per call.
+    """POST a batch via /imports/tickets/create_many.json - max 100 per call.
 
     Raises TrialCapHit if all tickets in the batch fail with the trial-tier
     "account has expired" error, so the caller can stop iterating.
@@ -885,7 +885,7 @@ def import_tickets_bulk(
         elif res.get("error"):
             print(f"  bulk ticket error: {res}")
     if expired_count and not ids:
-        # Whole batch hit the trial cap — surface that to the caller.
+        # Whole batch hit the trial cap - surface that to the caller.
         raise TrialCapHit(
             f"trial cap hit: {expired_count}/{len(specs)} tickets blocked"
         )
@@ -1034,7 +1034,7 @@ def main() -> int:
                 try:
                     tid = import_ticket(client, ts)
                 except TrialCapHit:
-                    print(f"  TRIAL CAP HIT during {slug} workflow ticket — stop")
+                    print(f"  TRIAL CAP HIT during {slug} workflow ticket - stop")
                     workflow_aborted = True
                     errors.append(
                         f"workflow {slug}: trial cap hit on '{spec['subject']}'"
@@ -1074,7 +1074,7 @@ def main() -> int:
                     ids = import_tickets_bulk(client, chunk)
                 except TrialCapHit as e:
                     trial_cap_hit = True
-                    print(f"\n  TRIAL CAP HIT — {e}")
+                    print(f"\n  TRIAL CAP HIT - {e}")
                     print(
                         "  Zendesk trial accounts cap total ticket volume. "
                         "Stopping noise seeding here."
@@ -1325,7 +1325,7 @@ def verify_workflows(client: httpx.Client, state: dict[str, Any]) -> None:
     for slug, exp in expectations.items():
         tids = state["workflow_tickets"].get(slug, [])
         if len(tids) < exp["min"]:
-            print(f"W {slug}: FAIL — got {len(tids)} tickets, need {exp['min']}")
+            print(f"W {slug}: FAIL - got {len(tids)} tickets, need {exp['min']}")
             continue
         subjects: list[str] = []
         urgent_open_ok = False

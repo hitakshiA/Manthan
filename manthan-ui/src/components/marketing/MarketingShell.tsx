@@ -1,8 +1,8 @@
 /**
- * MarketingShell — minimal nav + footer wrapper for marketing pages
+ * MarketingShell - minimal nav + footer wrapper for marketing pages
  * other than the landing page (Changelog, Contact, Privacy, Terms, DPA).
  *
- * Same brand voice as the landing — pure black, Geist + Instrument Serif,
+ * Same brand voice as the landing - pure black, Geist + Instrument Serif,
  * single Sign in pill in the nav, quiet footer with brand + legal links.
  */
 

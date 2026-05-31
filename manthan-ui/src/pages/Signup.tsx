@@ -1,5 +1,5 @@
 /**
- * Signup — faithful port of Aurora Onboard's right column.
+ * Signup - faithful port of Aurora Onboard's right column.
  *
  * - "Create New Profile" header + subtitle
  * - 2-col Google + GitHub socials
@@ -7,7 +7,7 @@
  * - 2-col first/last name
  * - Email full width
  * - Password full width with Eye toggle + hint
- * - Submit "Create Account" — w-full h-14 bg-white text-black rounded-xl
+ * - Submit "Create Account" - w-full h-14 bg-white text-black rounded-xl
  * - Footer link "Member of the team? Log in"
  */
 
@@ -40,12 +40,12 @@ export default function Signup() {
         </p>
       </header>
 
-      {/* Clerk-hosted sign-up — themed to match the dark form style.
+      {/* Clerk-hosted sign-up - themed to match the dark form style.
           Brings the social buttons + divider + email/password fields
           inside one widget. Submission lands on Clerk; on success Clerk
           redirects to `/app` per the provider config in main.tsx.
           Note: there is intentionally no "Try the demo · no signup"
-          bypass on this page — authentication is the only path into
+          bypass on this page - authentication is the only path into
           the workspace so every visitor's email is captured (Clerk's
           user.created webhook fires the MVP welcome). */}
       <ClerkAuthForm mode="signup" />

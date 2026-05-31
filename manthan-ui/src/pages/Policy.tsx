@@ -1,5 +1,5 @@
 /**
- * Policy Center — the rulebook that decides which cases auto-execute
+ * Policy Center - the rulebook that decides which cases auto-execute
  * vs. wait for human approval.
  *
  * Editorial-memo direction: each rule renders as a mini-memo with a
@@ -28,7 +28,7 @@ import {
 import { CreatePolicyRuleModal } from "@/components/app/CreatePolicyRuleModal";
 
 // ──────────────────────────────────────────────────────────────────────
-// Mode tokens — same palette as the WorkspaceMemo phase indicator.
+// Mode tokens - same palette as the WorkspaceMemo phase indicator.
 // ──────────────────────────────────────────────────────────────────────
 
 type Mode = "auto" | "recommend" | "suggest" | "hitl" | "escalate";
@@ -185,7 +185,7 @@ export default function PolicyPage() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Page header — eyebrow + Spectral italic title + subtitle + CTA.
+// Page header - eyebrow + Spectral italic title + subtitle + CTA.
 // ──────────────────────────────────────────────────────────────────────
 
 function PageHeader({
@@ -229,8 +229,8 @@ function PageHeader({
             {loading
               ? "Loading…"
               : ruleCount === 0
-                ? "No rules yet — Manthan defaults to escalating every case."
-                : `${enabledCount} of ${ruleCount} ${ruleCount === 1 ? "rule" : "rules"} active. Each match is recorded — open a case to see which rule fired.`}
+                ? "No rules yet - Manthan defaults to escalating every case."
+                : `${enabledCount} of ${ruleCount} ${ruleCount === 1 ? "rule" : "rules"} active. Each match is recorded - open a case to see which rule fired.`}
           </p>
         </div>
         <button
@@ -262,7 +262,7 @@ function PageHeader({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RuleMemo — one rule as a HeaderStrip + two-column card.
+// RuleMemo - one rule as a HeaderStrip + two-column card.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleMemo({
@@ -382,7 +382,7 @@ function RuleHeaderStrip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// LEFT column — "When". Description + numbered prose conditions.
+// LEFT column - "When". Description + numbered prose conditions.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleWhenColumn({ rule }: { rule: ApiPolicyRule }) {
@@ -465,7 +465,7 @@ function RuleWhenColumn({ rule }: { rule: ApiPolicyRule }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RIGHT column — "Decision" + Matched counter.
+// RIGHT column - "Decision" + Matched counter.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleDecisionColumn({ rule }: { rule: ApiPolicyRule }) {
@@ -591,7 +591,7 @@ function MatchedCount({ count }: { count: number }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Recent matches — slim ledger strip grouped by day.
+// Recent matches - slim ledger strip grouped by day.
 // ──────────────────────────────────────────────────────────────────────
 
 function RecentMatches({ matches }: { matches: ApiPolicyMatch[] | null }) {
@@ -809,7 +809,7 @@ function Toggle({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Condition flattening — clause-tree JSON → flat list.
+// Condition flattening - clause-tree JSON → flat list.
 // Handles `{all: [...]}`, `{any: [...]}`, `{not: …}`, plus the leaf
 // shape `{field: {op: value}}`.
 // ──────────────────────────────────────────────────────────────────────
@@ -843,7 +843,7 @@ function flattenClauses(node: unknown): FlatClause[] {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Humanizers — JSON → prose a Director would read.
+// Humanizers - JSON → prose a Director would read.
 // ──────────────────────────────────────────────────────────────────────
 
 function humanizeClause(c: FlatClause): string {

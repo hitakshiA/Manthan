@@ -19,7 +19,7 @@ DELETE FROM policy_rules
 INSERT INTO policy_rules
   (org_id, name, description, conditions, decision, priority, enabled)
 VALUES
-  -- ── 1. Abuse guard (priority 10 — fires first) ────────────────────
+  -- ── 1. Abuse guard (priority 10 - fires first) ────────────────────
   (
     '8ae1b532-8f5a-44bc-9a48-9110336e49fb',
     'repeat-disputer-escalate',
@@ -43,7 +43,7 @@ VALUES
   (
     '8ae1b532-8f5a-44bc-9a48-9110336e49fb',
     'large-amount-two-approvers',
-    'Disputes above $25,000 require a sign-off from a director-level approver — finance-controls-aligned. Manthan drafts the full brief and packet but never fires alone, regardless of confidence.',
+    'Disputes above $25,000 require a sign-off from a director-level approver - finance-controls-aligned. Manthan drafts the full brief and packet but never fires alone, regardless of confidence.',
     '{
       "all": [
         {"case.amount_minor": {"gt": 2500000}}
@@ -79,11 +79,11 @@ VALUES
     TRUE
   ),
 
-  -- ── 4. Email refund — autonomous when evidence is clean (priority 50)
+  -- ── 4. Email refund - autonomous when evidence is clean (priority 50)
   (
     '8ae1b532-8f5a-44bc-9a48-9110336e49fb',
     'email-refund-clean-customer',
-    'A customer emails about a duplicate or small unintended charge. If they''re in good standing — no prior disputes — and the agent''s confidence is above 90%, Manthan refunds and replies on the same email thread. The full receipt lands in the audit log.',
+    'A customer emails about a duplicate or small unintended charge. If they''re in good standing - no prior disputes - and the agent''s confidence is above 90%, Manthan refunds and replies on the same email thread. The full receipt lands in the audit log.',
     '{
       "all": [
         {"case.trigger_surface": {"eq": "inbound_email"}},
@@ -104,11 +104,11 @@ VALUES
     TRUE
   ),
 
-  -- ── 5. Chargeback — autonomous fight when the evidence is overwhelming
+  -- ── 5. Chargeback - autonomous fight when the evidence is overwhelming
   (
     '8ae1b532-8f5a-44bc-9a48-9110336e49fb',
     'chargeback-fight-strong-evidence',
-    'Stripe chargebacks where the customer has months of healthy usage, the contract is in writing, and the agent''s confidence is above 92% — auto-submit the dispute evidence packet. Anything under $5,000 fires alone; above that it requests a nod.',
+    'Stripe chargebacks where the customer has months of healthy usage, the contract is in writing, and the agent''s confidence is above 92% - auto-submit the dispute evidence packet. Anything under $5,000 fires alone; above that it requests a nod.',
     '{
       "all": [
         {"case.case_type":           {"eq": "chargeback"}},
@@ -132,7 +132,7 @@ VALUES
   -- W7R-pattern: a customer disputes a paid cycle in which an
   -- internally-documented operational incident degraded the feature
   -- they paid for. The agent's drafted decision will be a PARTIAL
-  -- refund (decision_amount_minor < case.amount_minor) — that's the
+  -- refund (decision_amount_minor < case.amount_minor) - that's the
   -- shape this rule recognises. We recommend the partial-credit
   -- decision back to a human reviewer rather than auto-firing it,
   -- because the math (degraded_days / cycle_days × tier_amount)
@@ -160,11 +160,11 @@ VALUES
     TRUE
   ),
 
-  -- ── 7. Email default — always investigate, then ask (priority 100)
+  -- ── 7. Email default - always investigate, then ask (priority 100)
   (
     '8ae1b532-8f5a-44bc-9a48-9110336e49fb',
     'email-default-investigate-then-ask',
-    'Every customer email gets the full investigation treatment — Manthan reads across the eleven connected sources, drafts a brief with cited evidence, and queues the case for your nod. Default safe: nothing fires without you when the more specific auto rules don''t match.',
+    'Every customer email gets the full investigation treatment - Manthan reads across the eleven connected sources, drafts a brief with cited evidence, and queues the case for your nod. Default safe: nothing fires without you when the more specific auto rules don''t match.',
     '{
       "all": [
         {"case.trigger_surface": {"eq": "inbound_email"}}

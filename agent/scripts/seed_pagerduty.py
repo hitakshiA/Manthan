@@ -4,7 +4,7 @@ Drives the Manthan billing-dispute investigation agent. Bakes in the W2
 workflow signal (failed Stripe webhook → Northwind ghost-paid) as a
 resolved high-urgency incident on the billing-webhook-handler service.
 
-Idempotent — re-runs:
+Idempotent - re-runs:
   * Services: looked up by name via GET /services?query=<name>; the
     "Default Service" that ships with a fresh PagerDuty account is
     renamed to core-platform-prod on first run.
@@ -13,7 +13,7 @@ Idempotent — re-runs:
     once and skip any whose incident_key is already present.
 
 PagerDuty stamps every incident with its real created_at; the API does
-not let us backdate. So all timestamps will be "today" — that's accepted
+not let us backdate. So all timestamps will be "today" - that's accepted
 per the seed spec.
 
 Run:
@@ -57,7 +57,7 @@ HEADERS = {
 }
 
 # Rate limit: 720 req/min ≈ 12 req/s. Sleep ~0.1s between requests to
-# stay comfortably under the cap. We don't batch — PagerDuty's REST
+# stay comfortably under the cap. We don't batch - PagerDuty's REST
 # API has no bulk-incident-create endpoint.
 REQ_SLEEP = 0.10
 
@@ -108,7 +108,7 @@ def _request(
 SERVICE_CATALOG: list[tuple[str, str]] = [
     (
         "core-platform-prod",
-        "Core platform services — APIs, background jobs, internal tooling.",
+        "Core platform services - APIs, background jobs, internal tooling.",
     ),
     (
         "billing-webhook-handler",
@@ -118,7 +118,7 @@ SERVICE_CATALOG: list[tuple[str, str]] = [
     ),
     (
         "auth-service",
-        "Authentication / authorization — token issuance, session "
+        "Authentication / authorization - token issuance, session "
         "validation, OAuth callback handlers.",
     ),
     (
@@ -128,7 +128,7 @@ SERVICE_CATALOG: list[tuple[str, str]] = [
     ),
     (
         "ingest-pipeline",
-        "Streaming ingest workers — Kafka consumers feeding the data "
+        "Streaming ingest workers - Kafka consumers feeding the data "
         "warehouse and analytics jobs.",
     ),
     (
@@ -138,12 +138,12 @@ SERVICE_CATALOG: list[tuple[str, str]] = [
     ),
     (
         "cdn-edge",
-        "CDN edge fleet — static asset delivery, image transformations, "
+        "CDN edge fleet - static asset delivery, image transformations, "
         "cache invalidation pipeline.",
     ),
     (
         "monitoring",
-        "Observability stack — Prometheus, Grafana, alertmanager, "
+        "Observability stack - Prometheus, Grafana, alertmanager, "
         "incident routing.",
     ),
 ]
@@ -165,7 +165,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "core-platform-prod: pod restart loop on payments-worker deployment",
             "high",
             "payments-worker pods entered CrashLoopBackOff after the 14:22 "
-            "rollout. Liveness probe failing intermittently — suspect "
+            "rollout. Liveness probe failing intermittently - suspect "
             "config map drift. Rolling back to previous revision.",
         ),
         (
@@ -186,7 +186,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "core-platform-prod: feature flag service returned 503 during deploy",
             "low",
             "LaunchDarkly client got 503s for ~90s during their planned "
-            "maintenance. Fallback cache served stale flags — no user "
+            "maintenance. Fallback cache served stale flags - no user "
             "impact, but worth tightening the fallback TTL.",
         ),
         (
@@ -200,7 +200,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "core-platform-prod: graceful shutdown timeout on canary pods",
             "low",
             "Canary pods took 45s to shut down during the v2.14.0 rollout "
-            "— breaches the 30s SLO for graceful shutdown. Investigating "
+            "- breaches the 30s SLO for graceful shutdown. Investigating "
             "long-running goroutines in the metrics flusher.",
         ),
     ],
@@ -211,7 +211,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "high",
             "Webhook signature verification error rate jumped from 0.01% "
             "to 3.2% over a 15-minute window. Suspect Stripe rotated the "
-            "endpoint secret without our knowing — pulling fresh secret "
+            "endpoint secret without our knowing - pulling fresh secret "
             "from dashboard.",
         ),
         (
@@ -226,7 +226,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "low",
             "Customers received duplicate upgrade confirmation emails when "
             "Stripe retried delivery of customer.subscription.updated. "
-            "Idempotency key collision — fixed by including the event_id "
+            "Idempotency key collision - fixed by including the event_id "
             "in the dedupe key.",
         ),
         (
@@ -256,7 +256,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "billing-webhook-handler: missing handler for new event type 'invoice.upcoming'",
             "low",
             "We're logging 'unhandled event type' warnings for "
-            "invoice.upcoming. Not currently used downstream — adding "
+            "invoice.upcoming. Not currently used downstream - adding "
             "a no-op handler to silence the noise.",
         ),
     ],
@@ -273,7 +273,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "low",
             "A subset of clients on the older SDK (<v3.2) are failing "
             "their background refresh and hitting the login screen "
-            "every ~30 minutes. SDK bug — upgrading customers off the "
+            "every ~30 minutes. SDK bug - upgrading customers off the "
             "old version.",
         ),
         (
@@ -317,7 +317,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
         (
             "api-gateway: TLS cert renewal failed on edge-3",
             "high",
-            "cert-manager renewal CronJob errored on edge-3 — Route 53 "
+            "cert-manager renewal CronJob errored on edge-3 - Route 53 "
             "DNS challenge timed out. Manually rotated; investigating "
             "the DNS plugin retry behaviour.",
         ),
@@ -380,7 +380,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "worker. Skipped that file; replayed the rest.",
         ),
         (
-            "ingest-pipeline: dead-letter topic growing — 'events.dlq'",
+            "ingest-pipeline: dead-letter topic growing - 'events.dlq'",
             "low",
             "DLQ topic up to ~3k messages, all from a single mis-configured "
             "tenant. Routed their traffic to the quarantine pipeline "
@@ -424,7 +424,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "old partitions detached and dropped.",
         ),
         (
-            "database-primary: long-running query detected — > 10 min",
+            "database-primary: long-running query detected - > 10 min",
             "low",
             "A reporting query from the BI tool ran for 18 minutes on "
             "the primary instead of the read replica. BI tool config "
@@ -433,7 +433,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
         (
             "database-primary: failed pg_dump nightly backup",
             "high",
-            "Nightly pg_dump exited non-zero — disk full on the backup "
+            "Nightly pg_dump exited non-zero - disk full on the backup "
             "bucket prefix due to retention misconfig. Extended the "
             "lifecycle rule; backup re-run successfully.",
         ),
@@ -443,7 +443,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
             "cdn-edge: cache hit rate dropped below 92%",
             "low",
             "Cache hit rate fell from 98.4% to 89.1% after the asset "
-            "pipeline changed its hashing scheme — invalidated more "
+            "pipeline changed its hashing scheme - invalidated more "
             "URLs than expected. Warming cache; expected to recover.",
         ),
         (
@@ -501,7 +501,7 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
         (
             "monitoring: alert flapping on auth-service token issuance latency",
             "low",
-            "Threshold too tight — alert fired and resolved 14 times "
+            "Threshold too tight - alert fired and resolved 14 times "
             "in 90 minutes. Hysteresis added; threshold relaxed by 10%.",
         ),
         (
@@ -516,14 +516,14 @@ INCIDENT_TEMPLATES: dict[str, list[tuple[str, str, str]]] = {
 
 
 # ──────────────────────────────────────────────────────────────────────
-# W2 signal — the canonical billing-webhook-handler crash
+# W2 signal - the canonical billing-webhook-handler crash
 # ──────────────────────────────────────────────────────────────────────
 
 
 W2_SERVICE = "billing-webhook-handler"
 W2_TITLE = (
     "billing-webhook-handler: unhandled TypeError processing "
-    "invoice.payment_succeeded — entitlement updates failing"
+    "invoice.payment_succeeded - entitlement updates failing"
 )
 W2_BODY = (
     "Webhook handler crashed with uncaught TypeError around 2026-05-12 "
@@ -602,7 +602,7 @@ def upsert_service(
     # On a fresh account, the only existing service is "Default Service".
     # If the caller wants the very first service in our catalog
     # (core-platform-prod) and Default Service still exists, rename it
-    # instead of creating a new one — keeps the EP attached and avoids
+    # instead of creating a new one - keeps the EP attached and avoids
     # leaving "Default Service" cluttering the directory.
     if name == "core-platform-prod":
         default_sid, _ = find_service_id_by_name(client, "Default Service")
@@ -837,7 +837,7 @@ def main() -> int:
 
         if "billing-webhook-handler" not in service_ids:
             sys.exit(
-                "ERROR: billing-webhook-handler service was not created — "
+                "ERROR: billing-webhook-handler service was not created - "
                 "cannot seed W2 signal. Aborting."
             )
 
@@ -879,7 +879,7 @@ def main() -> int:
                 by_urgency[W2_URGENCY] += 1
                 w2_incident_id = w2_id
                 w2_incident_number = w2_num
-                # Resolve immediately — the past-incident-already-fixed
+                # Resolve immediately - the past-incident-already-fixed
                 # narrative is what the agent should see.
                 time.sleep(REQ_SLEEP)
                 if update_incident_status(client, w2_id, "resolved"):
@@ -965,14 +965,14 @@ def main() -> int:
 
                 if (i + 1) % 5 == 0:
                     print(
-                        f"    {i + 1:>3}/{target_n} created — "
+                        f"    {i + 1:>3}/{target_n} created - "
                         f"latest #{inc_num} [{target_status}]"
                     )
                 time.sleep(REQ_SLEEP)
 
     # ── 5. Final report ───────────────────────────────────────────────
     print("\n" + "=" * 62)
-    print("SEED SUMMARY — PagerDuty")
+    print("SEED SUMMARY - PagerDuty")
     print("=" * 62)
     print(f"  Services: {len(SERVICE_CATALOG)} total")
     print(f"    created : {counts['services_created']}")
@@ -996,7 +996,7 @@ def main() -> int:
     for s, n in by_status.items():
         print(f"      {n:>3}  {s}")
     print()
-    print("  W2 SIGNAL — webhook crash → Northwind ghost-paid:")
+    print("  W2 SIGNAL - webhook crash → Northwind ghost-paid:")
     if w2_incident_id:
         print(f"    incident id      : {w2_incident_id}")
         print(f"    incident number  : {w2_incident_number}")

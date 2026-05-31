@@ -1,11 +1,11 @@
 /**
- * ApprovalCinematic — the takeover after the operator hits Approve.
+ * ApprovalCinematic - the takeover after the operator hits Approve.
  *
  * Editorial / "feels alive" requirement from the sketch:
  *   - Clear out the page chrome.
  *   - Animate each action one at a time.
  *   - Each action holds the canvas for a minimum of 3 seconds, even if
- *     it completes faster — the operator needs to feel each action land,
+ *     it completes faster - the operator needs to feel each action land,
  *     not see a blur of green checkmarks.
  *   - Show the source it touched + a single-line description of what
  *     the agent is doing.
@@ -13,7 +13,7 @@
  *     Closed Brief view.
  *
  * Driven by:
- *   - `actions[]` — the drafted actions in execution order
+ *   - `actions[]` - the drafted actions in execution order
  *   - real `action.status` transitions arriving via the case SSE stream
  *
  * Sketch fidelity:
@@ -26,7 +26,7 @@
  *   │             │ Action title │                 │
  *   │             └──────────────┘                 │
  *   │                                              │
- *   │              now firing · — · fired ✓        │
+ *   │              now firing · - · fired ✓        │
  *   └──────────────────────────────────────────────┘
  */
 
@@ -68,7 +68,7 @@ export function ApprovalCinematic({
   actions,
   onAllComplete,
 }: ApprovalCinematicProps) {
-  // Filter out actions the operator denied — only fire-actions belong
+  // Filter out actions the operator denied - only fire-actions belong
   // in the cinematic.
   const playable = useMemo(
     () => actions.filter((a) => a.status !== "denied" && a.status !== "drafted-skipped"),
@@ -99,7 +99,7 @@ export function ApprovalCinematic({
   }, [currentIdx, playable.length]);
 
   // Advance when (min dwell elapsed AND real status terminal) OR (hard
-  // timeout). The hard timeout shouldn't normally fire — it's a safety
+  // timeout). The hard timeout shouldn't normally fire - it's a safety
   // net so the UI doesn't get stuck if the actor worker hangs.
   const realDone =
     current?.status !== undefined && TERMINAL_STATUSES.has(current.status);
@@ -137,7 +137,7 @@ export function ApprovalCinematic({
       className="flex-1 min-h-0 flex flex-col items-center justify-center px-10 py-10 relative"
       style={{ background: "var(--color-bg)" }}
     >
-      {/* Progress dots — one per action. */}
+      {/* Progress dots - one per action. */}
       <div
         className="absolute top-8 left-0 right-0 flex items-center justify-center gap-2"
         aria-label={`Action ${Math.min(currentIdx + 1, playable.length)} of ${playable.length}`}
@@ -223,7 +223,7 @@ function ActionStage({ action }: { action: WorkspaceAction }) {
           the action is running. */}
       <SourceTile sourceId={sourceId} phase={phase} />
 
-      {/* Action title — italic display, big enough to read across the room. */}
+      {/* Action title - italic display, big enough to read across the room. */}
       <h2
         className="mt-6 font-display text-[clamp(1.4rem,1.1rem+0.8vw,1.85rem)] leading-[1.18]"
         style={{ color: "var(--color-ink-strong)" }}
@@ -231,7 +231,7 @@ function ActionStage({ action }: { action: WorkspaceAction }) {
         {action.title}
       </h2>
 
-      {/* Target line — what the agent is actually calling. */}
+      {/* Target line - what the agent is actually calling. */}
       <p
         className="mt-2 font-mono text-[11.5px] tabular-nums"
         style={{ color: "var(--color-ink-faint)" }}

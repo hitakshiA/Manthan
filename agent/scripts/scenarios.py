@@ -2,7 +2,7 @@
 
 Each scenario is a realistic billing-ops case with:
   - Messy trigger text (how a human would actually forward/describe the case)
-  - Rich source bundles ("world") — some relevant, some red herrings
+  - Rich source bundles ("world") - some relevant, some red herrings
   - Ground truth: expected decision, optional amount, keywords that
     should appear in findings, keywords that should NOT (red-herring
     citations the agent must avoid)
@@ -13,7 +13,7 @@ Design constraints we honored:
   - Triggers are HUMAN-WRITTEN, not pristine. Some have typos, partial
     info, opinions, internal politics. The agent has to find truth in
     the data, not in the trigger.
-  - Every scenario surfaces at least one red-herring source — an
+  - Every scenario surfaces at least one red-herring source - an
     incident/ticket/escalation that LOOKS related but isn't.
   - Decisions span: fight, refund (full), refund (partial), accept,
     escalate (ask_human).
@@ -35,7 +35,7 @@ class Scenario:
     trigger_text: str
     dispute_header: dict[str, Any]
     # Legacy flat path: source → pre-curated field bundle. The mock unions
-    # these into a single returned row. Easy mode — answers are pre-extracted.
+    # these into a single returned row. Easy mode - answers are pre-extracted.
     world: dict[str, dict[str, Any]] = field(default_factory=dict)
     distractor_sources: list[str] = field(default_factory=list)
     catalog: list[dict[str, Any]] = field(default_factory=list)
@@ -53,7 +53,7 @@ class Scenario:
 
 # The unified catalog every scenario advertises. We give the agent a
 # broad surface so a scenario with no PagerDuty data still LOOKS like
-# PagerDuty exists — the agent might JOIN into it and get nothing back,
+# PagerDuty exists - the agent might JOIN into it and get nothing back,
 # which is itself a finding ("no incidents on file"). That mirrors real
 # Coral behavior.
 _FULL_CATALOG: list[dict[str, Any]] = [
@@ -76,7 +76,7 @@ _FULL_CATALOG: list[dict[str, Any]] = [
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S01 — Friendly fraud with a legit-feeling complaint in the rear-view
+# S01 - Friendly fraud with a legit-feeling complaint in the rear-view
 # ──────────────────────────────────────────────────────────────────────
 
 _S01 = Scenario(
@@ -85,7 +85,7 @@ _S01 = Scenario(
     trigger_text=(
         "Slack DM from @priya (CSM):\n"
         "\"Hey can you take dp_3MqAcmeRen? Acme Genomics is fighting the $4,200 annual "
-        "renewal. They keep insisting they tried to cancel earlier this year — I poked "
+        "renewal. They keep insisting they tried to cancel earlier this year - I poked "
         "around Intercom and there's something from a couple months back but it didn't "
         "feel like a formal cancel request to me. They're using the product. Brief "
         "please by EOD Thu (evidence due Fri).\"\n\n"
@@ -148,17 +148,17 @@ _S01 = Scenario(
         },
         "gmail": {
             "gmail_threads_90d": 1,
-            "gmail_last_subject": "Acme Genomics — Q1 check-in",
+            "gmail_last_subject": "Acme Genomics - Q1 check-in",
             "gmail_last_at": "2026-03-12T16:00:00Z",
             "gmail_cancel_requests_90d": 0,
         },
         "slack": {
             "slack_cs_escalations_90d": 1,
-            "slack_last_text_snippet": "Priya flagged Acme as yellow — data-export question, not a cancel.",
+            "slack_last_text_snippet": "Priya flagged Acme as yellow - data-export question, not a cancel.",
             "slack_last_ts": "2026-03-09T10:15:00Z",
         },
         "notion": {
-            "notion_refunds_title": "Refunds & Disputes — 2026 SOP",
+            "notion_refunds_title": "Refunds & Disputes - 2026 SOP",
             "notion_refunds_body": (
                 "For subscription_canceled chargebacks: FIGHT when (a) no formal "
                 "cancellation request exists across Intercom/Zendesk/Gmail, AND (b) "
@@ -172,7 +172,7 @@ _S01 = Scenario(
             "ph_distinct_users_active_30d": 4,
             "ph_critical_actions_14d": 12,
         },
-        # RED HERRING — old sentry incident on a different product line
+        # RED HERRING - old sentry incident on a different product line
         "sentry": {
             "sentry_recent_incidents_90d": 1,
             "sentry_last_issue_title": "legacy-reporting-v1: NullPointerException in /v1/reports/quarterly",
@@ -205,7 +205,7 @@ _S01 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S02 — SLA short-pay with conflicting sources, correct answer is PARTIAL
+# S02 - SLA short-pay with conflicting sources, correct answer is PARTIAL
 # ──────────────────────────────────────────────────────────────────────
 
 _S02 = Scenario(
@@ -213,7 +213,7 @@ _S02 = Scenario(
     pattern_name="sla_partial_credit",
     trigger_text=(
         "Forwarded email from @marcus (AR):\n"
-        "\"FYI — Northwind Logistics short-paid INV-9821 by 25% ($2,250 on a $9k invoice). "
+        "\"FYI - Northwind Logistics short-paid INV-9821 by 25% ($2,250 on a $9k invoice). "
         "Their cite reason is 'SLA breach during May 14-15 outage.' I checked our status "
         "page (StatusGator snapshot) and it said operational the whole time so I don't "
         "think we owe them anything but plz double-check. AE is asking we don't ding the "
@@ -263,9 +263,9 @@ _S02 = Scenario(
             "pd_last_incident_root_cause": "Degraded latency in EU region: routing config rollout",
         },
         "statusgator": {
-            # Customer-facing status — note that we DIDN'T post an update.
+            # Customer-facing status - note that we DIDN'T post an update.
             # A naive agent will read this as "no outage"; the right read
-            # is "operational error — we failed to communicate, but the
+            # is "operational error - we failed to communicate, but the
             # internal incident is the ground truth."
             "sg_status_during_window": "operational",
             "sg_status_updates_in_window": 0,
@@ -283,13 +283,13 @@ _S02 = Scenario(
             "dd_note": "Latency + error spike confirmed for the PagerDuty window.",
         },
         "notion": {
-            "notion_msa_title": "Northwind Logistics MSA — SLA Addendum",
+            "notion_msa_title": "Northwind Logistics MSA - SLA Addendum",
             "notion_msa_body": (
                 "Per Northwind MSA Section 7.4: SLA credit = "
                 "(downtime_hours / total_hours_in_month) * monthly_fee * multiplier. "
                 "multiplier = 2 for SEV-2, 4 for SEV-1. Credits cap at one month's fee. "
                 "Customer must claim credits within 30 days of incident. Customers may "
-                "NOT unilaterally short-pay invoices — credits issue as billing adjustments."
+                "NOT unilaterally short-pay invoices - credits issue as billing adjustments."
             ),
             "notion_msa_updated_at": "2025-11-02T00:00:00Z",
             "notion_calc_note": (
@@ -306,7 +306,7 @@ _S02 = Scenario(
             ),
             "ic_last_at": "2026-05-20T10:00:00Z",
         },
-        # RED HERRING — an OLD SLA breach from a year ago that does NOT apply
+        # RED HERRING - an OLD SLA breach from a year ago that does NOT apply
         "sentry": {
             "sentry_recent_incidents_90d": 0,
             "sentry_old_incidents_note": (
@@ -317,7 +317,7 @@ _S02 = Scenario(
     },
     distractor_sources=["sentry", "statusgator"],
     catalog=_FULL_CATALOG,
-    expected_decision="refund",  # PARTIAL — small credit, not full short-pay
+    expected_decision="refund",  # PARTIAL - small credit, not full short-pay
     expected_amount_minor=11100,  # ~$111 credit
     expected_min_confidence=0.75,
     expected_findings_keywords=[
@@ -328,12 +328,12 @@ _S02 = Scenario(
         "credit",
     ],
     must_not_findings_keywords=[
-        "no outage",  # wrong — there WAS an outage, statusgator was the wrong source
+        "no outage",  # wrong - there WAS an outage, statusgator was the wrong source
         "sentry",
         "2,250",  # don't agree to the full short-pay
     ],
     notes=(
-        "Two-source contradiction: StatusGator says operational (red herring — we "
+        "Two-source contradiction: StatusGator says operational (red herring - we "
         "didn't post a status update); PagerDuty + Datadog confirm SEV-2 outage. "
         "Customer is RIGHT that there was an outage, WRONG about the credit math. "
         "Correct answer: issue $111 credit, document the comms gap, do NOT accept "
@@ -343,7 +343,7 @@ _S02 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S03 — AE made an off-contract verbal promise via Gmail; honor it
+# S03 - AE made an off-contract verbal promise via Gmail; honor it
 # ──────────────────────────────────────────────────────────────────────
 
 _S03 = Scenario(
@@ -393,7 +393,7 @@ _S03 = Scenario(
             "gmail_promise_thread_to": "accounting@globex.example",
             "gmail_promise_thread_at": "2026-03-18T14:22:00Z",
             "gmail_promise_thread_quote": (
-                "Hey Sarah — we can flex you up to 220 seats at no extra charge through "
+                "Hey Sarah - we can flex you up to 220 seats at no extra charge through "
                 "end of Q3 as we'd talked about. Just keep me in the loop on hiring."
             ),
             "gmail_promise_thread_attachments": 0,
@@ -405,13 +405,13 @@ _S03 = Scenario(
             "ph_last_active_at": "2026-06-02T16:00:00Z",
         },
         "notion": {
-            "notion_msa_title": "Globex MSA — Seat Billing Terms",
+            "notion_msa_title": "Globex MSA - Seat Billing Terms",
             "notion_msa_body": (
                 "Seat overage billed at contract rate * overage_count, prorated monthly. "
                 "Side letters or AE-issued promises must be reflected as opportunity "
                 "amendments in Salesforce before being honored by billing automation."
             ),
-            "notion_runbook_title": "Off-contract AE promises — 2026 RevOps SOP",
+            "notion_runbook_title": "Off-contract AE promises - 2026 RevOps SOP",
             "notion_runbook_body": (
                 "If a Gmail/Slack AE promise exists but no SF amendment was filed, the "
                 "promise still binds the company (good-faith reliance). Refund or credit "
@@ -423,16 +423,16 @@ _S03 = Scenario(
         },
         "zendesk": {
             "zd_tickets_90d": 1,
-            "zd_last_subject": "Question about seat pricing — closed Jan",
+            "zd_last_subject": "Question about seat pricing - closed Jan",
             "zd_last_status": "solved",
             "zd_last_at": "2026-01-08T11:00:00Z",
             "zd_cancel_tickets_90d": 0,
         },
-        # RED HERRING — a Slack message about a DIFFERENT customer's seat dispute
+        # RED HERRING - a Slack message about a DIFFERENT customer's seat dispute
         "slack": {
             "slack_cs_escalations_90d": 0,
             "slack_last_text_snippet": (
-                "Globex Polymers (different account!) had a seat dispute in Feb — "
+                "Globex Polymers (different account!) had a seat dispute in Feb - "
                 "that one was resolved by adjusting their billing cycle. Unrelated to "
                 "Globex Software."
             ),
@@ -442,7 +442,7 @@ _S03 = Scenario(
     distractor_sources=["slack"],
     catalog=_FULL_CATALOG,
     expected_decision="refund",
-    expected_amount_minor=820000,  # full $8,200 — AE promised up to 220, they used 215
+    expected_amount_minor=820000,  # full $8,200 - AE promised up to 220, they used 215
     expected_min_confidence=0.75,
     expected_findings_keywords=[
         "gmail",
@@ -466,7 +466,7 @@ _S03 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S04 — VAT misconfig: customer is right but only partially
+# S04 - VAT misconfig: customer is right but only partially
 # ──────────────────────────────────────────────────────────────────────
 
 _S04 = Scenario(
@@ -474,7 +474,7 @@ _S04 = Scenario(
     pattern_name="compliance_vat_misconfig",
     trigger_text=(
         "Stripe webhook + slack note from @finance:\n"
-        "\"Italian customer is disputing INV-4521 ($5,400 total) — they say they shouldn't "
+        "\"Italian customer is disputing INV-4521 ($5,400 total) - they say they shouldn't "
         "have been charged VAT because they're a business with a valid IT VAT ID. Avalara "
         "computed VAT anyway. I think they have a point but the disputed amount is "
         "$5,400 which is the WHOLE invoice and that can't be right either.\"\n\n"
@@ -519,10 +519,10 @@ _S04 = Scenario(
             ),
         },
         "notion": {
-            "notion_policy_title": "EU B2B Tax Handling — RevOps SOP v4",
+            "notion_policy_title": "EU B2B Tax Handling - RevOps SOP v4",
             "notion_policy_body": (
                 "EU B2B customers with a VIES-verified VAT ID are subject to reverse-charge "
-                "VAT — we do NOT charge VAT on their invoices. They self-report VAT in their "
+                "VAT - we do NOT charge VAT on their invoices. They self-report VAT in their "
                 "own jurisdiction. Configure tax_exempt=true in the billing platform once VAT "
                 "ID is VIES-verified. If a customer is incorrectly charged VAT, refund the "
                 "VAT portion only (product portion is owed and used)."
@@ -531,7 +531,7 @@ _S04 = Scenario(
         },
         "intercom": {
             "ic_conversations_90d": 2,
-            "ic_last_subject": "VAT question — EU business customer",
+            "ic_last_subject": "VAT question - EU business customer",
             "ic_last_body_snippet": (
                 "Hi, we're an Italian business. Are we supposed to pay VAT to you, or does "
                 "the reverse-charge mechanism apply? Our accountant is asking."
@@ -539,7 +539,7 @@ _S04 = Scenario(
             "ic_last_at": "2026-05-02T09:00:00Z",
             "ic_last_response_snippet": (
                 "Hi! Our Avalara integration handles VAT automatically, so whatever's on "
-                "the invoice is correct. — Riya (CS)"
+                "the invoice is correct. - Riya (CS)"
             ),
             "ic_last_response_at": "2026-05-02T11:30:00Z",
         },
@@ -548,10 +548,10 @@ _S04 = Scenario(
             "ph_logins_30d": 22,
             "ph_distinct_users_active_30d": 18,
         },
-        # RED HERRING — an unrelated Notion page about EU labor law
+        # RED HERRING - an unrelated Notion page about EU labor law
         "linear": {
             "linear_open_issues_90d": 1,
-            "linear_last_issue_title": "EU GDPR right-to-deletion task — unrelated infra cleanup",
+            "linear_last_issue_title": "EU GDPR right-to-deletion task - unrelated infra cleanup",
             "linear_last_issue_status": "in_progress",
         },
     },
@@ -573,7 +573,7 @@ _S04 = Scenario(
         "$5400",
     ],
     notes=(
-        "Customer is RIGHT that VAT shouldn't have applied — but only the $900 VAT "
+        "Customer is RIGHT that VAT shouldn't have applied - but only the $900 VAT "
         "portion, not the full $5,400 invoice. The bug is the tax_exempt flag in "
         "the billing platform, not the engine. The CS response in Intercom was "
         "unhelpfully wrong. Linear GDPR ticket is a red herring."
@@ -582,7 +582,7 @@ _S04 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S05 — Dunning escalation: agent MUST ask_human, runbook conflict
+# S05 - Dunning escalation: agent MUST ask_human, runbook conflict
 # ──────────────────────────────────────────────────────────────────────
 
 _S05 = Scenario(
@@ -593,7 +593,7 @@ _S05 = Scenario(
         "\"Helix Bio is 47 days past due on $11,200 invoice. Standard runbook says "
         "suspend at 30. AE Sarah is in my DMs saying don't suspend, her CTO contact "
         "promised payment this week. CFO assistant pinged me twice asking why "
-        "they're still active. I don't want to make this call solo — please advise.\"\n\n"
+        "they're still active. I don't want to make this call solo - please advise.\"\n\n"
         "Customer: Helix Bio (cus_HelixB, ap@helix-bio.example)\n"
         "Invoice INV-3344 · $11,200 USD · 47 days past due\n"
         "Last collection attempt: day 30 (failed, no retry since)"
@@ -631,7 +631,7 @@ _S05 = Scenario(
         "slack": {
             "slack_cs_escalations_90d": 3,
             "slack_ae_message_snippet": (
-                "(AE Sarah, 3d ago, #cs-execs): 'Their CTO promised payment this week — "
+                "(AE Sarah, 3d ago, #cs-execs): 'Their CTO promised payment this week - "
                 "don't suspend, please. I'll lose this renewal if we cut them off.'"
             ),
             "slack_ae_message_at": "2026-06-13T09:14:00Z",
@@ -643,9 +643,9 @@ _S05 = Scenario(
         },
         "intercom": {
             "ic_conversations_90d": 1,
-            "ic_last_subject": "Re: Invoice INV-3344 — payment reminder",
+            "ic_last_subject": "Re: Invoice INV-3344 - payment reminder",
             "ic_last_body_snippet": (
-                "Sorry, our AP team is backed up. We'll process this week. — Helix AP"
+                "Sorry, our AP team is backed up. We'll process this week. - Helix AP"
             ),
             "ic_last_at": "2026-06-04T14:00:00Z",
             "ic_follow_up_response_count": 0,  # No further response after 12d
@@ -666,7 +666,7 @@ _S05 = Scenario(
             ),
             "notion_runbook_updated_at": "2026-04-10T00:00:00Z",
         },
-        # RED HERRING — a 6-month-old issue
+        # RED HERRING - a 6-month-old issue
         "sentry": {
             "sentry_recent_incidents_90d": 0,
             "sentry_note": "An old 2025-12 incident affected Helix briefly but resolved within hours. Unrelated.",
@@ -698,7 +698,7 @@ _S05 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S06 — Failed payment with subtle new-account-fraud red flags
+# S06 - Failed payment with subtle new-account-fraud red flags
 # ──────────────────────────────────────────────────────────────────────
 
 _S06 = Scenario(
@@ -708,7 +708,7 @@ _S06 = Scenario(
         "Stripe webhook + ops comment from @evan:\n"
         "\"Failed payment on $50k invoice for Quantum Synth, INV-7732. Customer wants us "
         "to retry the charge. Deal was just closed 3 weeks ago by Jordan (new AE). Just "
-        "want to make sure we're not getting hosed before I queue another attempt — feels "
+        "want to make sure we're not getting hosed before I queue another attempt - feels "
         "off but I can't put my finger on why.\"\n\n"
         "Customer: Quantum Synth (cus_QSynth, support@quantum-synth.io)\n"
         "Invoice INV-7732 · $50,000 USD · charge failed 'insufficient_funds' on 2026-06-13"
@@ -771,7 +771,7 @@ _S06 = Scenario(
             "ph_signup_at": "2026-05-22T09:00:00Z",
         },
         "notion": {
-            "notion_runbook_title": "Anti-Fraud SOP — 2026",
+            "notion_runbook_title": "Anti-Fraud SOP - 2026",
             "notion_runbook_body": (
                 "BEFORE retrying ANY charge >$25k where (a) customer-domain age <90 days "
                 "AND (b) product-usage <10 critical events AND (c) the account-owning AE "
@@ -781,7 +781,7 @@ _S06 = Scenario(
             ),
             "notion_runbook_updated_at": "2026-01-15T00:00:00Z",
         },
-        # RED HERRING — a different "Quantum Synth Corp" (legitimate)
+        # RED HERRING - a different "Quantum Synth Corp" (legitimate)
         "hubspot_dup_check": {
             "hs_dup_company_note": (
                 "Separate company 'Quantum Synth Corp' (industrial sensors, 200 employees, "
@@ -806,7 +806,7 @@ _S06 = Scenario(
     ],
     notes=(
         "Three fraud signals stack: new domain (78d), new AE (62d), almost no usage "
-        "(0 critical actions). Notion runbook is explicit — escalate to Fraud Review. "
+        "(0 critical actions). Notion runbook is explicit - escalate to Fraud Review. "
         "The HubSpot dup-check is a red herring (different entity); the agent must "
         "not be fooled by the legitimate company sharing the name."
     ),
@@ -814,7 +814,7 @@ _S06 = Scenario(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S07 — Tiny dispute, auto-accept policy. Agent must NOT over-investigate
+# S07 - Tiny dispute, auto-accept policy. Agent must NOT over-investigate
 # ──────────────────────────────────────────────────────────────────────
 
 _S07 = Scenario(
@@ -822,7 +822,7 @@ _S07 = Scenario(
     pattern_name="thin_low_value_auto_accept",
     trigger_text=(
         "Forwarded Stripe email:\n"
-        "\"Small chargeback came in — $42 on dp_3MqJoeCo, customer says didn't recognize "
+        "\"Small chargeback came in - $42 on dp_3MqJoeCo, customer says didn't recognize "
         "the charge. We get these constantly with self-serve accounts.\"\n\n"
         "Customer: joe@joescoffee-pdx.example (self-serve, no account record)\n"
         "Charge ch_3MqJoeCo · $42 USD · 2026-04-04\n"
@@ -869,7 +869,7 @@ _S07 = Scenario(
             "ph_critical_actions_lifetime": 1,
         },
         "notion": {
-            "notion_policy_title": "Self-Serve Chargeback Policy — 2026",
+            "notion_policy_title": "Self-Serve Chargeback Policy - 2026",
             "notion_policy_body": (
                 "Auto-accept ANY dispute under $100 from self-serve accounts with no CRM "
                 "record, lifetime revenue <$200, and <5 critical actions. Operational cost "
@@ -877,7 +877,7 @@ _S07 = Scenario(
             ),
         },
     },
-    distractor_sources=[],  # this scenario is anti-trap — no red herrings, just don't overthink
+    distractor_sources=[],  # this scenario is anti-trap - no red herrings, just don't overthink
     catalog=_FULL_CATALOG,
     expected_decision="accept",
     expected_amount_minor=4200,
@@ -891,14 +891,14 @@ _S07 = Scenario(
     notes=(
         "Anti-over-investigation test. The right answer is a 30-second clean accept. "
         "Bad agents will waste tools probing CRM/support, find nothing, and still "
-        "conclude — wasting wall-clock. Score this on efficiency too: <3 findings is OK, "
+        "conclude - wasting wall-clock. Score this on efficiency too: <3 findings is OK, "
         "<2 coral_sql calls is great."
     ),
 )
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S08 — Multi-customer migration: charge happened on the orphan
+# S08 - Multi-customer migration: charge happened on the orphan
 # ──────────────────────────────────────────────────────────────────────
 
 _S08 = Scenario(
@@ -910,7 +910,7 @@ _S08 = Scenario(
         "back in March when we migrated them to cus_newSaga. They've been paying on "
         "cus_newSaga for 3 months and now we randomly charged the OLD customer? Why "
         "did that even happen?\"\n\n"
-        "Customer: Saga Robotics — TWO stripe records:\n"
+        "Customer: Saga Robotics - TWO stripe records:\n"
         "  cus_oldSaga (the disputed charge)\n"
         "  cus_newSaga (their active sub since March)\n"
         "Dispute dp_3MqSagaOrph · $3,600 USD · reason: subscription_canceled"
@@ -930,7 +930,7 @@ _S08 = Scenario(
             # Orphan customer (the disputed one)
             "orphan_customer_id": "cus_oldSaga",
             "orphan_subscription_id": "sub_oldSaga",
-            "orphan_subscription_status": "active",  # SHOULD BE canceled — this is the bug
+            "orphan_subscription_status": "active",  # SHOULD BE canceled - this is the bug
             "orphan_subscription_cancel_at_period_end": True,  # was set
             "orphan_subscription_cancel_intended_at": "2026-03-12T00:00:00Z",
             "orphan_last_charge_id": "ch_3MqSagaOrph",
@@ -954,9 +954,9 @@ _S08 = Scenario(
             "ic_migration_thread_at": "2026-03-10T00:00:00Z",
             "ic_migration_thread_subject": "Confirming migration to new billing entity",
             "ic_migration_thread_body": (
-                "Hi Saga — we've migrated your billing to cus_newSaga effective Mar 12. "
+                "Hi Saga - we've migrated your billing to cus_newSaga effective Mar 12. "
                 "Your old subscription will cancel at period end. New invoices will go "
-                "to the same AP contact. — Billing Ops"
+                "to the same AP contact. - Billing Ops"
             ),
         },
         "posthog": {
@@ -971,7 +971,7 @@ _S08 = Scenario(
                 "When an orphan customer charge occurs after a migration: ALWAYS (a) refund "
                 "the orphan charge in full, (b) force-cancel the orphan subscription, (c) "
                 "file an engineering ticket against billing-bug-7172 (the known migration "
-                "cleanup defect). Do NOT fight — the charge is operationally invalid."
+                "cleanup defect). Do NOT fight - the charge is operationally invalid."
             ),
         },
         "linear": {
@@ -980,14 +980,14 @@ _S08 = Scenario(
             "linear_issue_status": "in_progress",
             "linear_issue_assigned_to": "platform-billing-team",
         },
-        # RED HERRING — an unrelated finance ticket from the same period
+        # RED HERRING - an unrelated finance ticket from the same period
         "zendesk": {
             "zd_tickets_90d": 1,
             "zd_last_subject": "Finance question for Saga Foods (different customer!)",
             "zd_last_status": "solved",
             "zd_last_at": "2026-03-20T00:00:00Z",
             "zd_unrelated_company_note": (
-                "Saga Foods (different company) had a billing question in March — totally "
+                "Saga Foods (different company) had a billing question in March - totally "
                 "unrelated to Saga Robotics. Don't conflate."
             ),
         },

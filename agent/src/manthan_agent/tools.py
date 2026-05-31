@@ -6,7 +6,7 @@ type and a `read_only` flag that determines dispatch behavior:
   read_only = True   → run in parallel (asyncio.gather)
   read_only = False  → run serially through an idempotency queue
 
-For step 1 (this file), the Coral tools are MOCK — they return canned
+For step 1 (this file), the Coral tools are MOCK - they return canned
 evidence. Step 3 swaps them for real MCP calls against the Coral binary.
 The agent code doesn't change.
 """
@@ -97,23 +97,23 @@ class ConcludeArgs(BaseModel):
     drafted_actions: list[DraftedAction] = Field(
         default_factory=list,
         description=(
-            "List of DraftedAction objects — one per concrete action the "
+            "List of DraftedAction objects - one per concrete action the "
             "Action Executor should fire after human approval. Draft the "
             "COMPLETE set for this decision_action / case_type (see the "
             "Drafted-action rules in the system prompt). Each item MUST "
             "include kind, payload, and description. Empty / partial / "
             "TODO payloads are rejected. Pull identifiers (charge_id, "
             "dispute_id, customer_email, hubspot_company_id) from the "
-            "case trigger_payload — do NOT leave them blank.\n\n"
+            "case trigger_payload - do NOT leave them blank.\n\n"
             "Worked examples (use as exact templates, swap in real ids):\n"
             '  {"kind": "stripe_refund", "payload": {"charge_id": "ch_xxx", '
             '"amount_minor": 56000, "currency": "usd", "reason": '
             '"documented_incident_pro_rata"}, "description": "Refund $560 '
-            'against ch_xxx — 2/30 × $8,400 pro-rata", "reversibility": '
+            'against ch_xxx - 2/30 × $8,400 pro-rata", "reversibility": '
             '"reversible"}\n'
             '  {"kind": "stripe_dispute_response", "payload": {"dispute_id": '
             '"du_xxx", "submit": true, "evidence": {"uncategorized_text": '
-            '"Pro-rata credit issued — conceding remainder."}}, '
+            '"Pro-rata credit issued - conceding remainder."}}, '
             '"description": "Concede dispute du_xxx", "reversibility": '
             '"partial"}\n'
             '  {"kind": "customer_email", "payload": {"to": '
@@ -122,7 +122,7 @@ class ConcludeArgs(BaseModel):
             '"description": "Email customer about credit", "reversibility": '
             '"irreversible"}\n'
             '  {"kind": "hubspot_note", "payload": {"company_id": '
-            '"324968425171", "body_html": "<p>APR-xxx — partial_credit '
+            '"324968425171", "body_html": "<p>APR-xxx - partial_credit '
             '($560)...</p>"}, "description": "Log resolution to HubSpot", '
             '"reversibility": "reversible"}\n'
             '  {"kind": "slack_brief", "payload": {"channel": "#billing-ops", '
@@ -231,7 +231,7 @@ def tool_by_name(name: str) -> ToolDef | None:
 def openai_schema() -> list[dict[str, Any]]:
     """Render all tools as OpenAI-shape function definitions.
 
-    Uses `strict: true` per the 2026 production pattern — the model
+    Uses `strict: true` per the 2026 production pattern - the model
     cannot emit a malformed call. Combined with the
     `structured-outputs-2025-11-13` header on the client, this gives
     us constrained decoding at the token level.
@@ -289,7 +289,7 @@ MockHandler = Callable[[dict[str, Any], list[Evidence]], ToolResult]
 # ----------------------------------------------------------------------
 # Source-aware mock fixture for CASE-SMK-001 / CASE-INSP-001 (TechCorp).
 #
-# A wider JOIN should surface more evidence — that's Coral's whole moat.
+# A wider JOIN should surface more evidence - that's Coral's whole moat.
 # The naive previous mock returned the same 8 fields regardless of query
 # shape, giving the model no incentive to JOIN. This mock parses the SQL
 # string for `<source>.<table>` references and unions the corresponding
@@ -376,7 +376,7 @@ def _sources_in_query(q: str) -> set[str]:
     }
 
 
-# Always-present case header — every query at minimum identifies the
+# Always-present case header - every query at minimum identifies the
 # case under investigation.
 _DISPUTE_HEADER: dict[str, Any] = {
     "dispute_id": "dp_mock_1Qxxxx",
@@ -437,7 +437,7 @@ _FACTS_BY_SOURCE: dict[str, dict[str, Any]] = {
         "ic_last_subject": "Plan pricing question",
         "ic_last_body_snippet": (
             "We are reviewing plans and may downgrade. Can you share Standard "
-            "tier pricing? Not cancelling — just evaluating."
+            "tier pricing? Not cancelling - just evaluating."
         ),
         "ic_last_at": "2026-04-29T15:00:00Z",
         "ic_cancel_intent_mentions_90d": 1,
@@ -454,13 +454,13 @@ _FACTS_BY_SOURCE: dict[str, dict[str, Any]] = {
     "slack": {
         "slack_cs_escalations_90d": 1,
         "slack_last_text_snippet": (
-            "TechCorp asked about downgrade options on Apr 29 — Amelia handled, "
+            "TechCorp asked about downgrade options on Apr 29 - Amelia handled, "
             "no cancel request followed."
         ),
         "slack_last_ts": "2026-04-29T16:10:00Z",
     },
     "notion": {
-        "notion_refunds_title": "Refunds & Disputes — 2026 SOP",
+        "notion_refunds_title": "Refunds & Disputes - 2026 SOP",
         "notion_refunds_body": (
             "Refunds are not issued after 30 days from charge except for "
             "duplicate billing or proven service outage. For chargeback "
@@ -495,7 +495,7 @@ def _mock_coral_sql_duckdb(
     sources_used = sorted(_sources_in_query(query))
 
     if err is not None:
-        # SQL error — record an Evidence (so the agent sees the query
+        # SQL error - record an Evidence (so the agent sees the query
         # was attempted) but mark the result as error.
         ev = Evidence(
             source="coral_error",
@@ -520,7 +520,7 @@ def _mock_coral_sql_duckdb(
             evidence=[ev],
         )
 
-    # Success — package the rows into one Evidence.
+    # Success - package the rows into one Evidence.
     is_join = len(sources_used) > 1
     source_label = "coral_join" if is_join else (sources_used[0] if sources_used else "coral")
     table_label = "+".join(sources_used) if is_join else (sources_used[0] if sources_used else "(none)")
@@ -564,7 +564,7 @@ def _mock_coral_sql(args: dict[str, Any], evidence_acc: list[Evidence]) -> ToolR
 
     1. If a DuckDB connection is bound via set_scenario_world(duckdb_con=...),
        execute the agent's SQL against it for real. Volume, JOINs, WHERE
-       filters, aggregates — the agent gets back actual result-sets and
+       filters, aggregates - the agent gets back actual result-sets and
        has to navigate them.
     2. Otherwise, fall back to the legacy source-aware bundle path: parse
        which `<source>.<table>` references appear in the SQL, union the
@@ -654,7 +654,7 @@ def _mock_coral_list_catalog(args: dict[str, Any], _ev: list[Evidence]) -> ToolR
         status="ok",
         data={
             "schemas": schemas,
-            "note": "MOCK CATALOG — real Coral wires in step 3.",
+            "note": "MOCK CATALOG - real Coral wires in step 3.",
         },
     )
 
@@ -686,7 +686,7 @@ def _mock_coral_describe(args: dict[str, Any], _ev: list[Evidence]) -> ToolResul
                 {"name": "status",   "type": "string"},
                 {"name": "created",  "type": "timestamp"},
             ],
-            "note": "MOCK SCHEMA — flat fallback.",
+            "note": "MOCK SCHEMA - flat fallback.",
         },
     )
 
@@ -699,12 +699,12 @@ MOCK_HANDLERS: dict[str, MockHandler] = {
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Real Coral handlers (async — called when get_active_coral_session()
+# Real Coral handlers (async - called when get_active_coral_session()
 # returns a live ClientSession; otherwise mocks take over).
 # ──────────────────────────────────────────────────────────────────────
 
 
-import json  # noqa: E402 — defer to keep imports grouped
+import json  # noqa: E402 - defer to keep imports grouped
 
 
 def _extract_text(call_result: Any) -> str:
@@ -720,7 +720,7 @@ async def _real_coral_sql(
 ) -> ToolResult:
     session = get_active_coral_session()
     if session is None:
-        # Defensive — caller should only invoke this when session is set
+        # Defensive - caller should only invoke this when session is set
         return _mock_coral_sql(args, evidence_acc)
 
     query = args.get("query", "<unknown>")
@@ -916,7 +916,7 @@ class ToolExecutor:
     """Dispatch a batch of tool calls.
 
     Read-only tools run in parallel via asyncio.gather. Write tools
-    (none of the v0 tools are external writes — `record_finding`,
+    (none of the v0 tools are external writes - `record_finding`,
     `ask_human`, `conclude` are pure orchestration) run serially.
     """
 
@@ -951,7 +951,7 @@ class ToolExecutor:
 
         # Serial writes (none of these are external in v0; this scaffold
         # is what the Action Executor will eventually become for real
-        # writes like Stripe refunds — those go through a separate
+        # writes like Stripe refunds - those go through a separate
         # process per the locked architecture).
         for i, c in writes:
             results[i] = await self._invoke(c)
@@ -961,7 +961,7 @@ class ToolExecutor:
     async def _invoke(self, call: ToolCall) -> ToolResult:
         # Real Coral wins when a session is bound. Falls through to mock
         # otherwise. Non-coral tools (record_finding, ask_human, conclude)
-        # are orchestration — handled by the loop directly.
+        # are orchestration - handled by the loop directly.
         if get_active_coral_session() is not None and call.name in REAL_CORAL_HANDLERS:
             res = await REAL_CORAL_HANDLERS[call.name](call.arguments, self.evidence)
             return res.model_copy(update={"tool_call_id": call.id})

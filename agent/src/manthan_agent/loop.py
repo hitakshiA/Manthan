@@ -48,7 +48,7 @@ _ = DraftedAction
 
 @dataclass
 class Budget:
-    """Telemetry only — caps removed at user request.
+    """Telemetry only - caps removed at user request.
 
     The agent self-terminates on confidence or saturation. Steps and
     USD are tracked for visibility but never trigger termination.
@@ -102,7 +102,7 @@ async def run_case(
 
     # Findings accumulate via record_finding tool calls.
     # Drafted actions are emitted only at conclude() time, packed inside
-    # the Brief — they don't accumulate during the loop.
+    # the Brief - they don't accumulate during the loop.
     findings: list[Finding] = []
 
     # Open the case
@@ -269,7 +269,7 @@ async def run_case(
             )
 
         # Check for terminal tools (ask_human / conclude) FIRST. These
-        # don't go through the executor — the loop handles them directly.
+        # don't go through the executor - the loop handles them directly.
         for tc in tool_calls:
             tool = tool_by_name(tc.name)
             if tool is None:

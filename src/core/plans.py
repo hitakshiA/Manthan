@@ -1,4 +1,4 @@
-"""Plan mode / approval gate — the agent's structured plan primitive.
+"""Plan mode / approval gate - the agent's structured plan primitive.
 
 When the master agent is about to do something expensive or
 consequential (run 20 SQL queries, materialize a large dataset, make
@@ -10,19 +10,19 @@ the interpretation is sound. This module backs that flow.
 
 A plan is a structured snapshot of the agent's reasoning:
 
-- ``user_question`` — exactly what the user asked (verbatim)
-- ``interpretation`` — agent's plain-language restatement of what
+- ``user_question`` - exactly what the user asked (verbatim)
+- ``interpretation`` - agent's plain-language restatement of what
   the user is really asking for
-- ``citations`` — specific DCD columns / computed_metrics /
+- ``citations`` - specific DCD columns / computed_metrics /
   agent_instructions the interpretation relies on. If the agent
   misread a column's role or aggregation, this is where it shows
-- ``steps`` — the concrete tool calls the agent intends to run, in
+- ``steps`` - the concrete tool calls the agent intends to run, in
   order, with parameters. Each step declares its tool, arguments,
   a one-line description, and optional ``depends_on`` edges
-- ``expected_cost`` — a rough estimate (number of tool calls,
+- ``expected_cost`` - a rough estimate (number of tool calls,
   number of LLM calls) so the user can see how much work they're
   approving
-- ``risks`` — caveats the agent is aware of (e.g. "this query scans
+- ``risks`` - caveats the agent is aware of (e.g. "this query scans
   the whole Gold table, no index hint available")
 
 ## State machine
@@ -49,7 +49,7 @@ tool calls finish.
 
 ## Why Layer 1 hosts this rather than Layer 2
 
-Because the approval flow is stateful and long-lived — a plan can
+Because the approval flow is stateful and long-lived - a plan can
 sit in ``pending`` for minutes while the user reads it. Layer 1's
 HTTP API gives every Layer 2 consumer the same blocking wait
 semantics for free (``POST /plans/{id}/wait``), and the SQLite audit
@@ -134,7 +134,7 @@ class PlanStep:
 
 @dataclass
 class Plan:
-    """The full plan object — what the agent proposes and the user approves."""
+    """The full plan object - what the agent proposes and the user approves."""
 
     id: str
     session_id: str

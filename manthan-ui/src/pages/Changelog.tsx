@@ -1,5 +1,5 @@
 /**
- * Changelog — release notes for Manthan.
+ * Changelog - release notes for Manthan.
  * Editorial timeline layout, newest first. Each entry has a date, a
  * version, a one-line headline, and bulleted items grouped by Added /
  * Changed / Fixed.

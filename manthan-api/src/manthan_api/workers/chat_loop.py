@@ -8,12 +8,12 @@ brief picks up the same thread with the same tool surface and can:
   2. Record new findings that join the original ones.
   3. Amend the brief's decision (action / amount / rationale / confidence)
      and regenerate drafted actions when the decision changes.
-  4. Reply directly to the operator — terminal step.
+  4. Reply directly to the operator - terminal step.
 
 It's the same ReAct/Reflexion loop as the initial investigation, just
 with `amend_brief` + `reply` instead of `conclude` + `ask_human`. The
 operator is talking to the agent that produced the brief, not a generic
-chatbot — full case context + Coral access + write authority.
+chatbot - full case context + Coral access + write authority.
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ def chat_tools_schema() -> list[dict[str, Any]]:
     """Tools available to the chat agent in a single response.
 
     Read tools (coral_*) run in parallel. Write tools (record_finding,
-    amend_brief, reply) run serially. `reply` is terminal — calling it
+    amend_brief, reply) run serially. `reply` is terminal - calling it
     ends the loop and posts the text as an agent_reply event.
     """
     tools: list[dict[str, Any]] = []
@@ -200,19 +200,19 @@ def chat_tools_schema() -> list[dict[str, Any]]:
 
 
 CHAT_SYSTEM_PROMPT = """\
-You are Manthan, a billing-ops investigator. You already drafted a case brief earlier in this thread. The operator (a Director of Revenue Accounting or similar) is following up — pushing back on the decision, asking you to re-check a specific source, or requesting a change to the action.
+You are Manthan, a billing-ops investigator. You already drafted a case brief earlier in this thread. The operator (a Director of Revenue Accounting or similar) is following up - pushing back on the decision, asking you to re-check a specific source, or requesting a change to the action.
 
-You are NOT a chatbot. You are the same agent that wrote the brief, with the same tools (Coral SQL access across Stripe/HubSpot/Salesforce/Intercom/Zendesk/Slack/Notion/etc.). When the operator asks you to verify something, USE THE TOOLS — don't just claim you can't or guess from memory.
+You are NOT a chatbot. You are the same agent that wrote the brief, with the same tools (Coral SQL access across Stripe/HubSpot/Salesforce/Intercom/Zendesk/Slack/Notion/etc.). When the operator asks you to verify something, USE THE TOOLS - don't just claim you can't or guess from memory.
 
 How to handle a follow-up:
 
 1. Re-read the case context (trigger, findings, decision) carried in the user message.
-2. If the operator asks "are you sure?", "double-check X", or "look at Y" — actually call coral_sql to re-verify. Don't say "I already checked" without re-running the query.
+2. If the operator asks "are you sure?", "double-check X", or "look at Y" - actually call coral_sql to re-verify. Don't say "I already checked" without re-running the query.
 3. If new evidence changes your answer, call record_finding to capture it, then call amend_brief with the updated decision.
-4. If the operator disagrees but provides no new evidence, defend your call with the specific findings (cite them as [1], [2]) — don't fold without reason.
+4. If the operator disagrees but provides no new evidence, defend your call with the specific findings (cite them as [1], [2]) - don't fold without reason.
 5. Always end your turn by calling `reply` with 2-6 sentences for the operator.
 
-Use forbidden engineering vocabulary sparingly when explaining to the operator — they understand customers, charges, refunds, support tickets, not schemas/tables/queries.
+Use forbidden engineering vocabulary sparingly when explaining to the operator - they understand customers, charges, refunds, support tickets, not schemas/tables/queries.
 
 Budget: do at most 4 tool round-trips before replying. If you can answer from existing findings, reply directly.
 """
@@ -486,9 +486,9 @@ async def run_chat_followup(
                         })
 
                 if not replied:
-                    # Out of rounds — synth a fallback so the operator isn't
+                    # Out of rounds - synth a fallback so the operator isn't
                     # left hanging.
-                    log.warning("chat hit MAX_CHAT_ROUNDS without reply — emitting fallback")
+                    log.warning("chat hit MAX_CHAT_ROUNDS without reply - emitting fallback")
                     await append_event(
                         org_id, thread_id, "agent_reply", "agent",
                         {
@@ -513,7 +513,7 @@ async def run_chat_followup(
             org_id, thread_id, "agent_reply", "agent",
             {
                 "text": "Something broke on my side mid-investigation. Try again, "
-                        "or rephrase the question — and check the activity log.",
+                        "or rephrase the question - and check the activity log.",
                 "in_reply_to": "human_followup",
                 "fallback": True,
             },
@@ -599,7 +599,7 @@ async def _build_context_block(
     ) or "(no actions drafted)"
 
     return f"""\
-=== CASE CONTEXT (do not respond — this is your memory) ===
+=== CASE CONTEXT (do not respond - this is your memory) ===
 
 Case: {short_id}  Customer: {customer}  Amount: ${(amount or 0) / 100:,.2f} {currency.upper()}
 
@@ -624,7 +624,7 @@ The operator's question follows. Use coral_sql to re-verify if asked. End with r
 
 
 async def _build_chat_history(org_id: UUID, thread_id: UUID) -> list[dict[str, Any]]:
-    """Recent chat turns (human_followup ↔ agent_reply pairs) — limited to last 6 for context."""
+    """Recent chat turns (human_followup ↔ agent_reply pairs) - limited to last 6 for context."""
     async with get_pool().acquire() as conn:
         rows = await conn.fetch(
             """
@@ -635,7 +635,7 @@ async def _build_chat_history(org_id: UUID, thread_id: UUID) -> list[dict[str, A
             """,
             org_id, thread_id,
         )
-    # Exclude the very last human_followup — it's the message we're about
+    # Exclude the very last human_followup - it's the message we're about
     # to act on, passed separately.
     if rows and rows[-1]["type"] == "human_followup":
         rows = rows[:-1]
@@ -676,7 +676,7 @@ async def _apply_amend(
         elif col == "decision_confidence":
             sets.append(f"decision_confidence = ${len(params) + 1}")
             params.append(val)
-        # decision_rationale lives in events, not cases — UI reads brief
+        # decision_rationale lives in events, not cases - UI reads brief
 
     if sets:
         params.append(case_id)
@@ -695,7 +695,7 @@ async def _apply_amend(
             )
         if row is None:
             return
-        # Wipe drafted actions (preserve approved/executed — those are
+        # Wipe drafted actions (preserve approved/executed - those are
         # historic). New synth happens below.
         async with get_pool().acquire() as conn:
             await conn.execute(

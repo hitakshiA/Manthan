@@ -6,7 +6,7 @@ The scenario world is the brutal-data structure:
 
 For each source we CREATE SCHEMA, for each table CREATE TABLE with types
 inferred from the rows, and INSERT every row. The agent then runs its
-SQL against the resulting connection — same dialect as real Coral,
+SQL against the resulting connection - same dialect as real Coral,
 real cross-source JOINs, real volume.
 
 Why DuckDB and not SQLite: schema namespacing (`stripe.disputes` rather
@@ -79,7 +79,7 @@ def build_world(world: dict[str, dict[str, list[dict[str, Any]]]]) -> duckdb.Duc
         for table_name, rows in tables.items():
             cols = _column_set(rows) if rows else []
             if not cols:
-                # Empty table — skip creation; the agent's JOIN against
+                # Empty table - skip creation; the agent's JOIN against
                 # a missing table will surface as a SQL error, which is
                 # itself useful evidence of absence.
                 continue

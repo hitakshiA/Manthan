@@ -1,7 +1,7 @@
 """Cross-case agent chat.
 
 Different from per-case chat (workers/chat_loop). This is the "talk to
-the agent across all the cases" surface — answers questions like
+the agent across all the cases" surface - answers questions like
 "which customers had refunds delayed past 5 days?" or "MRR down 4%, why?"
 
 For v1 it's a stateless single-shot LLM call seeded with recent cases.
@@ -44,7 +44,7 @@ You are Manthan, a billing operations AI working alongside a Director of Revenue
 You're answering a question about the operator's billing cases. The CONTEXT block below has the last 20 cases this workspace has seen with their status, customer, decision, and amount. Use it to answer.
 
 Rules:
-- If the question can be answered from the context, answer it directly and cite the case short_ids inline (e.g. "QLO-198835 was a $9k chargeback against Quill Logistics — fight recommended").
+- If the question can be answered from the context, answer it directly and cite the case short_ids inline (e.g. "QLO-198835 was a $9k chargeback against Quill Logistics - fight recommended").
 - If the question cannot be answered from the context, say so honestly. Don't make up data.
 - Keep replies 2-5 sentences. The operator skims.
 - No markdown beyond inline `code` for ids. No bullet points unless answering a list question.
@@ -90,7 +90,7 @@ async def chat(
 
     context_lines = []
     for r in rows:
-        amt = f"${(r['amount_minor'] or 0) / 100:,.0f}" if r["amount_minor"] else "—"
+        amt = f"${(r['amount_minor'] or 0) / 100:,.0f}" if r["amount_minor"] else "-"
         dec = r["decision_action"] or "pending"
         dec_amt = (
             f"${(r['decision_amount_minor']) / 100:,.0f}"
@@ -104,7 +104,7 @@ async def chat(
     context_block = "\n".join(context_lines)
 
     user_payload = (
-        f"CONTEXT — last 20 cases for this workspace:\n{context_block}\n\n"
+        f"CONTEXT - last 20 cases for this workspace:\n{context_block}\n\n"
         f"OPERATOR ASKS: {body.message}"
     )
 

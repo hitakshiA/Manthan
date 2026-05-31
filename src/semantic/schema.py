@@ -1,6 +1,6 @@
 """Pydantic schema for the Data Context Document (DCD).
 
-The DCD is Manthan's semantic contract with downstream analysis agents —
+The DCD is Manthan's semantic contract with downstream analysis agents -
 a YAML artifact encoding everything about a dataset: columns, metrics,
 temporal grain, PII flags, quality caveats, verified queries, and agent
 instructions. This module defines the strict shape of that document so
@@ -95,8 +95,8 @@ class DcdColumn(BaseModel):
         default=False,
         description=(
             "If true, this column contains personally-identifiable "
-            "information. Agents must aggregate or count — never "
-            "enumerate — values from this column."
+            "information. Agents must aggregate or count - never "
+            "enumerate - values from this column."
         ),
     )
     aggregation: str | None = None
@@ -146,7 +146,7 @@ class DcdComputedMetric(BaseModel):
 
 
 class DcdMetric(BaseModel):
-    """A governed, named business metric — the atomic unit of trust.
+    """A governed, named business metric - the atomic unit of trust.
 
     Unlike :class:`DcdComputedMetric` (whose ``formula`` is plain text
     and never executed), a ``DcdMetric`` is a prescriptive contract:
@@ -159,17 +159,17 @@ class DcdMetric(BaseModel):
 
     Filter semantics: when ``filter`` is set (e.g. ``status =
     'delivered'``), it is ALWAYS applied. An agent cannot produce
-    "revenue" without the filter — the validator rejects such queries.
+    "revenue" without the filter - the validator rejects such queries.
 
     Aggregation semantics classify whether the metric can be SUMmed
     across slices without producing nonsense:
 
-        * ``additive`` — SUM across any combination of dimensions is
+        * ``additive`` - SUM across any combination of dimensions is
           valid. Typical of counts, totals, row-level monetary fields.
-        * ``ratio_unsafe`` — the metric is a ratio or average. SUMming
+        * ``ratio_unsafe`` - the metric is a ratio or average. SUMming
           across slices is WRONG; the ratio must be re-computed from
           its numerator and denominator.
-        * ``non_additive`` — the metric is distinct-count-like or uses
+        * ``non_additive`` - the metric is distinct-count-like or uses
           HyperLogLog; SUM is wrong for a different reason (the
           distinct space collapses).
 
@@ -286,7 +286,7 @@ class DcdRollup(BaseModel):
 class DcdEntity(BaseModel):
     """Stable, business-facing entity wrapper over physical tables.
 
-    The entity is the agent's — and exec's — handle on a dataset.
+    The entity is the agent's - and exec's - handle on a dataset.
     The ``slug`` is stable across re-ingests; the ``physical_table``
     pointer rotates atomically when new data arrives. User-authored
     customizations (``name``, ``metrics``, column ``label`` /

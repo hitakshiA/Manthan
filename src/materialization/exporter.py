@@ -7,7 +7,7 @@ serializes the DCD to ``manthan-context.yaml``, and writes the
 verified-queries payload to ``verified-queries.json``.
 
 The resulting directory is the atomic, portable unit of a Manthan
-dataset per SPEC §3.3 — copy it anywhere and any DuckDB process can
+dataset per SPEC §3.3 - copy it anywhere and any DuckDB process can
 reconstruct the agent-queryable view.
 """
 

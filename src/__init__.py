@@ -1,4 +1,4 @@
-"""Manthan — Autonomous Data Analyst Platform.
+"""Manthan - Autonomous Data Analyst Platform.
 
 A 3-layer system: data pipeline + semantic layer (Layer 1), autonomous
 LLM agent (Layer 2), and frontend rendering (Layer 3). Upload any

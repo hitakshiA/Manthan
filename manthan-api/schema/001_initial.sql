@@ -34,7 +34,7 @@ CREATE TABLE members (
 CREATE INDEX idx_members_clerk ON members(clerk_user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- Event log — single source of truth
+-- Event log - single source of truth
 -- Every case is a thread. Events accumulate. State is derived.
 -- ──────────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,7 @@ CREATE INDEX idx_events_thread     ON events(org_id, thread_id, seq);
 CREATE INDEX idx_events_type       ON events(org_id, type, created_at DESC);
 CREATE INDEX idx_events_created    ON events(org_id, created_at DESC);
 
--- Notify channel — workers LISTEN to react to new triggers.
+-- Notify channel - workers LISTEN to react to new triggers.
 CREATE OR REPLACE FUNCTION notify_event() RETURNS trigger AS $$
 BEGIN
     PERFORM pg_notify(
@@ -87,7 +87,7 @@ CREATE TABLE cases (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     org_id              UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
     thread_id           UUID UNIQUE NOT NULL,
-    short_id            TEXT NOT NULL,        -- "CASE-4821" — display id
+    short_id            TEXT NOT NULL,        -- "CASE-4821" - display id
     status              TEXT NOT NULL DEFAULT 'investigating',
     -- investigating | awaiting_approval | acting | resolved | errored | escalated
     trigger_surface     TEXT NOT NULL,
@@ -212,7 +212,7 @@ CREATE INDEX idx_policies_active ON policies(org_id) WHERE activated_at IS NOT N
 -- );
 -- CREATE INDEX idx_memory_semantic_org ON memory_semantic(org_id, kind);
 
--- Procedural memory — YAML skills the agent loads at runtime.
+-- Procedural memory - YAML skills the agent loads at runtime.
 CREATE TABLE memory_procedural (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     org_id          UUID NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,

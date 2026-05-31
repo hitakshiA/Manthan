@@ -1,5 +1,5 @@
 /**
- * DraftAudit — Audit log, editorial direction (DRAFT).
+ * DraftAudit - Audit log, editorial direction (DRAFT).
  *
  * Scales the landing's tiny AuditVisual up to a full-page surface that
  * lives inside the existing AppShell. Vocabulary borrowed 1:1 from
@@ -28,7 +28,7 @@
  *   │ every action signed & exportable to your SIEM · live│  FOOTER
  *   └─────────────────────────────────────────────────────┘
  *
- * Throwaway draft — route /app/draft-audit.
+ * Throwaway draft - route /app/draft-audit.
  */
 
 import { useMemo, useState } from "react";
@@ -36,7 +36,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { SourceIcon } from "@/components/ui/SourceIcon";
 
 // ──────────────────────────────────────────────────────────────────────
-// Mock data — twelve events grouped into two days.
+// Mock data - twelve events grouped into two days.
 // Mix of "you" and "manthan" actors. Real-sounding verbs + objects.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -47,13 +47,13 @@ interface AuditEvent {
   who: Actor;
   /** Lowercase verb phrase, e.g. "refunded", "posted brief to". */
   verb: string;
-  /** The "object" — case id / customer / channel / amount. */
+  /** The "object" - case id / customer / channel / amount. */
   object: string;
   /** Source the action was routed through (matches SourceIcon ids). */
   src: string;
   /** Human-readable "via" suffix shown after the source name. */
   refLabel: string;
-  /** "6 min ago" / "11:42 UTC" — already formatted. */
+  /** "6 min ago" / "11:42 UTC" - already formatted. */
   ago: string;
 }
 
@@ -200,7 +200,7 @@ type Filter = "all" | "you" | "manthan";
 export default function DraftAudit() {
   const [filter, setFilter] = useState<Filter>("all");
 
-  // Counts are stable — derived once from the static mock.
+  // Counts are stable - derived once from the static mock.
   const counts = useMemo(() => {
     const all = TOTAL_ALL;
     let you = 0;
@@ -259,7 +259,7 @@ export default function DraftAudit() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// HeaderStrip — surface identity. Always present.
+// HeaderStrip - surface identity. Always present.
 // ──────────────────────────────────────────────────────────────────────
 
 function HeaderStrip({ todayCount }: { todayCount: number }) {
@@ -349,7 +349,7 @@ function HeaderStrip({ todayCount }: { todayCount: number }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Canvas — title block, filter row, day-grouped feed.
+// Canvas - title block, filter row, day-grouped feed.
 // ──────────────────────────────────────────────────────────────────────
 
 function AuditCanvas({
@@ -393,7 +393,7 @@ function AuditCanvas({
         </p>
       </div>
 
-      {/* Filter row — eyebrow on the left, pills on the right */}
+      {/* Filter row - eyebrow on the left, pills on the right */}
       <div
         className="flex items-center pb-5"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
@@ -412,7 +412,7 @@ function AuditCanvas({
         </div>
       </div>
 
-      {/* Activity feed — one container, day-grouped */}
+      {/* Activity feed - one container, day-grouped */}
       <div
         className="relative"
         style={{
@@ -450,7 +450,7 @@ function AuditCanvas({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Day section — Spectral italic date heading + events list.
+// Day section - Spectral italic date heading + events list.
 // ──────────────────────────────────────────────────────────────────────
 
 function DaySection({ day, isFirst }: { day: AuditDay; isFirst: boolean }) {
@@ -509,7 +509,7 @@ function DaySection({ day, isFirst }: { day: AuditDay; isFirst: boolean }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// EventRow — avatar dot + text line + via line.
+// EventRow - avatar dot + text line + via line.
 // ──────────────────────────────────────────────────────────────────────
 
 function EventRow({
@@ -526,7 +526,7 @@ function EventRow({
     : "rgba(86, 207, 131, 0.22)";
 
   // Mono-style object text whenever it looks like an ID, amount, or
-  // case-ref. Pure heuristic — keeps the typography honest.
+  // case-ref. Pure heuristic - keeps the typography honest.
   const objectIsCode =
     /^\$/.test(event.object) ||
     /^(CASE\s|CSE-|W7R-|BIL-|du_|ch_|evt_|#)/.test(event.object) ||
@@ -544,7 +544,7 @@ function EventRow({
         gap: 16,
       }}
     >
-      {/* Avatar dot — colored by actor, ringed if newest */}
+      {/* Avatar dot - colored by actor, ringed if newest */}
       <span
         className="shrink-0 inline-flex items-center justify-center rounded-full"
         aria-hidden
@@ -591,7 +591,7 @@ function EventRow({
           <span style={{ color: "rgba(255,255,255,0.50)" }}>{event.ago}</span>
         </div>
 
-        {/* "via" line — small mono, with the source icon */}
+        {/* "via" line - small mono, with the source icon */}
         <div
           className="mt-2.5 inline-flex items-center gap-2 font-mono text-[12.5px] tabular-nums"
           style={{
@@ -630,7 +630,7 @@ function EventRow({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// FilterPill — quiet, hairline-only outline. Soft green tint when active.
+// FilterPill - quiet, hairline-only outline. Soft green tint when active.
 // ──────────────────────────────────────────────────────────────────────
 
 function FilterPill({
@@ -685,7 +685,7 @@ function FilterPill({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// EmptyDay — when a filter zeroes everything out.
+// EmptyDay - when a filter zeroes everything out.
 // ──────────────────────────────────────────────────────────────────────
 
 function EmptyDay({ filter }: { filter: Filter }) {
@@ -716,7 +716,7 @@ function EmptyDay({ filter }: { filter: Filter }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// StatusStrip — wall-clock counterpart to the memo's footer.
+// StatusStrip - wall-clock counterpart to the memo's footer.
 // ──────────────────────────────────────────────────────────────────────
 
 function StatusStrip() {
@@ -758,7 +758,7 @@ function StatusStrip() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Eyebrow — mirrors WorkspaceMemo's primitive 1:1.
+// Eyebrow - mirrors WorkspaceMemo's primitive 1:1.
 // ──────────────────────────────────────────────────────────────────────
 
 function Eyebrow({
@@ -785,7 +785,7 @@ function Eyebrow({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Pretty source labels — keeps brand casing where we have a logo;
+// Pretty source labels - keeps brand casing where we have a logo;
 // falls back to a hand-written label for our internal surfaces.
 // ──────────────────────────────────────────────────────────────────────
 

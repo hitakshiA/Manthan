@@ -1,5 +1,5 @@
 /**
- * Approvals — cross-case queue. Editorial ledger form, not a card grid.
+ * Approvals - cross-case queue. Editorial ledger form, not a card grid.
  *
  * Each row is a single hairline-separated line: customer, decision +
  * amount as inline text, drafted-action count as a tabular numeral,
@@ -63,9 +63,9 @@ export default function Approvals() {
       const built: PendingCase[] = cases.map((c, i) => ({
         caseId: c.id,
         shortId: c.short_id,
-        customer: c.customer_ref ?? "—",
+        customer: c.customer_ref ?? "-",
         triggerSurface: c.trigger_surface,
-        decision: c.decision_action ?? "—",
+        decision: c.decision_action ?? "-",
         amountLabel: formatAmount(
           c.decision_amount_minor ?? c.amount_minor,
           c.currency ?? "usd",

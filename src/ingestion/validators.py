@@ -1,8 +1,8 @@
 """File-level validation for Bronze-stage ingestion.
 
 These checks run before any loader touches a file. They catch the obvious
-failure modes — missing file, directory instead of file, zero-byte file,
-oversized upload — and raise :class:`IngestionError` with a clear message
+failure modes - missing file, directory instead of file, zero-byte file,
+oversized upload - and raise :class:`IngestionError` with a clear message
 the API layer can surface to the user.
 """
 

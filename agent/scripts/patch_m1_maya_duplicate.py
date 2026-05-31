@@ -1,4 +1,4 @@
-"""Patch M1R — Maya Patel small autonomous duplicate-charge refund.
+"""Patch M1R - Maya Patel small autonomous duplicate-charge refund.
 
 Seeds evidence across all 11 connected sources so the Manthan agent
 investigating Maya's "I was charged twice" email can corroborate the
@@ -6,42 +6,42 @@ duplicate-charge root cause (OUR webhook handler retry bug), confirm
 Maya is in good standing, match the autonomous "small-refund-auto"
 policy, and refund + auto-reply without a human in the loop:
 
-  Stripe       — Test-mode customer keyed on hitakshi220@gmail.com.
+  Stripe       - Test-mode customer keyed on hitakshi220@gmail.com.
                  Caldera Pro subscription at $89/mo. TWO successful
                  $89 charges on 2026-05-22 four minutes apart:
                  charge A 14:21:03 UTC, charge B 14:25:09 UTC (the
                  duplicate). Both tagged
                  metadata.webhook_retry_chain=evt_xxx_retry. Zero
-                 disputes — this is NOT a chargeback yet, just a
+                 disputes - this is NOT a chargeback yet, just a
                  customer email.
-  Salesforce   — "Maya Patel Design" account with the same Gmail
+  Salesforce   - "Maya Patel Design" account with the same Gmail
                  address. 18-month tenure. CSM=null. Zero prior
                  disputes.
-  HubSpot      — Contact for Maya at hitakshi220@gmail.com. NPS=9,
+  HubSpot      - Contact for Maya at hitakshi220@gmail.com. NPS=9,
                  lifecyclestage=customer, long engagement history.
-  Intercom     — Bare contact record only. ZERO conversations — Maya
+  Intercom     - Bare contact record only. ZERO conversations - Maya
                  has never raised an issue before, which is itself the
                  "good standing" signal the agent must verify.
-  Zendesk      — Org + user. Zero tickets in the trailing 90 days.
+  Zendesk      - Org + user. Zero tickets in the trailing 90 days.
                  One unrelated 2025 feature-request ticket (solved).
-  Slack        — NO internal mention of Maya. She's small enough that
+  Slack        - NO internal mention of Maya. She's small enough that
                  CS has never escalated her. (We seed nothing.)
-  Notion       — "Small-refund policy — duplicate charges under $200"
+  Notion       - "Small-refund policy - duplicate charges under $200"
                  codifying the AUTONOMOUS path: duplicate charges
                  under $200 from customers in good standing within
                  60 days → AUTO-REFUND + AUTO-REPLY. No human review.
-  PostHog      — Maya's normal usage events: ~6 logins in last 7 days,
+  PostHog      - Maya's normal usage events: ~6 logins in last 7 days,
                  create_design + export_design actions. Nothing
                  anomalous.
-  Sentry       — CRITICAL root-cause beat. A RetryError event tagged
+  Sentry       - CRITICAL root-cause beat. A RetryError event tagged
                  to stripe-webhook-handler project at exactly
                  2026-05-22T14:25:09 UTC matching the duplicate-charge
                  timestamp. Plus a handful of baseline noise events.
-  Datadog      — A log event from webhook-router at 2026-05-22T14:25:09
+  Datadog      - A log event from webhook-router at 2026-05-22T14:25:09
                  showing the SAME Stripe charge.succeeded event id
                  POSTed twice (handler 500'd first time, Stripe
                  retried 4 min later, both charges processed).
-  PagerDuty    — A P3 incident auto-created from the Datadog alert at
+  PagerDuty    - A P3 incident auto-created from the Datadog alert at
                  2026-05-22T14:25 titled "webhook-router 5xx spike",
                  service=webhook-router, status=resolved (resolved
                  2026-05-22T14:32). Proves the system bug was real
@@ -167,7 +167,7 @@ from seed_world import (  # noqa: E402
 )
 
 
-# Salesforce is optional — only seed it if the access token is valid.
+# Salesforce is optional - only seed it if the access token is valid.
 SALESFORCE_AVAILABLE = bool(
     os.getenv("SALESFORCE_API_URL") and os.getenv("SALESFORCE_ACCESS_TOKEN")
 )
@@ -183,7 +183,7 @@ if SALESFORCE_AVAILABLE:
         SALESFORCE_AVAILABLE = False
 
 
-# Stripe is required — bail loudly if not configured.
+# Stripe is required - bail loudly if not configured.
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 if not stripe.api_key or not stripe.api_key.startswith("sk_test_"):
     raise SystemExit("STRIPE_API_KEY must be a sk_test_... key in agent/.env")
@@ -218,14 +218,14 @@ MAYA_TENURE_MONTHS = 18
 CHARGE_DATE = "2026-05-22"
 CHARGE_A_TIMESTAMP = "2026-05-22T14:21:03+00:00"  # original
 CHARGE_B_TIMESTAMP = "2026-05-22T14:25:09+00:00"  # duplicate (after retry)
-# Shared narrative Stripe event id — the one that was retried.
+# Shared narrative Stripe event id - the one that was retried.
 STRIPE_WEBHOOK_RETRY_CHAIN_ID = "evt_test_chargesucc_retry_m1r"
 WEBHOOK_RETRY_GAP_SEC = 246  # 14:25:09 - 14:21:03 = 4 min 6 sec
 
 # Policy that fires for M1R.
 SMALL_REFUND_POLICY_ID = "small-refund-auto"
 SMALL_REFUND_POLICY_TITLE = (
-    "Small-refund policy — duplicate charges under $200"
+    "Small-refund policy - duplicate charges under $200"
 )
 
 # Deterministic randomness so re-runs are reproducible.
@@ -268,7 +268,7 @@ def log(msg: str = "") -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 1. Stripe — customer + Caldera Pro subscription + two $89 charges
+# 1. Stripe - customer + Caldera Pro subscription + two $89 charges
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -344,7 +344,7 @@ def stripe_ensure_caldera_price() -> stripe.Price:
             idem_key=idem("product", "caldera_pro"),
             label="Product[caldera_pro]",
             name="Caldera Pro",
-            description="Caldera Pro — monthly plan for solo designers.",
+            description="Caldera Pro - monthly plan for solo designers.",
             metadata={
                 "seeded_by": "manthan_seed_stripe",
                 "product_key": "caldera_pro",
@@ -411,7 +411,7 @@ def stripe_find_existing_m1r_charges(
 ) -> tuple[stripe.Charge | None, stripe.Charge | None]:
     """Look for the M1R charge pair on this customer (idempotency).
 
-    Returns (charge_A, charge_B) — either or both may be None.
+    Returns (charge_A, charge_B) - either or both may be None.
     """
     charge_a = None
     charge_b = None
@@ -449,7 +449,7 @@ def stripe_create_charge(
             " Created when our stripe-webhook-handler retry-fired the "
             "same charge.succeeded event (event id "
             f"{STRIPE_WEBHOOK_RETRY_CHAIN_ID}) after the first delivery "
-            "500'd. This is OUR bug — Maya should be refunded."
+            "500'd. This is OUR bug - Maya should be refunded."
         )
     pi = safe_create(
         stripe.PaymentIntent.create,
@@ -532,7 +532,7 @@ def stripe_create_duplicate_charges(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 2. Salesforce — Maya Patel Design account + contact
+# 2. Salesforce - Maya Patel Design account + contact
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -540,7 +540,7 @@ def salesforce_seed(
     c: Company, stripe_customer_id: str
 ) -> tuple[str | None, str | None]:
     if not SALESFORCE_AVAILABLE:
-        log("\n[SALESFORCE]  SKIP — SALESFORCE_ACCESS_TOKEN not configured.")
+        log("\n[SALESFORCE]  SKIP - SALESFORCE_ACCESS_TOKEN not configured.")
         return None, None
     log("\n[SALESFORCE]  ensuring Maya Patel Design account + contact…")
     try:
@@ -566,11 +566,11 @@ def salesforce_seed(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 3. HubSpot — company + contact with NPS=9 + engagement-history note
+# 3. HubSpot - company + contact with NPS=9 + engagement-history note
 # ──────────────────────────────────────────────────────────────────────
 
 
-# Maya's solo practice doesn't have a real company domain — we treat
+# Maya's solo practice doesn't have a real company domain - we treat
 # her Gmail-style identity as the company anchor. We still set a domain
 # field so HubSpot's company-search-by-domain works (the V1R pattern).
 MAYA_HS_DOMAIN = "mayapateldesign.test"
@@ -702,13 +702,13 @@ def hubspot_upsert_contact(
 
 HUBSPOT_NOTE_SIGNATURE = "[manthan_patch_m1_maya_duplicate]"
 HUBSPOT_NOTE_BODY = (
-    f"{HUBSPOT_NOTE_SIGNATURE} Maya Patel — long-tenure solo customer "
+    f"{HUBSPOT_NOTE_SIGNATURE} Maya Patel - long-tenure solo customer "
     f"on {MAYA_PLAN_DISPLAY} (${MAYA_MONTHLY_USD}/mo since signup in "
     f"2024). NPS=9 (most recent survey 2026-04). Zero disputes, zero "
     f"escalations, zero support tickets in 90 days. Listed as 'green' "
     f"health. CSM=null (too small for assigned coverage). Direct support "
     f"contact through Gmail thread only. This contact is the M1R "
-    f"good-standing anchor — when the small-refund-auto policy needs to "
+    f"good-standing anchor - when the small-refund-auto policy needs to "
     f"verify 'customer in good standing,' this is the record to read."
 )
 
@@ -786,14 +786,14 @@ def hubspot_seed(
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 4. Intercom — bare contact only (NO conversations — first-time issue)
+# 4. Intercom - bare contact only (NO conversations - first-time issue)
 # ──────────────────────────────────────────────────────────────────────
 
 
 def intercom_ensure_contact(client: httpx.Client) -> str | None:
     """Create/find Maya's Intercom contact WITHOUT any conversations.
 
-    Maya has never raised an issue before — this is the "good standing"
+    Maya has never raised an issue before - this is the "good standing"
     signal the agent must verify. We seed a bare contact so the agent's
     Intercom lookup returns Maya but with zero conversation history.
     """
@@ -838,13 +838,13 @@ def intercom_seed() -> str | None:
         if not contact_id:
             log("  ERROR: could not establish Intercom contact for Maya")
             return None
-        log(f"  contact id: {contact_id} (no conversations — clean record)")
+        log(f"  contact id: {contact_id} (no conversations - clean record)")
         time.sleep(INTERCOM_REQ_SLEEP)
     return contact_id
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 5. Zendesk — org + user + 1 older unrelated ticket (zero in 90d)
+# 5. Zendesk - org + user + 1 older unrelated ticket (zero in 90d)
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -852,7 +852,7 @@ M1R_ZENDESK_TICKETS = [
     {
         "subject": "How do I change my default export format?",
         "body": (
-            "Hi support — when I export my designs they default to PNG. "
+            "Hi support - when I export my designs they default to PNG. "
             "Is there a way to change the default to JPG or SVG without "
             "having to pick it each time? Thanks!"
         ),
@@ -913,7 +913,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
         else:
             log(f"  user [reuse] id={user_id}")
 
-        # Tickets — idempotency via state['m1r_maya_tickets']
+        # Tickets - idempotency via state['m1r_maya_tickets']
         existing_tids = state.get("m1r_maya_tickets", [])
         if existing_tids:
             still_exist = []
@@ -944,7 +944,7 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
             try:
                 tid = zendesk_import_ticket(client, ticket_spec)
             except TrialCapHit:
-                log("  ! Zendesk trial cap hit — stopping ticket creation")
+                log("  ! Zendesk trial cap hit - stopping ticket creation")
                 break
             if tid:
                 new_tids.append(tid)
@@ -957,19 +957,19 @@ def zendesk_seed(c: Company) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 6. Slack — NO post for Maya (small-customer, no internal escalation)
+# 6. Slack - NO post for Maya (small-customer, no internal escalation)
 # ──────────────────────────────────────────────────────────────────────
 
 
 def slack_seed() -> tuple[None, None]:
-    log("\n[SLACK]    SKIP — Maya is too small for CS escalation channels.")
+    log("\n[SLACK]    SKIP - Maya is too small for CS escalation channels.")
     log("           (Intentional absence: 'no internal mention' is a")
     log("           good-standing signal for the small-refund-auto policy.)")
     return None, None
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 7. Notion — Small-refund policy for duplicate charges under $200
+# 7. Notion - Small-refund policy for duplicate charges under $200
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -981,7 +981,7 @@ M1R_NOTION_PAGES = [
         headings=[(2, SMALL_REFUND_POLICY_TITLE)],
         paragraphs=[
             "Owner: RevOps (priya@miny-labs.com) + Billing Engineering. "
-            f"Status: CURRENT — authoritative. Policy id "
+            f"Status: CURRENT - authoritative. Policy id "
             f"{SMALL_REFUND_POLICY_ID}. Doc version 1.0 (2026-05). Last "
             "reviewed 2026-05-20. Approved by VP Finance, VP Customer "
             "Success, and Head of Trust & Safety.",
@@ -997,7 +997,7 @@ M1R_NOTION_PAGES = [
             f"'{SMALL_REFUND_POLICY_ID}' SOP.",
 
             "",
-            "Section 1 — Eligibility checks (all must pass).",
+            "Section 1 - Eligibility checks (all must pass).",
 
             "(a) Duplicate confirmed in Stripe.",
             "  - Find two successful charges of identical amount on the "
@@ -1040,7 +1040,7 @@ M1R_NOTION_PAGES = [
             "    receive timestamp as the anchor).",
 
             "",
-            "Section 2 — Autonomous action (when all eligibility checks pass).",
+            "Section 2 - Autonomous action (when all eligibility checks pass).",
             "When ALL eligibility checks in Section 1 pass, the agent is "
             "authorised to act WITHOUT human review:",
 
@@ -1050,7 +1050,7 @@ M1R_NOTION_PAGES = [
             "  2. Reply to the customer in the same Gmail thread "
             "     confirming the refund. Include: confirmation that the "
             "     duplicate was caused by an internal webhook retry "
-            "     issue (be candid — Maya-grade transparency), the "
+            "     issue (be candid - Maya-grade transparency), the "
             "     specific refunded amount and charge id, the expected "
             "     timing for the refund to appear on her statement "
             "     (5-10 business days), and a brief apology. Do NOT "
@@ -1059,14 +1059,14 @@ M1R_NOTION_PAGES = [
             "  3. Document the root cause in the case record (Sentry "
             "     event id, Datadog event id, PagerDuty incident id if "
             "     present, plus the Stripe charge.id of both A and B). "
-            "     This documentation is REQUIRED — if the agent can't "
+            "     This documentation is REQUIRED - if the agent can't "
             "     identify the root cause from operational sources, the "
             "     case must escalate to a human instead of auto-firing.",
 
             "",
-            "Section 3 — Escalation triggers (do NOT auto-act).",
+            "Section 3 - Escalation triggers (do NOT auto-act).",
             "Escalate to a human reviewer when ANY of the following are "
-            "true (these are mutually exclusive — any single condition "
+            "true (these are mutually exclusive - any single condition "
             "escalates the case):",
             "  - Duplicate amount >= $200 USD.",
             "  - Customer has any open dispute in Stripe in the trailing "
@@ -1077,30 +1077,30 @@ M1R_NOTION_PAGES = [
             "  - Customer's HubSpot health is 'red' or NPS < 5.",
             "  - The agent CANNOT corroborate the duplicate as OUR bug "
             "    via at least two of {Sentry, Datadog, PagerDuty}. "
-            "    Unverified root cause is a hard escalation trigger — "
+            "    Unverified root cause is a hard escalation trigger - "
             "    we do NOT auto-refund duplicates that might be the "
             "    customer's pricing-page double-click error.",
             "  - The complaint mentions a Stripe chargeback or dispute "
             "    by name (those go through the chargeback pipeline "
             "    instead).",
             "  - Multiple duplicate-charge complaints from the same "
-            "    customer in any 90-day window — escalate so we can "
+            "    customer in any 90-day window - escalate so we can "
             "    investigate whether the underlying webhook bug is "
             "    recurring per-customer.",
 
             "",
-            "Section 4 — Customer reply template (informational).",
+            "Section 4 - Customer reply template (informational).",
             "Reply MUST be in the same Gmail thread the customer used. "
             "Tone: friendly, candid, brief. Keep under 120 words. Do "
             "NOT use boilerplate corporate apology language. Avoid "
-            "phrases like 'we apologize for any inconvenience' — say "
+            "phrases like 'we apologize for any inconvenience' - say "
             "exactly what happened in plain words. Examples of good "
-            "openings: 'Hi Maya — you're right about the duplicate. "
-            "Here's what happened:' or 'Hey Maya — confirming the "
+            "openings: 'Hi Maya - you're right about the duplicate. "
+            "Here's what happened:' or 'Hey Maya - confirming the "
             "duplicate charge on May 22 and refunding it now.'",
 
             "",
-            "Section 5 — Audit trail.",
+            "Section 5 - Audit trail.",
             "Every autonomous action under this policy is logged to the "
             "case ledger with: (i) the policy id "
             f"({SMALL_REFUND_POLICY_ID}), (ii) the Stripe refund.id, "
@@ -1150,11 +1150,11 @@ def notion_seed() -> list[tuple[str, str]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 8. PostHog — Maya's normal usage events (6 logins, design actions)
+# 8. PostHog - Maya's normal usage events (6 logins, design actions)
 # ──────────────────────────────────────────────────────────────────────
 
 
-# Maya is solo — single persona only.
+# Maya is solo - single persona only.
 MAYA_POSTHOG_PERSONA = {
     "distinct_id": "maya-patel-design-user-1",
     "role": "owner-designer",
@@ -1199,7 +1199,7 @@ def build_posthog_events(stripe_customer_id: str) -> list[dict]:
         "$lib": "manthan-m1r-patch",
     }
 
-    # 1) $identify for Maya — establishes Person row.
+    # 1) $identify for Maya - establishes Person row.
     events.append({
         "event": "$identify",
         "distinct_id": MAYA_POSTHOG_PERSONA["distinct_id"],
@@ -1299,7 +1299,7 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
     with httpx.Client(headers=POSTHOG_HEADERS, timeout=POSTHOG_TIMEOUT) as client:
         project_key = fetch_project_api_key(client)
         if not project_key:
-            log("  ! PostHog project key unavailable — skipping ingestion.")
+            log("  ! PostHog project key unavailable - skipping ingestion.")
             return out
         events = build_posthog_events(stripe_customer_id)
         log(f"  events={len(events)} (1 persona)")
@@ -1314,25 +1314,25 @@ def posthog_seed(stripe_customer_id: str) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 9. Sentry — stripe-webhook-handler RetryError at 14:25:09 UTC + baseline
+# 9. Sentry - stripe-webhook-handler RetryError at 14:25:09 UTC + baseline
 # ──────────────────────────────────────────────────────────────────────
 
 
 M1R_SENTRY_PROJECT_SLUG = "stripe-webhook-handler"
 M1R_SENTRY_TEAM_SLUG = "platform"
 M1R_SENTRY_RETRY_TITLE = (
-    "RetryError: webhook delivery 500 — Stripe retried after 4min timeout"
+    "RetryError: webhook delivery 500 - Stripe retried after 4min timeout"
 )
 M1R_SENTRY_BASELINE_TITLE = (
     "ValueError: optional metadata.idempotency_key missing on inbound "
-    "webhook payload — backfilled with event_id"
+    "webhook payload - backfilled with event_id"
 )
 
 
 def sentry_seed(stripe_customer_id: str) -> dict[str, Any]:
     """Ingest the M1R root-cause RetryError + baseline noise events.
 
-    The RetryError is the load-bearing beat — it MUST exist so the agent
+    The RetryError is the load-bearing beat - it MUST exist so the agent
     can corroborate the duplicate-charge root cause via Sentry. Title +
     fingerprint pin the issue group so re-runs collapse cleanly.
     """
@@ -1429,8 +1429,8 @@ def sentry_seed(stripe_customer_id: str) -> dict[str, Any]:
     time.sleep(INGEST_SLEEP)
     out["retry_event_seeded"] = True
 
-    # ── Baseline noise — 6 routine events scattered across May 2026 ──
-    # Establishes that the RetryError is NOT a recurring pattern — it's
+    # ── Baseline noise - 6 routine events scattered across May 2026 ──
+    # Establishes that the RetryError is NOT a recurring pattern - it's
     # the single bug that produced Maya's duplicate.
     baseline_rng = random.Random(20260518)
     may_start = datetime(2026, 5, 1, 8, 0, 0, tzinfo=timezone.utc)
@@ -1491,7 +1491,7 @@ def sentry_seed(stripe_customer_id: str) -> dict[str, Any]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 10. Datadog — webhook-router log event showing same stripe event id 2x
+# 10. Datadog - webhook-router log event showing same stripe event id 2x
 # ──────────────────────────────────────────────────────────────────────
 
 
@@ -1499,7 +1499,7 @@ def m1r_datadog_event(stripe_customer_id: str) -> DDEventSpec:
     return DDEventSpec(
         title=(
             f"webhook-router: duplicate POST of Stripe "
-            f"{STRIPE_WEBHOOK_RETRY_CHAIN_ID} — "
+            f"{STRIPE_WEBHOOK_RETRY_CHAIN_ID} - "
             f"workflow:M1R root cause for {MAYA_NAME}"
         ),
         text=(
@@ -1521,7 +1521,7 @@ def m1r_datadog_event(stripe_customer_id: str) -> DDEventSpec:
             f"Diagnosis: stripe.com retried the same charge.succeeded "
             f"event id {STRIPE_WEBHOOK_RETRY_CHAIN_ID} after the first "
             f"delivery 500'd. The first attempt's handler had ALREADY "
-            f"committed the downstream charge insert before throwing — "
+            f"committed the downstream charge insert before throwing - "
             f"the handler is not idempotency-keyed on the Stripe event "
             f"id, so the retry's handler ran the full pipeline a "
             f"second time, producing a duplicate $89 charge on Maya's "
@@ -1582,19 +1582,19 @@ def datadog_seed(stripe_customer_id: str) -> int | None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 11. PagerDuty — P3 webhook-router 5xx spike, status=resolved
+# 11. PagerDuty - P3 webhook-router 5xx spike, status=resolved
 # ──────────────────────────────────────────────────────────────────────
 
 
 M1R_PD_SERVICE = "webhook-router"
 M1R_PD_SERVICE_DESC = (
-    "Stripe webhook ingress router — receives all incoming Stripe events "
+    "Stripe webhook ingress router - receives all incoming Stripe events "
     "and dispatches them to the per-event handler (charge.succeeded, "
     "invoice.payment_succeeded, etc). Owns the response 2xx/5xx Stripe "
     "uses to decide whether to retry."
 )
 M1R_PD_TITLE = (
-    "webhook-router 5xx spike — Stripe event "
+    "webhook-router 5xx spike - Stripe event "
     f"{STRIPE_WEBHOOK_RETRY_CHAIN_ID} triggered handler retry "
     f"(workflow:M1R Maya duplicate-charge root cause)"
 )
@@ -1620,13 +1620,13 @@ def m1r_pd_body(stripe_customer_id: str) -> str:
         f"the window.\n\n"
         f"Customer impact: customer {stripe_customer_id} "
         f"({MAYA_NAME}, {MAYA_EMAIL}) was charged $89 TWICE on "
-        f"{CHARGE_DATE} — once at {CHARGE_A_TIMESTAMP} (the first "
+        f"{CHARGE_DATE} - once at {CHARGE_A_TIMESTAMP} (the first "
         f"delivery's path) and once at {CHARGE_B_TIMESTAMP} (the retry "
         f"path). Net: one duplicate $89 charge that should be refunded "
         f"per the small-refund-auto SOP.\n\n"
         f"Linked Sentry event: RetryError in project "
         f"stripe-webhook-handler at {CHARGE_B_TIMESTAMP} (fingerprint "
-        f"['RetryError', 'webhook delivery 500 — Stripe retried after "
+        f"['RetryError', 'webhook delivery 500 - Stripe retried after "
         f"4min timeout']).\n\n"
         f"Linked Datadog event: 'webhook-router: duplicate POST of "
         f"Stripe {STRIPE_WEBHOOK_RETRY_CHAIN_ID}'.\n\n"
@@ -1655,7 +1655,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
         if not ep_id:
             ep_id = pd_first_escalation_policy_id(client)
         if not ep_id:
-            log("  ! no escalation policy in PagerDuty — cannot seed")
+            log("  ! no escalation policy in PagerDuty - cannot seed")
             return None
 
         # 2. Service.
@@ -1707,7 +1707,7 @@ def pagerduty_seed(stripe_customer_id: str) -> str | None:
 
 def main() -> int:
     log("=" * 72)
-    log("Manthan M1R patch — Maya Patel small autonomous duplicate refund")
+    log("Manthan M1R patch - Maya Patel small autonomous duplicate refund")
     log("=" * 72)
 
     c = maya_company()
@@ -1718,14 +1718,14 @@ def main() -> int:
     log(f"  region  : {MAYA_REGION}")
     log(f"  health  : {c.health}  (NPS={MAYA_NPS}, tenure={MAYA_TENURE_MONTHS}mo)")
 
-    # 1. Stripe — required (drives the duplicate-charge case)
+    # 1. Stripe - required (drives the duplicate-charge case)
     cust = stripe_ensure_customer(c)
     price = stripe_ensure_caldera_price()
     sub = stripe_ensure_subscription(cust, price.id)
     ch_a, ch_b = stripe_create_duplicate_charges(cust)
     stripe_customer_id = cust.id
 
-    # 2. Salesforce — best-effort
+    # 2. Salesforce - best-effort
     sf_account_id, sf_contact_id = salesforce_seed(c, stripe_customer_id)
 
     # 3. HubSpot
@@ -1792,7 +1792,7 @@ def main() -> int:
         "email and find:")
     log(f"  customer_id        = {stripe_customer_id}")
     log(f"  charge_a_id        = {ch_a.id}  (original)")
-    log(f"  charge_b_id        = {ch_b.id}  (duplicate — refund this)")
+    log(f"  charge_b_id        = {ch_b.id}  (duplicate - refund this)")
     log(f"  sentry_project     = {sentry_result['project_slug']}")
     log(f"  datadog_event_id   = {dd_event_id}")
     log(f"  pagerduty_inc_id   = {pd_incident_id}")

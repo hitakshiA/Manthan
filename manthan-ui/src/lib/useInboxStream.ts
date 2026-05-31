@@ -1,11 +1,11 @@
 /**
- * useInboxStream — subscribe to the cross-cases SSE stream.
+ * useInboxStream - subscribe to the cross-cases SSE stream.
  *
  * Replaces the old "GET /api/cases every 10 seconds" pattern. The server
  * pushes a fresh `cases` event whenever any case in the org changes
  * (debounced ~1s on the server side so investigation bursts collapse).
  *
- * Falls back to a 15s poll if the EventSource fails to connect — we
+ * Falls back to a 15s poll if the EventSource fails to connect - we
  * never want the Inbox to stop updating because of a transient SSE issue.
  */
 
@@ -40,7 +40,7 @@ export function useInboxStream(limit = 60): UseInboxStreamState {
   const sourceRef = useRef<EventSource | null>(null);
   const pollRef = useRef<number | null>(null);
 
-  // Wait for Clerk to resolve before connecting — without this, the
+  // Wait for Clerk to resolve before connecting - without this, the
   // first SSE connect fires before ClerkIdentitySync has set the
   // dev_email header, so the backend has no email to route on and
   // (post-acme-wipe) has no fallback org → 404. Once Clerk loads
@@ -119,7 +119,7 @@ export function useInboxStream(limit = 60): UseInboxStreamState {
     });
 
     es.addEventListener("ping", () => {
-      /* heartbeat — no-op */
+      /* heartbeat - no-op */
     });
 
     es.addEventListener("error", () => {

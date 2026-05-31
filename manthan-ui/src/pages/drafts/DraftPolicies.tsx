@@ -1,5 +1,5 @@
 /**
- * DraftPolicies — Policies page, editorial-memo direction (DRAFT).
+ * DraftPolicies - Policies page, editorial-memo direction (DRAFT).
  *
  * Each rule is a mini-memo, same vocabulary as WorkspaceMemo:
  * HeaderStrip + two-column canvas separated by a hairline. The page
@@ -18,7 +18,7 @@
  *
  * Six hardcoded rules. No links. Disabled rules at 50% opacity.
  *
- * Throwaway draft — route /app/policies-memo.
+ * Throwaway draft - route /app/policies-memo.
  */
 
 import { useState } from "react";
@@ -26,7 +26,7 @@ import { motion } from "motion/react";
 import { Plus } from "lucide-react";
 
 // ──────────────────────────────────────────────────────────────────────
-// Mock data — the real Manthan policy seed shape.
+// Mock data - the real Manthan policy seed shape.
 // Conditions are stored as the raw clause-tree JSON so we can render
 // the same humanizer twice (engine consumes JSON, humans read prose).
 // ──────────────────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ const RULES: Rule[] = [
     priority: 10,
     name: "repeat-disputer-escalate",
     description:
-      "Customers with a history of chargebacks need a human in the loop — the agent should never silently fight or concede their next case.",
+      "Customers with a history of chargebacks need a human in the loop - the agent should never silently fight or concede their next case.",
     mode: "escalate",
     enabled: true,
     conditions: [
@@ -142,7 +142,7 @@ const RULES: Rule[] = [
     priority: 60,
     name: "chargeback-fight-strong-evidence",
     description:
-      "When a chargeback case carries a strong evidence packet — contract, usage, and customer-satisfaction confirmations — fight automatically.",
+      "When a chargeback case carries a strong evidence packet - contract, usage, and customer-satisfaction confirmations - fight automatically.",
     mode: "auto",
     enabled: true,
     conditions: [
@@ -186,7 +186,7 @@ const RULES: Rule[] = [
 ];
 
 // ──────────────────────────────────────────────────────────────────────
-// Mode tokens — color, label, and dim variant.
+// Mode tokens - color, label, and dim variant.
 // ──────────────────────────────────────────────────────────────────────
 
 interface ModeToken {
@@ -252,7 +252,7 @@ export default function DraftPolicies() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Page header — eyebrow + title + subtitle + CTA.
+// Page header - eyebrow + title + subtitle + CTA.
 // ──────────────────────────────────────────────────────────────────────
 
 function PageHeader() {
@@ -322,7 +322,7 @@ function NewRuleButton() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RuleMemo — one rule as a HeaderStrip + two-column body card.
+// RuleMemo - one rule as a HeaderStrip + two-column body card.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleMemo({ rule }: { rule: Rule }) {
@@ -361,7 +361,7 @@ function RuleMemo({ rule }: { rule: Rule }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// HeaderStrip — RULE NN · name + mode badge + ENABLED status.
+// HeaderStrip - RULE NN · name + mode badge + ENABLED status.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleHeaderStrip({ rule }: { rule: Rule }) {
@@ -433,7 +433,7 @@ function RuleHeaderStrip({ rule }: { rule: Rule }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// LEFT column — "When". Description + numbered prose conditions.
+// LEFT column - "When". Description + numbered prose conditions.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleWhenColumn({ rule }: { rule: Rule }) {
@@ -497,7 +497,7 @@ function RuleWhenColumn({ rule }: { rule: Rule }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RIGHT column — "Decision" + Matched counter.
+// RIGHT column - "Decision" + Matched counter.
 // ──────────────────────────────────────────────────────────────────────
 
 function RuleDecisionColumn({
@@ -633,7 +633,7 @@ function MatchedCount({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Eyebrow primitive — mirrors the WorkspaceMemo one 1:1.
+// Eyebrow primitive - mirrors the WorkspaceMemo one 1:1.
 // ──────────────────────────────────────────────────────────────────────
 
 function Eyebrow({
@@ -660,9 +660,9 @@ function Eyebrow({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Humanizers — turn the engine JSON into prose a Director would read.
+// Humanizers - turn the engine JSON into prose a Director would read.
 // Per .impeccable.md: render `{"case.amount_minor":{"lte":20000}}` as
-// "Amount is at most $200" — not as the raw clause.
+// "Amount is at most $200" - not as the raw clause.
 // ──────────────────────────────────────────────────────────────────────
 
 /**
@@ -735,7 +735,7 @@ function humanizeField(path: string): string {
     "customer.tenure_months": "Customer tenure (months)",
   };
   if (overrides[path]) return overrides[path];
-  // Default — strip the namespace and Title-Case the leaf.
+  // Default - strip the namespace and Title-Case the leaf.
   const leaf = path.split(".").pop() ?? path;
   return leaf
     .replace(/_/g, " ")

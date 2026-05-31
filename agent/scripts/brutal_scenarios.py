@@ -1,4 +1,4 @@
-"""Brutal-data scenarios — DuckDB-backed, real volume + noise.
+"""Brutal-data scenarios - DuckDB-backed, real volume + noise.
 
 Each scenario provides a duckdb_world: dict[source][table][rows]. The
 mock spins up an in-memory DuckDB and the agent's SQL runs against it
@@ -40,7 +40,7 @@ _OTHER_CUSTOMER_EMAILS = [
 
 _NOISE_TICKET_SUBJECTS = [
     "How do I export reports?", "Add a new user", "Reset password",
-    "Question about API rate limits", "Billing question — Q1 invoice",
+    "Question about API rate limits", "Billing question - Q1 invoice",
     "Slow dashboard loading", "Cancel one of my seats",
     "Request: SAML SSO support", "Bug: graphs not rendering",
     "Onboarding call follow-up", "Renewal date question",
@@ -58,23 +58,23 @@ _NOISE_SLACK_TEXTS = [
     "anyone seen the Q3 forecast?", "FYI: API latency spike at 3pm",
     "team lunch tomorrow", "merging deploy queue",
     "@channel pls review PR-2241",
-    "Helio Energy renewal looks shaky", "Acme Logistics churn risk flagged",  # red herring — wrong "Acme"
-    "Customer dispute on Northwind invoice — handling", "Vertex Mining onboarding stuck",
+    "Helio Energy renewal looks shaky", "Acme Logistics churn risk flagged",  # red herring - wrong "Acme"
+    "Customer dispute on Northwind invoice - handling", "Vertex Mining onboarding stuck",
     "Quantum Synth fraud-review approved", "Meridian Tech expansion deal closing",
 ]
 
 _DEPRECATED_NOTION_PAGES = [
     {
         "id": "n_0001",
-        "title": "Refunds policy — DEPRECATED 2024 version",
-        "body": "Historical SOP from 2024. Refunds capped at 30 days. Note: superseded by 2026 SOP — do not apply.",
+        "title": "Refunds policy - DEPRECATED 2024 version",
+        "body": "Historical SOP from 2024. Refunds capped at 30 days. Note: superseded by 2026 SOP - do not apply.",
         "status": "archived",
         "updated_at": "2024-08-12T00:00:00",
         "tags": "refunds,deprecated",
     },
     {
         "id": "n_0002",
-        "title": "Refunds — customer-facing FAQ",
+        "title": "Refunds - customer-facing FAQ",
         "body": "Public-facing FAQ for customer self-help. Talk points only, NOT internal policy.",
         "status": "current",
         "updated_at": "2025-09-01T00:00:00",
@@ -105,7 +105,7 @@ def _noise_intercom(n: int, base_id: int = 1000) -> list[dict[str, Any]]:
     for i in range(n):
         email = _OTHER_CUSTOMER_EMAILS[i % len(_OTHER_CUSTOMER_EMAILS)]
         subject = _NOISE_INTERCOM_SUBJECTS[i % len(_NOISE_INTERCOM_SUBJECTS)]
-        # Some bodies mention "cancel" — but for unrelated customers.
+        # Some bodies mention "cancel" - but for unrelated customers.
         body = (
             "We want to cancel our trial." if "Cancel" in subject
             else f"Hi team, just a quick question about {subject.lower()}."
@@ -149,14 +149,14 @@ def _noise_slack(n: int, base_id: int = 10000) -> list[dict[str, Any]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# S01-BRUTAL — Acme friendly fraud, real volume + noise
+# S01-BRUTAL - Acme friendly fraud, real volume + noise
 # ──────────────────────────────────────────────────────────────────────
 #
 # Ground truth (unchanged from flat S01):
 #   - Customer claims they cancelled an annual renewal ($4,200)
 #   - In reality: no formal cancel request anywhere
 #   - One 2-month-old Intercom convo says "we're evaluating whether to
-#     continue" — informal, not formal
+#     continue" - informal, not formal
 #   - Subscription still active, no cancel_at_period_end set
 #   - Customer was active 5 days before the dispute (Posthog)
 #   - Refunds SOP says FIGHT when no formal cancel + recent usage
@@ -169,7 +169,7 @@ def _noise_slack(n: int, base_id: int = 10000) -> list[dict[str, Any]]:
 #   - Zendesk: 40 tickets, 2 from this customer (neither cancel-related);
 #     several noise tickets mention "cancel" or "refund" from others.
 #   - Slack: 80 messages from cs-escalations + others. Two mention "Acme"
-#     — one for Acme Genomics (this customer), one for Acme Logistics
+#     - one for Acme Genomics (this customer), one for Acme Logistics
 #     (a different customer entirely).
 #   - Notion: 8 pages, only refunds-2026-sop is the right policy. There's
 #     a 2024 deprecated one, a customer-facing FAQ, a quarterly notes
@@ -201,7 +201,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
                 "created": "2026-05-09T11:02:00",
                 "evidence_due_by": "2026-06-12T00:00:00",
             },
-            # Noise — other customers' disputes from different periods
+            # Noise - other customers' disputes from different periods
             {"id": "dp_001", "customer": "cus_Joe01", "customer_email": "joe@joescoffee-pdx.example", "charge": "ch_001", "amount_minor": 4200, "currency": "usd", "reason": "fraudulent", "status": "lost", "created": "2026-04-04T11:00:00", "evidence_due_by": "2026-05-20T00:00:00"},
             {"id": "dp_002", "customer": "cus_AcmeLog", "customer_email": "admin@acme-logistics.example", "charge": "ch_002", "amount_minor": 31200, "currency": "usd", "reason": "duplicate", "status": "won", "created": "2026-02-12T14:21:00", "evidence_due_by": "2026-03-15T00:00:00"},
             {"id": "dp_003", "customer": "cus_Helio", "customer_email": "team@helio-energy.example", "charge": "ch_003", "amount_minor": 89400, "currency": "usd", "reason": "credit_not_processed", "status": "won", "created": "2025-12-19T10:00:00", "evidence_due_by": "2026-01-10T00:00:00"},
@@ -240,7 +240,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             # Acme historical (older, ended naturally)
             {"id": "sub_AcmeGn_2024", "customer": _THIS_CUSTOMER_ID, "status": "ended", "plan": "Pro Annual", "cancel_at_period_end": False, "canceled_at": "2024-05-09T00:00:00", "current_period_start": "2023-05-09T00:00:00", "current_period_end": "2024-05-09T00:00:00", "created": "2023-05-09T11:02:00", "collection_method": "charge_automatically"},
             {"id": "sub_AcmeGn_trial", "customer": _THIS_CUSTOMER_ID, "status": "canceled", "plan": "Trial", "cancel_at_period_end": False, "canceled_at": "2023-04-30T11:02:00", "current_period_start": "2023-04-15T00:00:00", "current_period_end": "2023-04-30T00:00:00", "created": "2023-04-15T11:02:00", "collection_method": "send_invoice"},
-            # Noise from other customers — including ones that DID cancel (to test if agent picks the right sub)
+            # Noise from other customers - including ones that DID cancel (to test if agent picks the right sub)
             {"id": "sub_QSynth", "customer": "cus_QSynth", "status": "trialing", "plan": "Pro Annual", "cancel_at_period_end": False, "canceled_at": None, "current_period_start": "2026-05-22T00:00:00", "current_period_end": "2027-05-22T00:00:00", "created": "2026-05-22T09:00:00", "collection_method": "send_invoice"},
             {"id": "sub_Vertex", "customer": "cus_Vertex", "status": "canceled", "plan": "Pro Monthly", "cancel_at_period_end": False, "canceled_at": "2026-03-21T00:00:00", "current_period_start": "2026-02-22T00:00:00", "current_period_end": "2026-03-22T00:00:00", "created": "2025-08-22T09:00:00", "collection_method": "charge_automatically"},
             {"id": "sub_Saga_new", "customer": "cus_newSaga", "status": "active", "plan": "Pro Annual", "cancel_at_period_end": False, "canceled_at": None, "current_period_start": "2026-03-12T00:00:00", "current_period_end": "2027-03-12T00:00:00", "created": "2026-03-12T11:00:00", "collection_method": "charge_automatically"},
@@ -275,7 +275,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
                 "industry": "genomics",
                 "strategic_flag": False,
             },
-            {"id": "001AcmeLog", "name": "Acme Logistics", "email": "admin@acme-logistics.example", "plan": "Standard Monthly", "arr_minor": 24000, "health": "red", "nps_last": 3, "csm_owner": "marcus@us", "renewal_date": "2026-09-01", "account_owner_notes": "Churn risk — actively shopping competitors.", "industry": "logistics", "strategic_flag": False},
+            {"id": "001AcmeLog", "name": "Acme Logistics", "email": "admin@acme-logistics.example", "plan": "Standard Monthly", "arr_minor": 24000, "health": "red", "nps_last": 3, "csm_owner": "marcus@us", "renewal_date": "2026-09-01", "account_owner_notes": "Churn risk - actively shopping competitors.", "industry": "logistics", "strategic_flag": False},
             {"id": "001Globex", "name": "Globex Software", "email": "billing@globex.example", "plan": "Pro Annual", "arr_minor": 4000000, "health": "green", "nps_last": 9, "csm_owner": "mark@us", "renewal_date": "2026-12-31", "account_owner_notes": "Expansion expected Q4.", "industry": "software", "strategic_flag": True},
             {"id": "001NorthW", "name": "Northwind Logistics", "email": "ar@northwind-logi.example", "plan": "Enterprise Annual", "arr_minor": 10800000, "health": "green", "nps_last": 8, "csm_owner": "rohan@us", "renewal_date": "2026-11-01", "account_owner_notes": "Stable.", "industry": "logistics", "strategic_flag": True},
             {"id": "001Helix", "name": "Helix Bio", "email": "ap@helix-bio.example", "plan": "Enterprise Annual", "arr_minor": 13400000, "health": "red", "nps_last": 4, "csm_owner": "sarah@us", "renewal_date": "2026-08-15", "account_owner_notes": "AR escalation in progress.", "industry": "biotech", "strategic_flag": False},
@@ -288,19 +288,19 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             {"id": "opp_NorthW_2025", "account_id": "001NorthW", "stage": "Closed Won", "amount_minor": 10800000, "close_date": "2025-11-01", "type": "Renewal"},
         ],
     },
-    # ─────────── intercom — 60 rows total, 5 ours, 55 noise ───────────
+    # ─────────── intercom - 60 rows total, 5 ours, 55 noise ───────────
     "intercom": {
         "conversations": [
-            # ours — 5 rows for ops@acme-genomics.example
+            # ours - 5 rows for ops@acme-genomics.example
             {
                 "id": "ic_acme_001",
                 "contact_email": _THIS_EMAIL,
                 "subject": "Data export options",
                 "body": (
-                    "Hi team — we're evaluating whether to continue with you for another year "
+                    "Hi team - we're evaluating whether to continue with you for another year "
                     "and need to understand what our data export options look like. Could you "
                     "walk us through the formats? We are not planning to cancel right now, just "
-                    "want to know what's available in case our review comes back negative. — Ops, Acme"
+                    "want to know what's available in case our review comes back negative. - Ops, Acme"
                 ),
                 "status": "closed",
                 "created_at": "2026-03-08T14:00:00",
@@ -310,7 +310,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
                 "contact_email": _THIS_EMAIL,
                 "subject": "Re: Data export options",
                 "body": (
-                    "Thanks for the walkthrough — that's helpful. Looping our analytics lead "
+                    "Thanks for the walkthrough - that's helpful. Looping our analytics lead "
                     "in. We'll come back to you if we need anything else. No action needed "
                     "for now."
                 ),
@@ -340,25 +340,25 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
                 "id": "ic_acme_005",
                 "contact_email": _THIS_EMAIL,
                 "subject": "Re: API rate limit question",
-                "body": "Thanks — confirmed 200rps. All good now.",
+                "body": "Thanks - confirmed 200rps. All good now.",
                 "status": "closed",
                 "created_at": "2026-04-23T09:30:00",
             },
-            # noise — 55 conversations from other customers
+            # noise - 55 conversations from other customers
             *_noise_intercom(55, base_id=1000),
         ],
     },
-    # ─────────── zendesk — 40 rows, 2 ours, 38 noise ───────────
+    # ─────────── zendesk - 40 rows, 2 ours, 38 noise ───────────
     "zendesk": {
         "tickets": [
-            # ours — non-cancel topics
+            # ours - non-cancel topics
             {"id": "zd_acme_001", "requester_email": _THIS_EMAIL, "subject": "Add new viewer-role user", "status": "solved", "updated_at": "2026-02-04T09:00:00"},
             {"id": "zd_acme_002", "requester_email": _THIS_EMAIL, "subject": "Webhook delivery question", "status": "solved", "updated_at": "2026-04-30T15:00:00"},
-            # noise — 38 tickets from other customers
+            # noise - 38 tickets from other customers
             *_noise_zendesk(38, base_id=5000),
         ],
     },
-    # ─────────── slack — 80 messages, 2 mention "Acme" (one is wrong Acme) ───────────
+    # ─────────── slack - 80 messages, 2 mention "Acme" (one is wrong Acme) ───────────
     "slack": {
         "messages": [
             # THIS customer escalation chatter
@@ -366,26 +366,26 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
                 "ts": "2026-03-09T10:15:00",
                 "channel": "cs-escalations",
                 "user": "priya",
-                "text": "Acme Genomics flagged yellow — data-export question, not a cancel. Will monitor. ops@acme-genomics.example",
+                "text": "Acme Genomics flagged yellow - data-export question, not a cancel. Will monitor. ops@acme-genomics.example",
             },
-            # WRONG Acme — Acme Logistics
+            # WRONG Acme - Acme Logistics
             {
                 "ts": "2026-02-13T14:00:00",
                 "channel": "cs-escalations",
                 "user": "marcus",
-                "text": "Acme Logistics churn risk flagged — shopping competitors. admin@acme-logistics.example. Won the dispute though.",
+                "text": "Acme Logistics churn risk flagged - shopping competitors. admin@acme-logistics.example. Won the dispute though.",
             },
             # 78 noise messages
             *_noise_slack(78, base_id=10000),
         ],
     },
-    # ─────────── notion — 8 pages with similar titles ───────────
+    # ─────────── notion - 8 pages with similar titles ───────────
     "notion": {
         "pages": [
             # THE ACTUAL POLICY
             {
                 "id": "n_refunds_2026",
-                "title": "Refunds & Disputes — 2026 SOP (CURRENT)",
+                "title": "Refunds & Disputes - 2026 SOP (CURRENT)",
                 "body": (
                     "OFFICIAL CURRENT POLICY. For subscription_canceled chargebacks: FIGHT when "
                     "(a) no formal cancellation request exists across Intercom/Zendesk/Gmail, AND "
@@ -410,7 +410,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             },
             {
                 "id": "n_sales_objections",
-                "title": "Sales objections handbook — when prospects say they're cancelling",
+                "title": "Sales objections handbook - when prospects say they're cancelling",
                 "body": "Sales-stage objection handling. Not for active customers.",
                 "status": "current",
                 "updated_at": "2025-11-20T00:00:00",
@@ -419,14 +419,14 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             {
                 "id": "n_csm_playbook",
                 "title": "CSM cancel-save playbook",
-                "body": "For when an active customer asks to cancel — offer retention discount tier, escalate to CS lead. NOT a disputes policy.",
+                "body": "For when an active customer asks to cancel - offer retention discount tier, escalate to CS lead. NOT a disputes policy.",
                 "status": "current",
                 "updated_at": "2026-03-15T00:00:00",
                 "tags": "csm,retention",
             },
         ],
     },
-    # ─────────── posthog — 30+ event rows the agent must aggregate ───────────
+    # ─────────── posthog - 30+ event rows the agent must aggregate ───────────
     "posthog": {
         "events": [
             # Acme Genomics events (last 30 days, multiple users)
@@ -442,7 +442,7 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             ],
             # Most recent (5 days before dispute)
             {"id": "ev_acme_last", "distinct_id": _THIS_EMAIL, "event": "login", "timestamp": "2026-05-04T22:01:00", "properties": '{"product_area": "v3-reporting"}'},
-            # Noise — events from other customers
+            # Noise - events from other customers
             *[
                 {
                     "id": f"ev_noise_{i:03d}",
@@ -460,17 +460,17 @@ _S01_BRUTAL_WORLD: dict[str, dict[str, list[dict[str, Any]]]] = {
             {"distinct_id": "billing@globex.example", "first_seen": "2023-01-01T10:00:00", "last_seen": "2026-06-02T16:00:00", "total_events_30d": 412, "distinct_users_active_30d": 215, "critical_actions_14d": 280, "product_areas": "v3-reporting,v3-seats"},
         ],
     },
-    # ─────────── gmail — 30 threads, 1 ours ───────────
+    # ─────────── gmail - 30 threads, 1 ours ───────────
     "gmail": {
         "threads": [
-            {"id": "gm_acme_001", "participants": _THIS_EMAIL, "subject": "Acme Genomics — Q1 check-in", "snippet": "Discussed renewal expectations, no objections raised.", "last_message_at": "2026-03-12T16:00:00"},
-            {"id": "gm_noise_001", "participants": "admin@acme-logistics.example", "subject": "Acme Logistics — please cancel", "snippet": "We are formally requesting cancellation effective end of Feb.", "last_message_at": "2026-02-10T10:00:00"},
+            {"id": "gm_acme_001", "participants": _THIS_EMAIL, "subject": "Acme Genomics - Q1 check-in", "snippet": "Discussed renewal expectations, no objections raised.", "last_message_at": "2026-03-12T16:00:00"},
+            {"id": "gm_noise_001", "participants": "admin@acme-logistics.example", "subject": "Acme Logistics - please cancel", "snippet": "We are formally requesting cancellation effective end of Feb.", "last_message_at": "2026-02-10T10:00:00"},
             {"id": "gm_noise_002", "participants": "ap@helix-bio.example", "subject": "Helix Bio AR follow-up", "snippet": "47 days past due, please confirm payment.", "last_message_at": "2026-06-04T14:00:00"},
             {"id": "gm_noise_003", "participants": "billing@globex.example", "subject": "Re: Q3 seat planning", "snippet": "We can flex you up to 220 seats at no extra charge through end of Q3.", "last_message_at": "2026-03-18T14:22:00"},
             {"id": "gm_noise_004", "participants": "joe@joescoffee-pdx.example", "subject": "Welcome to the platform", "snippet": "Self-serve signup welcome email.", "last_message_at": "2026-04-04T10:00:00"},
         ],
     },
-    # ─────────── sentry — red-herring legacy v1 incident ───────────
+    # ─────────── sentry - red-herring legacy v1 incident ───────────
     "sentry": {
         "issues": [
             {"id": "snt_001", "title": "legacy-reporting-v1: NullPointerException in /v1/reports/quarterly", "product_area": "legacy-reporting-v1", "first_seen": "2026-03-22T08:14:00", "affected_accounts_csv": "001NorthW,001Helix", "status": "ignored"},
@@ -490,7 +490,7 @@ S01_BRUTAL = Scenario(
     trigger_text=(
         "Slack DM from @priya (CSM):\n"
         "\"Hey can you take dp_3MqAcmeRen? Acme Genomics is fighting the $4,200 annual "
-        "renewal. They keep insisting they tried to cancel earlier this year — I poked "
+        "renewal. They keep insisting they tried to cancel earlier this year - I poked "
         "around Intercom and there's something from a couple months back but it didn't "
         "feel like a formal cancel request to me. They're using the product. Brief "
         "please by EOD Thu (evidence due Fri).\"\n\n"

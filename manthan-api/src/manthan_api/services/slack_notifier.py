@@ -1,4 +1,4 @@
-"""Slack notifier — mirror major case events back to the originating Slack thread.
+"""Slack notifier - mirror major case events back to the originating Slack thread.
 
 Called from the investigate worker + chat_loop after writing key events to PG:
   - brief_drafted: post the brief Block Kit card to the thread
@@ -149,7 +149,7 @@ async def maybe_notify_case_closed_card(
         ref_url = _ref_url(row["type"], ref) if ref else None
         return {
             "emoji": summary["emoji"],
-            "title": summary["title"] + (f" — {summary['target']}" if summary["target"] else ""),
+            "title": summary["title"] + (f" - {summary['target']}" if summary["target"] else ""),
             "ref_text": ref or "",
             "ref_url": ref_url or "",
         }
@@ -182,7 +182,7 @@ async def maybe_notify_case_closed_card(
 
 
 def _ref_url(kind: str, ref: str) -> str | None:
-    """Slim version of the actor's _source_ref_url — kept here so the
+    """Slim version of the actor's _source_ref_url - kept here so the
     close card can build links without importing the worker module."""
     if kind == "stripe_refund":
         return f"https://dashboard.stripe.com/test/refunds/{ref}"

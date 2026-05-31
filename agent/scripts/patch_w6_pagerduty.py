@@ -1,9 +1,9 @@
-"""Patch PagerDuty with W6 signal — cascade-cloud auth-svc outage.
+"""Patch PagerDuty with W6 signal - cascade-cloud auth-svc outage.
 
 Creates a single resolved high-urgency incident on the auth-service
 service:
   auth-service: KMS-rejected signing key causing intermittent token
-  issuance failures — partial degradation
+  issuance failures - partial degradation
 
 The narrative is a 15-day partial degradation, opened ~19 days ago,
 resolved ~5 days ago. PagerDuty stamps created_at itself; we bake the
@@ -50,7 +50,7 @@ from seed_pagerduty import (  # noqa: E402
 
 W6_SERVICE = "auth-service"
 W6_SERVICE_DESC = (
-    "Authentication / authorization — token issuance, session "
+    "Authentication / authorization - token issuance, session "
     "validation, OAuth callback handlers."
 )
 
@@ -59,11 +59,11 @@ W6_CUSTOMER_DOMAIN = "cascade-cloud.test"
 
 W6_TITLE = (
     "auth-service: KMS-rejected signing key causing intermittent token "
-    "issuance failures — partial degradation"
+    "issuance failures - partial degradation"
 )
 W6_URGENCY = "high"
 
-# Narrative dates — PagerDuty cannot backdate created_at via REST API,
+# Narrative dates - PagerDuty cannot backdate created_at via REST API,
 # so the chronology is captured in the body + a resolution log-entry note.
 _NOW = datetime.now(timezone.utc)
 W6_CREATED_NARRATIVE = _NOW - timedelta(days=19)
@@ -72,7 +72,7 @@ W6_DURATION_DAYS = (W6_RESOLVED_NARRATIVE - W6_CREATED_NARRATIVE).days  # 14d
 
 W6_BODY = (
     f"Partial degradation of auth-service token issuance.\n\n"
-    f"Narrative timeline (authoritative — PagerDuty timestamps reflect "
+    f"Narrative timeline (authoritative - PagerDuty timestamps reflect "
     f"seed time, not the actual outage):\n"
     f"  - Declared (created_at narrative): "
     f"{W6_CREATED_NARRATIVE.isoformat()}  ({W6_CREATED_NARRATIVE.date()})\n"
@@ -81,7 +81,7 @@ W6_BODY = (
     f"  - Duration: ~{W6_DURATION_DAYS} days (intermittent throughout)\n\n"
     f"Symptoms: POST /v1/oauth/token returning 503 for ~3-7% of requests "
     f"in spurts of 5-40 minutes. Affected primarily customer "
-    f"{W6_CUSTOMER_ID} ({W6_CUSTOMER_DOMAIN}, ARR $78k, Pro Annual) — "
+    f"{W6_CUSTOMER_ID} ({W6_CUSTOMER_DOMAIN}, ARR $78k, Pro Annual) - "
     f"their SSO + machine-to-machine clients hit elevated 401s/503s and "
     f"degraded login UX for end users in the cascade-cloud.test tenant.\n\n"
     f"Root cause: KMS rejected the active signing key "
@@ -116,7 +116,7 @@ W6_RESOLUTION_NOTE = (
 def add_incident_note(
     client: httpx.Client, incident_id: str, content: str
 ) -> bool:
-    """Attach a note to an incident — surfaces in the incident's log."""
+    """Attach a note to an incident - surfaces in the incident's log."""
     body = {"note": {"content": content}}
     r = _request(
         client,
@@ -140,7 +140,7 @@ def add_incident_note(
 
 
 def main() -> int:
-    print("== PagerDuty W6 patch — cascade-cloud auth-svc outage ==")
+    print("== PagerDuty W6 patch - cascade-cloud auth-svc outage ==")
     print(f"  customer_id    : {W6_CUSTOMER_ID}")
     print(f"  customer_domain: {W6_CUSTOMER_DOMAIN}")
     print(f"  service        : {W6_SERVICE}")
@@ -171,7 +171,7 @@ def main() -> int:
             )
         print(f"[1] Escalation policy id: {ep_id}")
 
-        # ── 2. Service — create if missing.
+        # ── 2. Service - create if missing.
         print(f"\n[2] Ensuring service {W6_SERVICE!r}")
         sid, action = upsert_service(client, W6_SERVICE, W6_SERVICE_DESC, ep_id)
         if not sid:
@@ -217,7 +217,7 @@ def main() -> int:
         # ── 5. Resolve.
         print("\n[5] Resolving incident (status=resolved)…")
         if inc_id:
-            # Always issue the resolve PUT — idempotent if already resolved.
+            # Always issue the resolve PUT - idempotent if already resolved.
             ok = update_incident_status(client, inc_id, "resolved")
             print(f"  resolved: {ok}")
             time.sleep(REQ_SLEEP)

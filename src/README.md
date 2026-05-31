@@ -1,4 +1,4 @@
-# src/ — Manthan Backend
+# src/ - Manthan Backend
 
 The backend is organized as a 2-layer pipeline: **Layer 1** (data pipeline + semantic layer) and **Layer 2** (autonomous agent harness).
 
@@ -6,13 +6,13 @@ The backend is organized as a 2-layer pipeline: **Layer 1** (data pipeline + sem
 
 ```
 src/
-├── agent/            Layer 2 — the autonomous agent
+├── agent/            Layer 2 - the autonomous agent
 ├── api/              HTTP endpoints (FastAPI routers)
 ├── core/             Shared infrastructure
-├── ingestion/        Bronze stage — file loading
-├── profiling/        Silver stage — AI classification
+├── ingestion/        Bronze stage - file loading
+├── profiling/        Silver stage - AI classification
 ├── semantic/         DCD schema + render spec models
-├── materialization/  Gold stage — summary tables
+├── materialization/  Gold stage - summary tables
 ├── tools/            SQL + Python tool implementations
 └── sandbox/          Python REPL subprocess worker
 ```

@@ -10,7 +10,7 @@ them. This module implements a simple but effective heuristic:
 3. If yes, emit a :class:`DcdRelationship` pointing from the subset
    side to the superset side. That's the foreign-key direction.
 
-The algorithm is intentionally conservative — it won't invent joins.
+The algorithm is intentionally conservative - it won't invent joins.
 It only reports relationships the data itself confirms.
 """
 
@@ -114,7 +114,7 @@ def _is_value_subset(
     qc = quote_identifier(child_column)
     qp = quote_identifier(parent_column)
 
-    # Non-empty child check first — a totally empty child column would
+    # Non-empty child check first - a totally empty child column would
     # trivially be a "subset" but carries no join information.
     child_count = connection.execute(
         f"SELECT COUNT(*) FROM {child_table} WHERE {qc} IS NOT NULL"
@@ -135,6 +135,6 @@ def _is_value_subset(
     except duckdb.Error:
         # If even the string-cast comparison fails (e.g. binary types or
         # struct/list columns), treat the pair as not a subset and move
-        # on — FK detection is best-effort.
+        # on - FK detection is best-effort.
         return False
     return orphan_count is not None and int(orphan_count[0]) == 0

@@ -20,7 +20,7 @@ interface SourceIconProps {
  *     mode.
  *
  * For both, we swap the brand hex for `var(--color-ink-strong)`, which
- * is the warm near-white on dark and the warm near-black on light —
+ * is the warm near-white on dark and the warm near-black on light -
  * legible everywhere. Brands whose canonical colour is in the readable
  * mid-range (Stripe purple, HubSpot orange, Intercom blue) are left
  * alone and rendered in their brand hex.
@@ -35,7 +35,7 @@ const USE_INK_INSTEAD = new Set([
   "anthropic",
   "x",
   "tiktok",
-  // Pure-white brands — same override, opposite-side problem.
+  // Pure-white brands - same override, opposite-side problem.
   "resend",
 ]);
 

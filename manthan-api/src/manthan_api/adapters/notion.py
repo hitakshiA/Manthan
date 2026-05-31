@@ -1,4 +1,4 @@
-"""Notion adapter — write a case decision log page."""
+"""Notion adapter - write a case decision log page."""
 
 from __future__ import annotations
 

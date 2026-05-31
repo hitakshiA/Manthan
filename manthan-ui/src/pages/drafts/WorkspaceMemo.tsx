@@ -1,5 +1,5 @@
 /**
- * WorkspaceMemo — Case Workspace, editorial-memo direction.
+ * WorkspaceMemo - Case Workspace, editorial-memo direction.
  *
  * Renders one case in the landing's BriefCanvas vocabulary: HeaderStrip
  * at the top, two-column editorial spread inside (postmortem left,
@@ -7,7 +7,7 @@
  * brief for the raw SQL trace.
  *
  * Two modes:
- *   - PROPS-LESS:  /app/workspace-memo standalone — renders the baked
+ *   - PROPS-LESS:  /app/workspace-memo standalone - renders the baked
  *                  W7R Aperture mock data with no Coral toggle (no
  *                  case_id known, no events to subscribe to).
  *   - PROPS-FED:   the production /app/case/:id route passes real
@@ -33,7 +33,7 @@ import {
 } from "./InvestigationMemo";
 
 // ──────────────────────────────────────────────────────────────────────
-// Public prop shape — what the production route passes in.
+// Public prop shape - what the production route passes in.
 // ──────────────────────────────────────────────────────────────────────
 
 export interface MemoFinding {
@@ -73,7 +73,7 @@ export interface WorkspaceMemoProps {
    *  cinematic. Falls back to a fabricated list from `actions` when
    *  not provided (mock/preview routes). */
   workspaceActions?: WorkspaceAction[];
-  /** Optional case_id — when present, the Coral toggle shows up in the
+  /** Optional case_id - when present, the Coral toggle shows up in the
    *  header and reads from this case's SSE event stream. */
   caseId?: string;
   /** Called after the cinematic finishes so the parent can refetch the
@@ -82,7 +82,7 @@ export interface WorkspaceMemoProps {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Default mock data — the W7R Aperture story. Used when the component
+// Default mock data - the W7R Aperture story. Used when the component
 // renders standalone at /app/workspace-memo (no props).
 // ──────────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ const MOCK_CASE: MemoCaseData = {
   tldr:
     "Aperture disputes the full $8,400 April Premium charge citing Custom " +
     "Reports degradation. Datadog confirms a 48-hour SLA breach during the " +
-    "cycle (2026-04-13 → 04-15) — exactly the window the customer " +
+    "cycle (2026-04-13 → 04-15) - exactly the window the customer " +
     "references in Intercom. The Notion 'Documented Incident Pro-Rata " +
     "Credit' policy mandates 2/30 × $8,400 = $560. Customer self-downgraded " +
     "post-incident; no full-refund basis.",
@@ -125,7 +125,7 @@ const MOCK_FINDINGS: MemoFinding[] = [
     src: "intercom",
     text:
       "Customer message 2026-04-14 cites Custom Reports timeouts " +
-      "“today and yesterday” — aligns exactly with the Datadog window.",
+      "“today and yesterday” - aligns exactly with the Datadog window.",
     citeRef: "conv/3708443460",
   },
   {
@@ -207,7 +207,7 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
   // `fired` → backend agrees all actions are terminal (case_closed
   //           arrived OR caseData.status flipped to a terminal state).
   //
-  // CRITICAL: `fired` is ALWAYS gated on backend truth — we never flip
+  // CRITICAL: `fired` is ALWAYS gated on backend truth - we never flip
   // it just because the cinematic finished. Previously the phase label
   // and "Queued · N actions" button would flip to "fired" the moment
   // the animation timed out, leading to three surfaces lying about
@@ -227,11 +227,11 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
   const [mode, setMode] = useState<"prose" | "coral">("prose");
 
   // Chat drawer (slides in from the right). Available only when caseId is
-  // provided — there's no thread to chat about in standalone mock mode.
+  // provided - there's no thread to chat about in standalone mock mode.
   const [chatOpen, setChatOpen] = useState(false);
 
   // Subscribe to SSE only when caseId is provided AND coral mode is
-  // opened at least once — keeps the event source dormant for the
+  // opened at least once - keeps the event source dormant for the
   // common "operator just glances at the brief" case.
   const liveEnabled = !!caseId;
   const { events, isComplete } = useCaseEvents(liveEnabled ? caseId : undefined);
@@ -263,7 +263,7 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
     try {
       await approveCase(caseId);
     } catch (e) {
-      // Approve failed at the API — surface the error and back out
+      // Approve failed at the API - surface the error and back out
       // of the firing state so the operator can retry.
       console.warn("manthan: approveCase failed", e);
       setApproveError((e as Error).message ?? "Approve failed");
@@ -282,7 +282,7 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
     if (caseId && isCaseTerminal) {
       setState("fired");
     } else if (!caseId) {
-      // Mock route — no backend to wait on.
+      // Mock route - no backend to wait on.
       setState("fired");
     }
     // else: stay in "firing"; the SSE useEffect above will flip us when
@@ -359,7 +359,7 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
             )}
           </motion.div>
 
-          {/* Approval cinematic — full-canvas takeover the moment the
+          {/* Approval cinematic - full-canvas takeover the moment the
               operator clicks Approve. Walks through each action one at
               a time, showing the source logo + the action firing, and
               flips back to the brief (in its closed state) once every
@@ -383,11 +383,11 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
             )}
           </AnimatePresence>
 
-          {/* Side chat drawer — Claude-mobile style. Floats over the
+          {/* Side chat drawer - Claude-mobile style. Floats over the
               right edge of the workspace canvas so the brief stays in
               its native 2-column layout underneath; a soft fade on the
               left edge of the drawer reads as "this is in front." */}
-          {/* Side chat drawer — Claude-mobile-style. Mounted only when
+          {/* Side chat drawer - Claude-mobile-style. Mounted only when
               open; we skip framer-motion here (got stuck mid-animation
               in this preview setup) and use a plain CSS transition for
               the slide-in. */}
@@ -423,7 +423,7 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps = {}) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// HeaderStrip — case identity + (optional) Coral toggle + phase label.
+// HeaderStrip - case identity + (optional) Coral toggle + phase label.
 // ──────────────────────────────────────────────────────────────────────
 
 function HeaderStrip({
@@ -542,7 +542,7 @@ function HeaderStrip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// BriefCanvas — postmortem left, suggested actions right.
+// BriefCanvas - postmortem left, suggested actions right.
 // ──────────────────────────────────────────────────────────────────────
 
 function BriefCanvas({
@@ -571,7 +571,7 @@ function BriefCanvas({
         gridTemplateRows: "minmax(0, 1fr)",
       }}
     >
-      {/* LEFT — postmortem */}
+      {/* LEFT - postmortem */}
       <div className="px-14 pt-12 pb-8 overflow-y-auto flex flex-col gap-7">
         <Eyebrow>Brief</Eyebrow>
 
@@ -715,14 +715,14 @@ function BriefCanvas({
           )}
         </ol>
 
-        {/* All-sources-touched footer — every source the agent queried,
+        {/* All-sources-touched footer - every source the agent queried,
             even if formal record_finding didn't fire for it. Reads
             "Also touched <X, Y, Z>" so the operator sees coverage at a
             glance without scrolling to the Coral trace. */}
         <AlsoTouched findings={findings} />
       </div>
 
-      {/* RIGHT — suggested actions while awaiting; fired-actions
+      {/* RIGHT - suggested actions while awaiting; fired-actions
           ledger (with results + external refs) once the case closes. */}
       <div
         className="pt-12 pb-8 pl-11 pr-14 flex flex-col"
@@ -845,7 +845,7 @@ function BriefCanvas({
                 }}
                 title={approveError}
               >
-                Approve failed — {approveError}
+                Approve failed - {approveError}
               </span>
             )}
           </div>
@@ -856,7 +856,7 @@ function BriefCanvas({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// BriefProse — render brief / postmortem prose with auto-detected
+// BriefProse - render brief / postmortem prose with auto-detected
 // formatting: long opaque IDs become compact monospace chips, source
 // names get brand-colored, sentences break into paragraphs (block
 // mode only). Inline mode preserves a single line.
@@ -871,7 +871,7 @@ function BriefProse({
   findings: MemoFinding[];
   inline?: boolean;
 }) {
-  // Build a citation lookup once — slug → finding number, so when we
+  // Build a citation lookup once - slug → finding number, so when we
   // detect a source mention we can stamp the right [N] chip.
   const sourceToCiteNum = useMemo(() => {
     const m = new Map<string, number>();
@@ -939,7 +939,7 @@ function renderProseNodes(
   sourceToCiteNum: Map<string, number>,
 ): React.ReactNode[] {
   const out: React.ReactNode[] = [];
-  // Order matters — try the most specific patterns first.
+  // Order matters - try the most specific patterns first.
   // Stripe IDs: ch_/du_/cus_/py_/pi_/re_/in_/sub_/evt_/seti_ + 20+ chars
   // HubSpot numeric IDs (12+ digits)
   // UUIDs
@@ -1099,7 +1099,7 @@ function compactId(id: string): string {
 }
 
 /**
- * SourceMention — the name of a source (Stripe, HubSpot, …) rendered
+ * SourceMention - the name of a source (Stripe, HubSpot, …) rendered
  * in its brand color, with a trailing superscript citation chip when
  * we have a matching finding.
  */
@@ -1178,7 +1178,7 @@ function brandHexFor(slug: string): string {
 }
 
 /**
- * AlsoTouched — small footer below the postmortem listing every other
+ * AlsoTouched - small footer below the postmortem listing every other
  * source the agent looked at, beyond the ones that produced formal
  * findings. Derived from a static map of "the 8 sources Manthan reads
  * for chargebacks" minus whatever's already in the formal findings.
@@ -1233,7 +1233,7 @@ function AlsoTouched({ findings }: { findings: MemoFinding[] }) {
               fontWeight: 500,
               letterSpacing: "0.01em",
             }}
-            title={`${src} — agent queried but no formal finding committed`}
+            title={`${src} - agent queried but no formal finding committed`}
           >
             <SourceIcon id={src} size={11} tinted />
             {prettyName(src)}
@@ -1304,7 +1304,7 @@ function SourceWord({ src, label }: { src: string; label: string }) {
 }
 
 /**
- * citationUrl — build a deep-link to the underlying source record from
+ * citationUrl - build a deep-link to the underlying source record from
  * the three structural fields we always carry (source / table / ref).
  *
  * The backend already pre-builds `url` on ApiCitation when it knows how
@@ -1354,7 +1354,7 @@ export function citationUrl(
 
   if (src === "hubspot" && (tbl === "companies" || ref.startsWith("company/"))) {
     const id = ref.replace(/^company\//, "");
-    // No portalId hardcoded — HubSpot routes /contacts/portalId/company/{id}
+    // No portalId hardcoded - HubSpot routes /contacts/portalId/company/{id}
     // through the user's active portal; passing the literal "portalId"
     // segment is what HubSpot's own deep-link docs recommend when the
     // portal isn't known at build time.
@@ -1381,7 +1381,7 @@ export function citationUrl(
     if (tbl === "events" || /^\d+$/.test(ref)) {
       return `https://app.datadoghq.com/event/event?id=${encodeURIComponent(ref)}`;
     }
-    // Fallback — Datadog top-level search.
+    // Fallback - Datadog top-level search.
     return `https://app.datadoghq.com/search?query=${encodeURIComponent(ref)}`;
   }
 
@@ -1403,7 +1403,7 @@ export function citationUrl(
   }
 
   if (src === "zendesk") {
-    // Subdomain from env — we seed against minylabs in dev.
+    // Subdomain from env - we seed against minylabs in dev.
     const sub =
       (import.meta.env.VITE_ZENDESK_SUBDOMAIN as string | undefined) ||
       "minylabs";
@@ -1430,7 +1430,7 @@ export function citationUrl(
   if (src === "slack") {
     // Slack permalinks need workspace + channel + ts which we don't
     // carry in the bare ref. Send the operator to the workspace search
-    // for the ref keyword — better than a dead chip.
+    // for the ref keyword - better than a dead chip.
     const ws =
       (import.meta.env.VITE_SLACK_WORKSPACE as string | undefined) ||
       "app";
@@ -1453,7 +1453,7 @@ export function citationUrl(
     return `https://${inst}/lightning/r/${ref}/view`;
   }
 
-  // Unknown / unmapped source — last-resort Google search on the ref
+  // Unknown / unmapped source - last-resort Google search on the ref
   // so the chip always opens SOMETHING rather than staying dead.
   return `https://www.google.com/search?q=${encodeURIComponent(
     `${src} ${ref}`,
@@ -1502,7 +1502,7 @@ function CiteChip({
         rel="noopener noreferrer"
         className="ml-2 inline-flex items-baseline gap-1.5 px-2 py-1 align-baseline transition-colors hover:brightness-125"
         style={sharedStyle}
-        title={`${src} · ${label} — open in new tab`}
+        title={`${src} · ${label} - open in new tab`}
       >
         {inner}
       </a>
@@ -1520,7 +1520,7 @@ function CiteChip({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// FiredActionRow + ClosedCaseFooter — post-resolution treatment of the
+// FiredActionRow + ClosedCaseFooter - post-resolution treatment of the
 // right panel. The same actions that read as "Suggested actions" while
 // awaiting approval now read as a ledger of what fired, with each row's
 // status, external reference, and a deep link to the source dashboard.
@@ -1732,7 +1732,7 @@ function ApproveButton({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// ChatDrawer — Claude-mobile-style side panel.
+// ChatDrawer - Claude-mobile-style side panel.
 //
 // Lives next to the brief (not inside it). Slides in from the right when
 // the operator taps the chat toggle in the HeaderStrip. Shows the
@@ -1775,7 +1775,7 @@ function collectChatTurns(events: CaseEvent[]): ChatTurn[] {
         elapsedMs: typeof ms === "number" ? ms : undefined,
       });
       // Drop any standalone "thinking" that sits immediately before this
-      // reply — once we have an answer the spinner is noise.
+      // reply - once we have an answer the spinner is noise.
       for (let i = turns.length - 2; i >= 0; i--) {
         const t = turns[i];
         if (t.kind === "thinking") {
@@ -1789,7 +1789,7 @@ function collectChatTurns(events: CaseEvent[]): ChatTurn[] {
   return turns;
 }
 
-/** Header toggle button — sits in the HeaderStrip beside CoralToggle. */
+/** Header toggle button - sits in the HeaderStrip beside CoralToggle. */
 function ChatHeaderToggle({
   open,
   onToggle,
@@ -1825,7 +1825,7 @@ function ChatHeaderToggle({
           transition: "all 160ms ease",
         }}
       >
-        {/* Speech-bubble glyph — minimal, no heavy weight. */}
+        {/* Speech-bubble glyph - minimal, no heavy weight. */}
         <svg
           width="13"
           height="13"
@@ -1898,7 +1898,7 @@ function ChatDrawer({
 
   return (
     <>
-      {/* Drawer header — minimal, identifies the panel + close button. */}
+      {/* Drawer header - minimal, identifies the panel + close button. */}
       <header
         className="shrink-0 flex items-center px-6"
         style={{
@@ -1967,7 +1967,7 @@ function ChatDrawer({
         </button>
       </header>
 
-      {/* Conversation list — scrollable. Empty state nudges the operator
+      {/* Conversation list - scrollable. Empty state nudges the operator
           with a single italic prompt, Claude-mobile style. */}
       <div
         ref={scrollRef}
@@ -2015,7 +2015,7 @@ function ChatDrawer({
         )}
       </div>
 
-      {/* Bottom-pinned ASK input — Claude-mobile rounded pill, monochrome. */}
+      {/* Bottom-pinned ASK input - Claude-mobile rounded pill, monochrome. */}
       <form
         onSubmit={send}
         className="shrink-0 px-5 pt-3 pb-5"
@@ -2175,7 +2175,7 @@ function ChatTurnRow({ turn }: { turn: ChatTurn }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// MarkdownText — light-weight inline formatter.
+// MarkdownText - light-weight inline formatter.
 //
 // The agent_reply text is plain English with a small number of
 // conventions we want to surface visually:
@@ -2186,7 +2186,7 @@ function ChatTurnRow({ turn }: { turn: ChatTurn }) {
 //   - backtick `code` runs (monospace, faint background)
 //   - `[N]` citation refs (small monospace chip)
 //
-// We deliberately avoid a real markdown library — the agent's output is
+// We deliberately avoid a real markdown library - the agent's output is
 // constrained enough that a 60-line tokeniser hits everything we need
 // and keeps the visual language consistent with the rest of the memo.
 // ──────────────────────────────────────────────────────────────────────
@@ -2243,7 +2243,7 @@ function MarkdownText({ text }: { text: string }) {
 }
 
 /**
- * InlineRich — handles **bold**, `code`, [N] in a single pass.
+ * InlineRich - handles **bold**, `code`, [N] in a single pass.
  *
  * A single regex captures all three patterns; the matched groups tell us
  * which kind it is. Everything between matches is plain text.

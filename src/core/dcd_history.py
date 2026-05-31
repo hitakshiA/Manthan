@@ -5,7 +5,7 @@ line in ``data/<ds>/dcd_history.jsonl`` capturing who changed what,
 when, and (optionally) why. An auditor who asks "what did 'Revenue'
 mean on March 15?" can walk the log to reconstruct the state.
 
-Intentionally simple — no git dependency, no diff library, no
+Intentionally simple - no git dependency, no diff library, no
 versioned storage. Each entry is a full snapshot of the DCD so
 replay is trivial. For high-churn production workloads a real
 versioned store (dvc, lakefs, git-backed) is a later-phase swap.
@@ -31,7 +31,7 @@ def log_dcd_change(
 ) -> None:
     """Append one change entry to ``data/<ds>/dcd_history.jsonl``.
 
-    Failure to write the history never blocks the DCD update itself —
+    Failure to write the history never blocks the DCD update itself -
     the snapshot file is the source of truth, history is metadata.
     """
     try:
@@ -72,7 +72,7 @@ def read_dcd_history(
     """Return the most recent entries (newest first).
 
     ``include_snapshots=False`` omits the full DCD blob from each
-    entry — the default, to keep list responses compact. Callers
+    entry - the default, to keep list responses compact. Callers
     that need a specific historical snapshot should request it with
     ``include_snapshots=True`` and slice by timestamp.
     """

@@ -1,5 +1,5 @@
 /**
- * InvestigationMemo — the LIVE investigation, editorial-memo direction.
+ * InvestigationMemo - the LIVE investigation, editorial-memo direction.
  *
  * Pulls the landing's InvestigatingCanvas vocabulary onto the actual
  * dashboard SSE stream. Subscribes via useCaseEvents, extracts the
@@ -9,7 +9,7 @@
  *
  * Route: /app/investigation-memo/:id  → useParams() supplies the case id.
  *
- * Throwaway draft — production wires this into the Workspace as the
+ * Throwaway draft - production wires this into the Workspace as the
  * phase the operator sees while status === "investigating".
  */
 
@@ -71,7 +71,7 @@ export default function InvestigationMemo() {
     id,
     { enabled: !isComplete },
   );
-  // Full source set the LATEST coral_sql touched — drives the prose
+  // Full source set the LATEST coral_sql touched - drives the prose
   // canvas's multi-source asking line + the hero constellation. The
   // existing single `currentSource` is the FROM table; this includes
   // every JOIN / subquery / scalar-correlated source as well.
@@ -84,7 +84,7 @@ export default function InvestigationMemo() {
     [events],
   );
 
-  // Customer + case label — derived from case_opened if present.
+  // Customer + case label - derived from case_opened if present.
   const caseHeader = useMemo(() => deriveCaseHeader(events, id), [events, id]);
 
   return (
@@ -116,7 +116,7 @@ export default function InvestigationMemo() {
           }
         />
 
-        {/* Conditional canvas — no AnimatePresence at this level. The
+        {/* Conditional canvas - no AnimatePresence at this level. The
             opacity fade happens via a single keyed motion.div that
             re-mounts when mode changes; React unmounts the old one
             cleanly so we never get a phantom prose canvas behind coral.
@@ -156,7 +156,7 @@ export default function InvestigationMemo() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// HeaderStrip — case identity + live elapsed clock.
+// HeaderStrip - case identity + live elapsed clock.
 // ──────────────────────────────────────────────────────────────────────
 
 function HeaderStrip({
@@ -178,7 +178,7 @@ function HeaderStrip({
   mode: "prose" | "coral";
   onToggleMode: () => void;
 }) {
-  const phase = isComplete ? "Brief ready" : isLive ? "Investigating" : "—";
+  const phase = isComplete ? "Brief ready" : isLive ? "Investigating" : "-";
   const phaseColor = isComplete
     ? "var(--color-accent)" // accent green
     : "var(--color-amber)"; // amber for active
@@ -272,7 +272,7 @@ function HeaderStrip({
 }
 
 /**
- * Coral toggle — small icon button in the header. Active state has a
+ * Coral toggle - small icon button in the header. Active state has a
  * green hairline ring + slight glow on the coral glyph; inactive state
  * is ghosted so the icon reads as "available, not on."
  */
@@ -298,7 +298,7 @@ export function CoralToggle({
       }}
       title={
         active
-          ? "Coral SQL view is on — click to return to the prettified summary"
+          ? "Coral SQL view is on - click to return to the prettified summary"
           : "Show the raw Coral SQL the agent is running"
       }
       aria-pressed={active}
@@ -346,7 +346,7 @@ export function CoralToggle({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Canvas — landing's InvestigatingCanvas layout, wired to live events.
+// Canvas - landing's InvestigatingCanvas layout, wired to live events.
 // ──────────────────────────────────────────────────────────────────────
 
 function Canvas({
@@ -389,7 +389,7 @@ function Canvas({
         gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)",
       }}
     >
-      {/* LEFT — typographic statement, currently-asked source */}
+      {/* LEFT - typographic statement, currently-asked source */}
       <div className="px-14 pt-12 pb-8 flex flex-col">
         <Eyebrow accent={!isComplete}>
           {isComplete ? "Investigation complete" : "Investigating"}
@@ -429,7 +429,7 @@ function Canvas({
           )}
         </h2>
 
-        {/* Live narrative — synthesized server-side from the last 25
+        {/* Live narrative - synthesized server-side from the last 25
             events. 2 paragraphs of plain-English story: what the
             agent has done so far, what it's doing now. Falls back to
             the prettifier's one-line summary while the first
@@ -465,7 +465,7 @@ function Canvas({
           </AnimatePresence>
         </div>
 
-        {/* Hero — source constellation. When the query touches one
+        {/* Hero - source constellation. When the query touches one
             source, render the big primary glyph (old behavior). When
             it joins across N sources, render the primary at center +
             up to 7 secondary glyphs in a halo around it, animating
@@ -522,7 +522,7 @@ function Canvas({
                   fontWeight: 500,
                 }}
               >
-                Brief drafted — see workspace
+                Brief drafted - see workspace
               </motion.div>
             ) : (
               <motion.div
@@ -542,9 +542,9 @@ function Canvas({
         </div>
       </div>
 
-      {/* RIGHT — findings as editorial marginalia. Formal findings
+      {/* RIGHT - findings as editorial marginalia. Formal findings
           (record_finding events) take priority. Until the agent
-          commits any, we show LLM-derived interim findings — concrete
+          commits any, we show LLM-derived interim findings - concrete
           facts the agent has surfaced from tool_results, with a small
           "in flight" caveat so the operator knows these aren't yet
           claims-with-citations. */}
@@ -665,7 +665,7 @@ function Canvas({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// CoralCanvas — raw SQL feed paired with prettified summaries.
+// CoralCanvas - raw SQL feed paired with prettified summaries.
 //
 // Each row is one tool_call: a header line with [SOURCE BYLINE] + the
 // prettified prose, then a code block with the actual SQL query (or the
@@ -684,7 +684,7 @@ export function CoralCanvas({
   isComplete: boolean;
   currentSource: string | null;
 }) {
-  // Track which rows are expanded. Set of step seq numbers — using seq
+  // Track which rows are expanded. Set of step seq numbers - using seq
   // rather than index so reorder via newer events doesn't toggle the
   // wrong row.
   const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
@@ -813,8 +813,8 @@ function CoralRow({
       }}
       className="grid cursor-pointer transition-colors"
       style={{
-        // Wider left column (was 118px) so the longest byline —
-        // DESCRIBE_TABLE — fits without colliding with the prose. We
+        // Wider left column (was 118px) so the longest byline -
+        // DESCRIBE_TABLE - fits without colliding with the prose. We
         // also short-label the tools (see byline()) so the column
         // doesn't need to scale to "CORAL_DESCRIBE_TABLE" length.
         gridTemplateColumns: "150px minmax(0, 1fr)",
@@ -825,7 +825,7 @@ function CoralRow({
         background: isExpanded ? "var(--color-surface-2)" : "transparent",
       }}
     >
-      {/* LEFT — byline + (extra source icons) + sequence + timestamp */}
+      {/* LEFT - byline + (extra source icons) + sequence + timestamp */}
       <div className="flex flex-col gap-1 pt-[3px] min-w-0 overflow-hidden">
         <div className="inline-flex items-baseline gap-2 min-w-0">
           <SourceWord
@@ -847,11 +847,11 @@ function CoralRow({
                 flexShrink: 0,
               }}
               aria-hidden
-              title="live — agent is on this step"
+              title="live - agent is on this step"
             />
           )}
         </div>
-        {/* Secondary sources — every OTHER known source this query
+        {/* Secondary sources - every OTHER known source this query
             touched via JOIN or scalar subquery. Tiny brand-tinted
             icons, max 6 shown + "+N" overflow. Hides when there's
             only the primary. */}
@@ -869,9 +869,9 @@ function CoralRow({
         </span>
       </div>
 
-      {/* RIGHT — prose then code (and on expand, the full event JSON) */}
+      {/* RIGHT - prose then code (and on expand, the full event JSON) */}
       <div className="flex flex-col gap-3 min-w-0">
-        {/* Prettified prose — same line the prose-view shows */}
+        {/* Prettified prose - same line the prose-view shows */}
         <div
           className="text-[14.5px] leading-[1.45]"
           style={{
@@ -884,7 +884,7 @@ function CoralRow({
           <CoralStepProse step={step} />
         </div>
 
-        {/* Code block — Fix #3: pre-wrap so long SQL breaks at natural
+        {/* Code block - Fix #3: pre-wrap so long SQL breaks at natural
             boundaries instead of forcing a horizontal scroll. Long
             identifiers stay on one line via word-break: keep-all. */}
         <pre
@@ -906,7 +906,7 @@ function CoralRow({
           {renderCoralBody(step)}
         </pre>
 
-        {/* Fix #4: expand panel — full event JSON for the power user.
+        {/* Fix #4: expand panel - full event JSON for the power user.
             Triggered by clicking the row. Slides down from the code
             block with a subtle opacity+y animation. */}
         <AnimatePresence initial={false}>
@@ -1037,7 +1037,7 @@ function renderCoralBody(step: CoralStep): React.ReactNode {
 
 /**
  * Light SQL syntax-tinting. Splits on whitespace and styles keywords
- * green, identifiers white, string literals amber. Not a parser — just
+ * green, identifiers white, string literals amber. Not a parser - just
  * enough to give the eye a foothold.
  */
 function formatSql(sql: string): React.ReactNode {
@@ -1112,7 +1112,7 @@ function formatSql(sql: string): React.ReactNode {
           </span>,
         );
       } else if (ident.includes(".")) {
-        // Schema-qualified identifier like stripe.disputes — color the
+        // Schema-qualified identifier like stripe.disputes - color the
         // schema part in info-blue, the table in normal ink.
         const [src, tbl] = ident.split(".");
         tokens.push(
@@ -1213,7 +1213,7 @@ function SourceWord({ src, label }: { src: string; label: string }) {
 }
 
 /**
- * Headline — renders the "Manthan is asking …" phrase, scaling its
+ * Headline - renders the "Manthan is asking …" phrase, scaling its
  * shape with how many sources the current query touches.
  *
  *   0 sources (non-SQL tool): "Manthan is working on it."
@@ -1359,11 +1359,11 @@ function brandColorFor(slug: string): string {
 }
 
 /**
- * SourceConstellation — hero visual for the multi-source asking state.
+ * SourceConstellation - hero visual for the multi-source asking state.
  *
  * Renders the touched sources as a horizontal row of equal-sized boxes
- * below the narrative text. Every source gets the same treatment — no
- * primary-vs-secondary hierarchy, no orbit — so the operator reads
+ * below the narrative text. Every source gets the same treatment - no
+ * primary-vs-secondary hierarchy, no orbit - so the operator reads
  * "these N systems are being asked" at a glance.
  *
  * Each tile is 56x56 with the brand logo at 28px and the source name
@@ -1452,18 +1452,18 @@ function SourceConstellation({ sources }: { sources: string[] }) {
 }
 
 /**
- * CoralStepProse — the human-readable line that sits next to a Coral
+ * CoralStepProse - the human-readable line that sits next to a Coral
  * trace row's SQL. Picks the best signal we have:
  *
  *   1. Real prettifier summary (if the worker has caught up AND
  *      didn't just write the generic `Calling coral_sql` fallback).
- *   2. Multi-source synthetic when the SQL touches ≥2 known sources —
+ *   2. Multi-source synthetic when the SQL touches ≥2 known sources -
  *      "Joining stripe with hubspot, intercom, notion, datadog and
- *      pagerduty" — derived from the step.sources list. Reads better
+ *      pagerduty" - derived from the step.sources list. Reads better
  *      than "Calling coral_sql" and stays useful while the prettifier
  *      catches up.
- *   3. Single-source synthetic — "Reading stripe records" /
- *      "Describing the stripe disputes table" — for short queries.
+ *   3. Single-source synthetic - "Reading stripe records" /
+ *      "Describing the stripe disputes table" - for short queries.
  *   4. Non-SQL tools fall back to a labelled "(prettifier pending)".
  */
 function CoralStepProse({ step }: { step: CoralStep }) {
@@ -1471,7 +1471,7 @@ function CoralStepProse({ step }: { step: CoralStep }) {
 
   // Treat the prettifier's own fallback ("Calling coral_sql",
   // "Result from coral_sql") as no-summary so we render the multi-
-  // source synthetic instead — it's strictly more useful.
+  // source synthetic instead - it's strictly more useful.
   const summary = step.summary?.trim() ?? "";
   const isWeakSummary =
     !summary ||
@@ -1556,7 +1556,7 @@ function describeStep(step: CoralStep): string | null {
  * doesn't run off.
  */
 function formatSourceList(sources: string[]): string {
-  if (sources.length === 0) return "—";
+  if (sources.length === 0) return "-";
   if (sources.length === 1) return sources[0];
   if (sources.length === 2) return `${sources[0]} and ${sources[1]}`;
   if (sources.length <= 5) {
@@ -1566,7 +1566,7 @@ function formatSourceList(sources: string[]): string {
 }
 
 /**
- * ExtraSources — small brand-icon row for the OTHER sources a SQL
+ * ExtraSources - small brand-icon row for the OTHER sources a SQL
  * touched (subqueries, joins). Caps at 6 visible + "+N" overflow so a
  * 10-source join still fits in the gutter.
  */
@@ -1611,7 +1611,7 @@ function ExtraSources({ sources }: { sources: string[] }) {
 
 /**
  * Short byline label for a Coral-trace row. The whole panel is the
- * Coral trace, so the `CORAL_` prefix is redundant noise — we strip
+ * Coral trace, so the `CORAL_` prefix is redundant noise - we strip
  * it. When `source` is set (extracted from the SQL), prefer it because
  * "STRIPE" reads as the actor faster than "SQL".
  *
@@ -1638,12 +1638,12 @@ function byline(source: string | null, tool: string | null | undefined): string 
     reply: "REPLY",
   };
   if (map[t]) return map[t];
-  // Generic fallback — drop "coral_" prefix and uppercase.
+  // Generic fallback - drop "coral_" prefix and uppercase.
   return t.replace(/^coral_/, "").toUpperCase();
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Derivation helpers — pull the "current source", "question line", and
+// Derivation helpers - pull the "current source", "question line", and
 // "findings list" out of the raw event stream.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -1718,7 +1718,7 @@ interface FindingRow {
 export interface CoralStep {
   seq: number;
   tool: string;            // coral_sql | record_finding | conclude | ask_human | …
-  /** Primary source — the table after the first FROM clause (the table
+  /** Primary source - the table after the first FROM clause (the table
    *  the query is actually scanning). null for non-SQL tools. */
   source: string | null;
   /** Every distinct known source touched by this query, in textual order
@@ -1736,7 +1736,7 @@ export interface CoralStep {
 
 /**
  * Convert the event stream into one CoralStep per tool_call (reverse
- * chronological — newest first). Non-SQL tool calls get rendered too
+ * chronological - newest first). Non-SQL tool calls get rendered too
  * with their args, so the operator sees the whole sequence: the
  * coral_sql reads, the record_findings the agent commits, and the
  * final conclude / ask_human.
@@ -1766,8 +1766,8 @@ export function collectCoralSteps(events: CaseEvent[]): CoralStep[] {
         : null;
     // Extract every known source the query touches (FROM, JOIN, scalar
     // subqueries, correlated SELECTs). Preserve textual order so the
-    // primary FROM table — usually the agent's anchor table for this
-    // query — ends up first.
+    // primary FROM table - usually the agent's anchor table for this
+    // query - ends up first.
     const sources = extractSources(sql);
     const primary = sources[0] ?? null;
     const local = new Date(e.created_at);
@@ -1794,7 +1794,7 @@ export function collectCoralSteps(events: CaseEvent[]): CoralStep[] {
  * Pull every distinct known source out of a SQL string in textual
  * order. A 10-source join (Salesforce FROM + Intercom/Zendesk/HubSpot/
  * Datadog/PagerDuty/Sentry/Notion/PostHog/Slack scalar subqueries)
- * returns all ten — the byline can then show "SALESFORCE +9" instead
+ * returns all ten - the byline can then show "SALESFORCE +9" instead
  * of pretending only Salesforce was touched.
  *
  * Anchor the primary on the FIRST `FROM table` token when present,
@@ -1812,9 +1812,9 @@ function extractSources(sql: string | null): string[] {
 
   // First, prefer the table named in the outermost FROM clause as
   // the primary source. Match `from <source>.<table>` not inside a
-  // subquery — i.e. the LAST FROM at the top level. (We approximate
+  // subquery - i.e. the LAST FROM at the top level. (We approximate
   // "top level" by taking the FROM that's not immediately preceded by
-  // an open paren on the same line — good enough for the agent's
+  // an open paren on the same line - good enough for the agent's
   // generated SQL, which doesn't nest the main FROM.)
   const fromRe = /\bfrom\s+([a-z_][a-z0-9_]*)\s*\.\s*[a-z_][a-z0-9_]*\b/g;
   let fm: RegExpExecArray | null;
@@ -1823,7 +1823,7 @@ function extractSources(sql: string | null): string[] {
     const src = fm[1];
     if (!KNOWN_SOURCES.has(src)) continue;
     // Look backwards from the match to find the last "(" or "\n".
-    // The "main" FROM is the one that isn't inside a subquery — we
+    // The "main" FROM is the one that isn't inside a subquery - we
     // approximate by picking the one whose preceding "(" count over
     // the file is balanced.
     const before = q.slice(0, fm.index);
@@ -1851,9 +1851,9 @@ function extractSources(sql: string | null): string[] {
 
 /**
  * Pulls findings from the event stream. Two sources:
- *   1. tool_call events with name="record_finding" — the args.text is
+ *   1. tool_call events with name="record_finding" - the args.text is
  *      the finding text.
- *   2. finding_recorded events (server-side projection) — data.text.
+ *   2. finding_recorded events (server-side projection) - data.text.
  * Source attribution falls back to the source the agent was reading
  * most recently before the finding was emitted.
  */
@@ -1911,24 +1911,24 @@ function deriveCaseHeader(
         | undefined;
       return {
         shortId: data?.short_id ?? truncId(fallbackId),
-        customer: data?.customer_ref ?? data?.customer ?? "—",
+        customer: data?.customer_ref ?? data?.customer ?? "-",
       };
     }
   }
   return {
     shortId: truncId(fallbackId),
-    customer: "—",
+    customer: "-",
   };
 }
 
 function truncId(id: string | undefined): string {
-  if (!id) return "—";
+  if (!id) return "-";
   // UUIDs are unwieldy in the header; show the first 8 chars uppercased.
   return id.slice(0, 8).toUpperCase();
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Elapsed clock — ticks once per second, anchored to the earliest
+// Elapsed clock - ticks once per second, anchored to the earliest
 // case_opened event so the wall-clock shows real investigation duration.
 // ──────────────────────────────────────────────────────────────────────
 
@@ -1947,7 +1947,7 @@ function useElapsed(events: CaseEvent[]): string {
     return () => window.clearInterval(id);
   }, []);
 
-  if (startMs === null) return "—";
+  if (startMs === null) return "-";
   const sec = Math.max(0, Math.floor((now - startMs) / 1000));
   const mm = Math.floor(sec / 60);
   const ss = sec % 60;

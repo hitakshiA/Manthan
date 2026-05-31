@@ -1,5 +1,5 @@
 /**
- * Settings — the workspace control panel, editorial-memo direction.
+ * Settings - the workspace control panel, editorial-memo direction.
  *
  * Only renders information that's actually real:
  *   - Workspace · team       → /api/me
@@ -8,7 +8,7 @@
  *     MANTHAN_CHAT_MODEL / MANTHAN_CITATION_MODEL for the workers).
  *
  * Everything else (billing, compliance certifications, policy
- * thresholds, notification channels) is honestly labelled DEMO MODE —
+ * thresholds, notification channels) is honestly labelled DEMO MODE -
  * the page used to ship hard-coded plausible-but-fake values which the
  * operator can't change, and that's worse than not showing them at all.
  *
@@ -22,15 +22,15 @@ import type { ReactNode } from "react";
 import { getMe, type MeResponse } from "@/lib/api";
 
 // ──────────────────────────────────────────────────────────────────────
-// Model runtime — mirrors what's actually configured in the running
+// Model runtime - mirrors what's actually configured in the running
 // stack (agent/.env + manthan-api/.env). When a real /api/runtime
 // endpoint lands later, swap this constant for a live fetch.
 //
-//   Investigator + Chat agent: x-ai/grok-build-0.1 — coding-tuned
+//   Investigator + Chat agent: x-ai/grok-build-0.1 - coding-tuned
 //     grok, the model that can drive Coral SQL tool calls cleanly.
 //     Same model for both because the chat loop reuses the same tools.
 //
-//   Prettifier + Citation reasoning: google/gemini-3.1-flash-lite —
+//   Prettifier + Citation reasoning: google/gemini-3.1-flash-lite -
 //     a small fast model is the right tool for one-line summaries and
 //     2-sentence explanations.
 // ──────────────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ export default function Settings() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PageHeader — eyebrow + Spectral italic + DEMO MODE badge.
+// PageHeader - eyebrow + Spectral italic + DEMO MODE badge.
 // ──────────────────────────────────────────────────────────────────────
 
 function PageHeader() {
@@ -123,7 +123,7 @@ function PageHeader() {
         }}
       >
         Identity, team, and the agent runtime. Billing, compliance, and
-        notification channels are wired in production — this build runs
+        notification channels are wired in production - this build runs
         them in demo mode.
       </p>
     </header>
@@ -162,7 +162,7 @@ function DemoBadge() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Editorial card shell — HeaderStrip + body. Mirrors the WorkspaceMemo /
+// Editorial card shell - HeaderStrip + body. Mirrors the WorkspaceMemo /
 // SourceProfileCard / RuleMemo pattern so all the inner pages use the
 // same vocabulary.
 // ──────────────────────────────────────────────────────────────────────
@@ -283,7 +283,7 @@ function Row({
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Cards — real data only.
+// Cards - real data only.
 // ──────────────────────────────────────────────────────────────────────
 
 function WorkspaceCard({ me }: { me: MeResponse | null }) {
@@ -367,8 +367,8 @@ function TeamCard({ me }: { me: MeResponse | null }) {
           placeholder
             ? undefined
             : me.member.role === "admin"
-              ? "Full workspace control — invite teammates, change policies, switch models."
-              : "Member access — read cases, draft replies, request approvals."
+              ? "Full workspace control - invite teammates, change policies, switch models."
+              : "Member access - read cases, draft replies, request approvals."
         }
       />
       <Row
@@ -401,19 +401,19 @@ function ModelRuntimeCard() {
       <Row
         label="Investigator"
         value={MODEL_RUNTIME.agent}
-        hint="The model that drafts the brief, calls Coral tools, and concludes. Coding-tuned Grok — same model the chat loop reuses. Set via MANTHAN_MODEL on the agent."
+        hint="The model that drafts the brief, calls Coral tools, and concludes. Coding-tuned Grok - same model the chat loop reuses. Set via MANTHAN_MODEL on the agent."
         mono
       />
       <Row
         label="Chat agent"
         value={MODEL_RUNTIME.chat}
-        hint="Handles operator follow-ups on closed and awaiting-nod cases. Same caliber as the investigator because it gets the same tool surface — Coral SQL, record_finding, amend_brief. Set via MANTHAN_CHAT_MODEL."
+        hint="Handles operator follow-ups on closed and awaiting-nod cases. Same caliber as the investigator because it gets the same tool surface - Coral SQL, record_finding, amend_brief. Set via MANTHAN_CHAT_MODEL."
         mono
       />
       <Row
         label="Prettifier"
         value={MODEL_RUNTIME.prettifier}
-        hint="Writes the one-line event summaries you see in the investigation feed. Small fast model — the right tool for one-liners. Set via MANTHAN_PRETTIFIER_MODEL."
+        hint="Writes the one-line event summaries you see in the investigation feed. Small fast model - the right tool for one-liners. Set via MANTHAN_PRETTIFIER_MODEL."
         mono
       />
       <Row
@@ -514,7 +514,7 @@ const DEMO_ENTRIES: { label: string; detail: string }[] = [
 ];
 
 // ──────────────────────────────────────────────────────────────────────
-// Eyebrow primitive — mirrors the other editorial-memo pages.
+// Eyebrow primitive - mirrors the other editorial-memo pages.
 // ──────────────────────────────────────────────────────────────────────
 
 function Eyebrow({ children }: { children: ReactNode }) {

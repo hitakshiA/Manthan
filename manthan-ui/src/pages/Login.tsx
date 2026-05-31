@@ -25,7 +25,7 @@ export default function Login() {
         </p>
       </header>
 
-      {/* Clerk-hosted sign-in — themed to match the dark form style.
+      {/* Clerk-hosted sign-in - themed to match the dark form style.
           On success Clerk redirects to `/app` per the provider config
           in main.tsx. The earlier "Try the demo · no signup" bypass
           has been removed by design: authentication is the only path

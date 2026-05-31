@@ -63,7 +63,7 @@ def _rate_limit_exceeded_handler(
 
 
 def _log_exception(kind: str, exc: BaseException, *, extra: str = "") -> None:
-    """Last-resort crash logger — prints to stderr so the supervisor log captures it."""
+    """Last-resort crash logger - prints to stderr so the supervisor log captures it."""
     print(
         f"[manthan.crash] {kind}: {type(exc).__name__}: {exc} {extra}".strip(),
         file=sys.stderr,

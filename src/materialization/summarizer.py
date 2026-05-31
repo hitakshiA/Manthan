@@ -94,7 +94,7 @@ def filter_numeric_metrics(
     dtype_by_name: dict[str, str] = {}
     for row in rows:
         name = row[0]
-        # DuckDB sometimes returns types like DECIMAL(10,2) — strip
+        # DuckDB sometimes returns types like DECIMAL(10,2) - strip
         # parametrization before comparing.
         raw_dtype = str(row[1]).upper()
         base_dtype = raw_dtype.split("(", 1)[0]

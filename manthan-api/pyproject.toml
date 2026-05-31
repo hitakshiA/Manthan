@@ -1,7 +1,7 @@
 [project]
 name = "manthan-api"
 version = "0.1.0"
-description = "Manthan backend — multi-tenant API + workers around the agent brain."
+description = "Manthan backend - multi-tenant API + workers around the agent brain."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "UNLICENSED" }

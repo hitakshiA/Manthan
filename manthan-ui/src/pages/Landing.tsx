@@ -49,7 +49,7 @@ const FOOTER_VIDEO =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260330_145725_08886141-ed95-4a8e-8d6d-b75eaadce638.mp4";
 
 export default function Landing() {
-  // Marketing page is composed around dark — every gradient, every hairline,
+  // Marketing page is composed around dark - every gradient, every hairline,
   // every text colour assumes the warm-near-black bg. If the operator has
   // toggled the workspace to light, we lock landing back to dark while
   // they're here. Stored preference for /app is preserved.
@@ -75,7 +75,7 @@ export default function Landing() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   SECTION 1 — HERO
+   SECTION 1 - HERO
    Video as section background. Hero copy in upper band.
    Dashboard peeks from below, no overlap with text.
    ═════════════════════════════════════════════════════════════════════ */
@@ -96,7 +96,7 @@ function Section1Hero() {
       className="relative overflow-hidden"
       style={{ background: "#000" }}
     >
-      {/* NAVBAR — minimal: brand left, auth right ─────────────────────── */}
+      {/* NAVBAR - minimal: brand left, auth right ─────────────────────── */}
       <nav className="relative z-30 px-6 md:px-12 lg:px-20 py-5 flex items-center justify-between">
         <Link
           to="/"
@@ -135,7 +135,7 @@ function Section1Hero() {
         style={{ y: heroY, opacity: heroOpacity }}
         className="relative z-20 px-6 mt-10 md:mt-14 flex flex-col items-center text-center"
       >
-        {/* Announcement pill — liquid-glass with "Beta" badge */}
+        {/* Announcement pill - liquid-glass with "Beta" badge */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,7 +153,7 @@ function Section1Hero() {
           </span>
         </motion.div>
 
-        {/* Headline — operations framing, italic wedge accent */}
+        {/* Headline - operations framing, italic wedge accent */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,7 +165,7 @@ function Section1Hero() {
           <em className="font-serif italic font-normal">revenue disputes.</em>
         </motion.h1>
 
-        {/* Subtitle — outcome-first, then proof */}
+        {/* Subtitle - outcome-first, then proof */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,7 +178,7 @@ function Section1Hero() {
           investigation. <span className="text-white">Cites every claim.</span>
         </motion.p>
 
-        {/* Single primary CTA — iridescent gradient (pink → lavender → cyan → mint) */}
+        {/* Single primary CTA - iridescent gradient (pink → lavender → cyan → mint) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -189,7 +189,7 @@ function Section1Hero() {
 
       </motion.div>
 
-      {/* SHOWCASE — full-bleed 16/9 frame with video bg + luminosity blend.
+      {/* SHOWCASE - full-bleed 16/9 frame with video bg + luminosity blend.
           IMPORTANT: no transforms on any ancestor of the blend element, or
           mix-blend-mode loses access to the video underneath. */}
       <motion.div
@@ -200,7 +200,7 @@ function Section1Hero() {
         style={{ marginLeft: "calc(-50vw + 50%)" }}
       >
         <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
-          {/* Background video — fills the 16/9 frame */}
+          {/* Background video - fills the 16/9 frame */}
           <video
             src={HERO_VIDEO}
             autoPlay
@@ -210,7 +210,7 @@ function Section1Hero() {
             className="absolute inset-0 w-full h-full object-cover"
           />
 
-          {/* The animated workflow showcase — replaces the old (outdated)
+          {/* The animated workflow showcase - replaces the old (outdated)
               TechCorp dashboard preview. Loops through investigating →
               review → approving → closed every ~50 seconds, so visitors
               see the whole product story without scrolling. Pauses
@@ -226,7 +226,7 @@ function Section1Hero() {
             </div>
           </div>
 
-          {/* Bottom gradient fade — black → warm-dark so the next section blends in */}
+          {/* Bottom gradient fade - black → warm-dark so the next section blends in */}
           <div
             className="absolute bottom-0 left-0 right-0 h-48 z-30 pointer-events-none"
             style={{
@@ -241,13 +241,13 @@ function Section1Hero() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   SECTION 2 — MANIFESTO (scroll-driven word reveal)
+   SECTION 2 - MANIFESTO (scroll-driven word reveal)
    Product principle, no founder, no fabricated team.
    ═════════════════════════════════════════════════════════════════════ */
 
 function Section2Manifesto() {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Reveal completes when the section center hits viewport center —
+  // Reveal completes when the section center hits viewport center -
   // i.e. by the time the user is reading the manifesto, every word is lit.
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -342,17 +342,17 @@ function Word({
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   STACK STRIP — eyebrow + infinite marquee of source icons.
+   STACK STRIP - eyebrow + infinite marquee of source icons.
    No labels. No sub-headline. No footnote. Just the icons moving.
    ═════════════════════════════════════════════════════════════════════ */
 
-/** Brand colors that disappear on dark backgrounds — render icon white. */
+/** Brand colors that disappear on dark backgrounds - render icon white. */
 const WHITE_ICON_OVERRIDE: Record<string, true> = {
   notion: true,
 };
 
 /* ─── HLS video helper ────────────────────────────────────────────────────
-   Chrome/Firefox can't play m3u8 natively — load hls.js dynamically.
+   Chrome/Firefox can't play m3u8 natively - load hls.js dynamically.
    Safari has native HLS support, so we skip the polyfill there.
    ─────────────────────────────────────────────────────────────────────── */
 function HlsVideo({
@@ -369,7 +369,7 @@ function HlsVideo({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    // Safari + iOS — native HLS
+    // Safari + iOS - native HLS
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
       return;
@@ -413,7 +413,7 @@ const STACK_VIDEO =
 function StackStrip() {
   // Duplicate the list so the marquee loop is seamless at translateX(-50%).
   // We use per-item padding (no gap on parent) so -50% lands EXACTLY at the
-  // start of the second copy — no visible seam at the wrap point.
+  // start of the second copy - no visible seam at the wrap point.
   const loop = [...BILLING_OPS_STACK, ...BILLING_OPS_STACK];
 
   // ─── macOS-dock magnification on hover ─────────────────────────────────
@@ -497,7 +497,7 @@ function StackStrip() {
           boxShadow: "0 40px 100px -20px rgba(0, 0, 0, 0.6)",
         }}
       >
-        {/* Background video — HLS stream */}
+        {/* Background video - HLS stream */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" style={{ zIndex: 0 }}>
           <HlsVideo
             src={STACK_VIDEO}
@@ -514,7 +514,7 @@ function StackStrip() {
           />
         </div>
 
-        {/* Hero text — left-aligned */}
+        {/* Hero text - left-aligned */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -557,7 +557,7 @@ function StackStrip() {
         </motion.div>
       </motion.div>
 
-      {/* ── Marquee row — round logo cards, macOS-dock magnify on hover ── */}
+      {/* ── Marquee row - round logo cards, macOS-dock magnify on hover ── */}
       <motion.div
         ref={marqueeRef}
         initial={{ opacity: 0, y: 20 }}
@@ -614,7 +614,7 @@ function StackStrip() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   HOW IT WORKS — verb-led step headers
+   HOW IT WORKS - verb-led step headers
    ═════════════════════════════════════════════════════════════════════ */
 
 function HowItWorks() {
@@ -665,7 +665,7 @@ function HowItWorks() {
           </p>
         </motion.div>
 
-        {/* Editorial step list — rules, not card boxes */}
+        {/* Editorial step list - rules, not card boxes */}
         <div>
           {steps.map((s, i) => (
             <motion.div
@@ -684,7 +684,7 @@ function HowItWorks() {
                 borderBottom: i === steps.length - 1 ? "1px solid var(--color-rule-soft)" : "none",
               }}
             >
-              {/* Step number — big italic serif, editorial */}
+              {/* Step number - big italic serif, editorial */}
               <div
                 className="display-italic select-none"
                 style={{
@@ -715,7 +715,7 @@ function HowItWorks() {
                 </p>
               </div>
 
-              {/* Animated workflow visual — directorially distinct per step */}
+              {/* Animated workflow visual - directorially distinct per step */}
               <motion.div
                 initial={{ opacity: 0, x: 16 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -741,7 +741,7 @@ function HowItWorks() {
 
 
 /* ═════════════════════════════════════════════════════════════════════
-   CASE ANATOMY — 6 product principle cards
+   CASE ANATOMY - 6 product principle cards
    ═════════════════════════════════════════════════════════════════════ */
 
 function CaseAnatomy() {
@@ -770,7 +770,7 @@ function CaseAnatomy() {
           </h2>
         </motion.div>
 
-        {/* Responsive bento — stacks to 1 column on mobile, 3 on md+.
+        {/* Responsive bento - stacks to 1 column on mobile, 3 on md+.
             Fixed 540px row height only on md+ so mobile cards size to content. */}
         <div className="grid gap-5 grid-cols-1 md:grid-cols-3 md:[grid-auto-rows:540px]">
           <BentoCard
@@ -839,7 +839,7 @@ function BentoCard({
         gridTemplateRows: "300px 1px 1fr",
       }}
     >
-      {/* Visual — fixed 300px so every card matches */}
+      {/* Visual - fixed 300px so every card matches */}
       <div className="relative overflow-hidden">
         {visual}
       </div>
@@ -847,7 +847,7 @@ function BentoCard({
       {/* Divider */}
       <div style={{ background: "rgba(255,255,255,0.06)" }} />
 
-      {/* Copy — fills the remaining ~239px uniformly, room for 4-5 lines */}
+      {/* Copy - fills the remaining ~239px uniformly, room for 4-5 lines */}
       <div className="px-6 py-5 flex flex-col justify-start">
         <h3
           className="text-[17px] tracking-[-0.01em]"
@@ -867,7 +867,7 @@ function BentoCard({
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   ANATOMY VISUALS — denser mini-product surfaces, not sparse diagrams.
+   ANATOMY VISUALS - denser mini-product surfaces, not sparse diagrams.
    Each visual fills its card and shows a layered product moment.
    ═════════════════════════════════════════════════════════════════════ */
 
@@ -947,7 +947,7 @@ function CrossSourceVisual() {
         </span>
       </div>
 
-      {/* Header line — TechCorp / charge id */}
+      {/* Header line - TechCorp / charge id */}
       <div className="flex items-baseline justify-between mb-3">
         <span className="text-[13px]" style={{ color: "oklch(0.96 0.004 75)", fontWeight: 600 }}>
           TechCorp
@@ -957,7 +957,7 @@ function CrossSourceVisual() {
         </span>
       </div>
 
-      {/* The body — brief sentence crossfades with lineage on hover */}
+      {/* The body - brief sentence crossfades with lineage on hover */}
       <div className="relative flex-1 min-h-[68px]">
         <AnimatePresence mode="wait">
           {hovered === null ? (
@@ -1007,7 +1007,7 @@ function CrossSourceVisual() {
         </AnimatePresence>
       </div>
 
-      {/* Footer — recommendation always shown */}
+      {/* Footer - recommendation always shown */}
       <div
         className="mt-3 pt-3 flex items-baseline gap-1.5 text-[11.5px]"
         style={{ borderTop: "1px solid oklch(0.22 0.005 75)" }}
@@ -1163,7 +1163,7 @@ function GatesVisual() {
           </div>
         </div>
 
-        {/* Middle: empty — the SVG curves cross this space */}
+        {/* Middle: empty - the SVG curves cross this space */}
         <div />
 
         {/* Right: 3 uniform branch rows */}
@@ -1332,7 +1332,7 @@ function BriefVisual() {
           </div>
         </div>
 
-        {/* Signature — pinned bottom */}
+        {/* Signature - pinned bottom */}
         <div
           className="mt-auto pt-2 border-t flex items-baseline justify-between text-[9px]"
           style={{ borderColor: "oklch(0.22 0.005 75)", color: "oklch(0.45 0.006 75)" }}
@@ -1379,7 +1379,7 @@ function PolicyVisual() {
         </span>
       </div>
 
-      {/* Row 1 — toggle */}
+      {/* Row 1 - toggle */}
       <div className="rounded-md flex items-center justify-between" style={rowBase}>
         <span className="text-[11.5px]" style={{ color: "oklch(0.96 0.004 75)" }}>
           Auto-approve refunds
@@ -1396,7 +1396,7 @@ function PolicyVisual() {
         </button>
       </div>
 
-      {/* Row 2 — slider (same height, inline layout) */}
+      {/* Row 2 - slider (same height, inline layout) */}
       <div
         className="rounded-md grid items-center gap-3"
         style={{
@@ -1429,7 +1429,7 @@ function PolicyVisual() {
         </span>
       </div>
 
-      {/* Row 3 — checkbox */}
+      {/* Row 3 - checkbox */}
       <button
         onClick={() => setAgeOn(!ageOn)}
         disabled={!enabled}
@@ -1566,7 +1566,7 @@ function CompoundVisual() {
 
   return (
     <div className="absolute inset-0 p-6 flex flex-col">
-      {/* Header — metric + delta */}
+      {/* Header - metric + delta */}
       <div className="flex items-baseline justify-between">
         <div>
           <div className="eyebrow">Hours saved · weekly</div>
@@ -1601,7 +1601,7 @@ function CompoundVisual() {
         </div>
       </div>
 
-      {/* The wave — hoverable */}
+      {/* The wave - hoverable */}
       <div className="relative flex-1 mt-4">
         <svg
           ref={svgRef}
@@ -1645,7 +1645,7 @@ function CompoundVisual() {
             transition={{ duration: 0.8, delay: 0.4 }}
           />
 
-          {/* The wave stroke — opacity fade-in (pathLength animation leaves a dasharray
+          {/* The wave stroke - opacity fade-in (pathLength animation leaves a dasharray
               artifact in framer-motion that visually cuts the line). */}
           <motion.path
             d={smoothPath}
@@ -1674,7 +1674,7 @@ function CompoundVisual() {
             </g>
           )}
 
-          {/* Latest point — pulsing emerald dot. Always visible when no hover, snaps to hovered point when active. */}
+          {/* Latest point - pulsing emerald dot. Always visible when no hover, snaps to hovered point when active. */}
           <circle cx={active.x} cy={active.y} r="2.4" fill="oklch(0.62 0.15 150)" opacity="0.22">
             <animate attributeName="r" values="2.4;3.8;2.4" dur="2s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.22;0.05;0.22" dur="2s" repeatCount="indefinite" />
@@ -1682,7 +1682,7 @@ function CompoundVisual() {
           <circle cx={active.x} cy={active.y} r="1.4" fill="oklch(0.96 0.004 75)" stroke="oklch(0.62 0.15 150)" strokeWidth="0.5" />
         </svg>
 
-        {/* Tooltip — pinned to the hover point */}
+        {/* Tooltip - pinned to the hover point */}
         {hovered !== null && (
           <div
             className="pointer-events-none absolute -translate-x-1/2"
@@ -1782,7 +1782,7 @@ function AuditVisual() {
 
   return (
     <div className="absolute inset-0 p-4 flex flex-col gap-2.5">
-      {/* Header — filter pills + live badge */}
+      {/* Header - filter pills + live badge */}
       <div className="flex items-baseline gap-2">
         <div className="eyebrow">Activity</div>
         <div className="flex items-center gap-0.5 ml-auto">
@@ -1892,7 +1892,7 @@ function AuditVisual() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   PRICING — outcome-based (YC RFS · service-as-software model)
+   PRICING - outcome-based (YC RFS · service-as-software model)
    No seats. No queries. Pay when Manthan closes a case for you.
    ═════════════════════════════════════════════════════════════════════ */
 
@@ -1934,7 +1934,7 @@ function Pricing() {
           <em className="font-serif italic font-normal">job right.</em>
         </motion.h2>
 
-        {/* The price — solo, centered, dominant */}
+        {/* The price - solo, centered, dominant */}
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.96 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -1978,7 +1978,7 @@ function Pricing() {
           First 50 every month are on us. False positives are free.
         </motion.p>
 
-        {/* CTAs — auth-aware:
+        {/* CTAs - auth-aware:
               Signed OUT → Sign up (primary green accent) routes to
                 /signup, where Clerk captures the email + the
                 user.created webhook fires the MVP welcome.
@@ -2022,7 +2022,7 @@ function Pricing() {
           </Show>
         </motion.div>
 
-        {/* Outcomes — single horizontal sentence */}
+        {/* Outcomes - single horizontal sentence */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -2042,7 +2042,7 @@ function Pricing() {
           ))}
         </motion.div>
 
-        {/* Volume bands — single horizontal pill */}
+        {/* Volume bands - single horizontal pill */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -2077,7 +2077,7 @@ function Pricing() {
           ))}
         </motion.div>
 
-        {/* Enterprise — single quiet line */}
+        {/* Enterprise - single quiet line */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -2102,7 +2102,7 @@ function Pricing() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   FOOTER — Kresna-style two-card layout with watermark
+   FOOTER - Kresna-style two-card layout with watermark
    ═════════════════════════════════════════════════════════════════════ */
 
 function Footer() {
@@ -2124,7 +2124,7 @@ function Footer() {
           `${bbox.x} ${bbox.y} ${bbox.width} ${tightHeight}`,
         );
       } catch {
-        // ignore — fonts not loaded yet
+        // ignore - fonts not loaded yet
       }
     };
     if (document.fonts && (document as Document & { fonts: { ready: Promise<unknown> } }).fonts.ready) {
@@ -2163,7 +2163,7 @@ function Footer() {
           gap: 16,
         }}
       >
-        {/* ── LEFT card — video background, logo, tagline, social ─────────── */}
+        {/* ── LEFT card - video background, logo, tagline, social ─────────── */}
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.985 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -2313,7 +2313,7 @@ function Footer() {
           </div>
         </motion.div>
 
-        {/* ── RIGHT card — nav, floating badge, subscribe.
+        {/* ── RIGHT card - nav, floating badge, subscribe.
             Hidden on mobile (keep only the left video card on small screens). */}
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.985 }}
@@ -2329,7 +2329,7 @@ function Footer() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.30)",
           }}
         >
-          {/* Floating "Sign up · try the demo" badge — clickable, routes
+          {/* Floating "Sign up · try the demo" badge - clickable, routes
               to /signup so every demo visitor lands as a known Clerk
               user. The green-gradient tile carries a Play glyph instead
               of the old "M" letter so the affordance reads as obvious
@@ -2428,7 +2428,7 @@ function Footer() {
             <FooterCol title="Company" links={companyLinks} />
           </div>
 
-          {/* Bottom row — copyright + subscribe */}
+          {/* Bottom row - copyright + subscribe */}
           <div
             className="flex items-end justify-between flex-wrap gap-6"
             style={{ marginTop: 48 }}
@@ -2521,7 +2521,7 @@ function Footer() {
         </motion.div>
       </motion.div>
 
-      {/* Giant faded "Manthan" watermark — desktop only. Mobile keeps just the left card. */}
+      {/* Giant faded "Manthan" watermark - desktop only. Mobile keeps just the left card. */}
       <motion.div
         aria-hidden
         initial={{ opacity: 0, y: 24 }}
@@ -2565,10 +2565,10 @@ function Footer() {
 }
 
 /**
- * HeroDemoCTA — the iridescent hero button.
+ * HeroDemoCTA - the iridescent hero button.
  *
  * Always routes to /signup. Marketing page treats every visitor the
- * same — signed-in users navigate to their workspace from the app
+ * same - signed-in users navigate to their workspace from the app
  * sidebar, not from the marketing CTA.
  */
 function HeroDemoCTA() {
@@ -2582,7 +2582,7 @@ function HeroDemoCTA() {
   );
 }
 
-/** Shared iridescent pill — same look, two trigger modes. */
+/** Shared iridescent pill - same look, two trigger modes. */
 function HeroCTAButton({
   children,
   onClick,
