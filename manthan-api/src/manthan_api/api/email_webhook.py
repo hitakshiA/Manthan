@@ -85,6 +85,39 @@ async def receive_email(
 
     # Resend wraps the email in {type, data}; accept either shape.
     email_data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+    event_type = payload.get("type") or ""
+
+    # The Resend `email.received` webhook delivers metadata only - text +
+    # html are NOT in the payload (see Resend's docs). Detect the new shape
+    # and fetch the body via the Receiving API keyed by `email_id`. We
+    # MERGE the API response over the webhook payload so the downstream
+    # code below sees a fully-populated dict regardless of which path we
+    # came in on. Synthetic / dev callers that include `text`/`html`
+    # inline still work - the merge prefers webhook fields when present.
+    email_id = email_data.get("email_id") or email_data.get("id") or ""
+    needs_body_fetch = (
+        event_type == "email.received"
+        and not (email_data.get("text") or email_data.get("html"))
+        and bool(email_id)
+    )
+    if needs_body_fetch:
+        from manthan_api.services.resend_inbound import fetch_received_email
+        fetched = await fetch_received_email(email_id)
+        if fetched is not None:
+            # API response shape (per docs): id, to, from, subject, html,
+            # text, created_at, headers, attachments, raw. Map onto the
+            # field names downstream code expects.
+            for key in ("from", "subject", "text", "html", "to", "headers"):
+                if fetched.get(key) is not None and not email_data.get(key):
+                    email_data[key] = fetched[key]
+            # `created_at` from the API maps to our `received_at` slot.
+            if fetched.get("created_at") and not email_data.get("received_at"):
+                email_data["received_at"] = fetched["created_at"]
+        else:
+            logger.warning(
+                "email.received body fetch failed for id=%s - case will open with metadata only",
+                email_id,
+            )
 
     msg_id = email_data.get("message_id") or email_data.get("id") or ""
     from_addr = _normalise_address(email_data.get("from"))
