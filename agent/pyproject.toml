@@ -24,21 +24,8 @@ dependencies = [
     "pydantic>=2.7",           # MIT  - typed tool args + structured outputs
     "python-dotenv>=1.0",      # BSD  - loads .env into os.environ
     "anyio>=4.4",              # MIT  - async backend for mcp
-    "rich>=13.7",              # MIT  - pretty console output (traces, smoke tests)
-    "typer>=0.12",             # MIT  - CLI entrypoint
-    "pyyaml>=6.0",             # MIT  - scenario / eval rubric files
-    "duckdb>=1.5.3",
+    "rich>=13.7",              # MIT  - pretty console output
 ]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "ruff>=0.6",
-]
-
-[project.scripts]
-manthan = "manthan_agent.cli:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -54,7 +41,3 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 ignore = ["E501"]  # line length governed by formatter
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"

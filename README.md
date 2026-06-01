@@ -240,8 +240,6 @@ Manthan ships as 1 API + 3 workers + a Postgres + a Vite static frontend + the C
 - **VPS** (single-box) - see [`infra/vps/`](./infra/vps) for the Caddy config, cloud-init, and setup script. This is what runs at [manthan.quest](https://manthan.quest).
 - **Fly.io + Vercel** - see [`DEPLOY.md`](./DEPLOY.md) for the multi-app runbook: Fly for API + workers + Postgres, Vercel for the frontend, Resend inbound for `support@`.
 
-For a one-shot demo run, [`DEMO_RUNBOOK.md`](./DEMO_RUNBOOK.md) walks the exact sequence used during live pitches.
-
 ## Contributing
 
 Issues and PRs welcome. Before pushing:
