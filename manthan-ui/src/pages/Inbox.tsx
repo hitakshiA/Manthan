@@ -1077,6 +1077,11 @@ type TriggerCard = {
   sourceId: string;
   label: string;
   comingSoon?: boolean;
+  // When true, clicking the card opens the guided Demo v2 wizard
+  // (autonomous-email flow) instead of firing a pre-baked scenario.
+  // The scenarioId is still used as a stable key; it doesn't drive any
+  // backend trigger for demo-v2 cards.
+  demoV2?: boolean;
 };
 
 const TRIGGER_CARDS: TriggerCard[] = [
@@ -1085,7 +1090,7 @@ const TRIGGER_CARDS: TriggerCard[] = [
     scenarioId: "maya",
     sourceId: "resend",
     label: "Customer Email",
-    comingSoon: true,
+    demoV2: true,
   },
   {
     scenarioId: "vermillion",
@@ -1098,16 +1103,33 @@ const TRIGGER_CARDS: TriggerCard[] = [
 function InboxEmptyState() {
   const { scenarios, firingId, onCardFire, storyOverlay } =
     useScenarioWithStory();
+  const [, setParams] = useSearchParams();
 
   // Resolve the simplified card configs against the live scenario list.
-  // Coming-soon cards are kept regardless (they don't need a backend
-  // scenario yet); real cards degrade gracefully if a scenario id ever
-  // gets renamed/removed.
+  // Coming-soon AND demo-v2 cards are kept regardless (they don't need
+  // a backend scenario row); real scenario cards degrade gracefully if
+  // a scenario id is renamed/removed upstream.
   const visible = scenarios
     ? TRIGGER_CARDS.filter(
-        (c) => c.comingSoon || scenarios.some((s) => s.id === c.scenarioId),
+        (c) =>
+          c.comingSoon ||
+          c.demoV2 ||
+          scenarios.some((s) => s.id === c.scenarioId),
       )
-    : TRIGGER_CARDS.filter((c) => c.comingSoon);
+    : TRIGGER_CARDS.filter((c) => c.comingSoon || c.demoV2);
+
+  const handleCardFire = (card: TriggerCard) => {
+    if (card.demoV2) {
+      // Flip ?demo=v2 - AppShell sees the param and mounts the wizard.
+      setParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("demo", "v2");
+        return next;
+      });
+      return;
+    }
+    onCardFire(card.scenarioId);
+  };
 
   return (
     <div
@@ -1171,13 +1193,11 @@ function InboxEmptyState() {
                 firingId !== null && firingId !== card.scenarioId
               }
               comingSoon={card.comingSoon}
-              onFire={() => onCardFire(card.scenarioId)}
+              onFire={() => handleCardFire(card)}
             />
           ))}
         </div>
       )}
-
-      <DemoV2EntryChip />
 
       {storyOverlay}
 
@@ -1413,40 +1433,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Demo v2 entry chip - tiny, dev-only opt-in for the guided autonomous-
-// email tour. The full wizard lives in components/demo-v2/DemoV2Wizard
-// and is gated separately by the `?demo=v2` URL param so even if this
-// chip is hidden the wizard is still reachable by URL during testing.
-// ──────────────────────────────────────────────────────────────────────
-
-function DemoV2EntryChip() {
-  const [, setParams] = useSearchParams();
-  const handleStart = () => {
-    setParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("demo", "v2");
-      return next;
-    });
-  };
-  return (
-    <button
-      onClick={handleStart}
-      style={{
-        marginTop: 18,
-        background: "transparent",
-        color: "var(--color-ink-faint)",
-        border: "1px dashed rgba(120,120,120,0.35)",
-        borderRadius: 999,
-        padding: "8px 14px",
-        fontFamily: "Geist Mono, ui-monospace, monospace",
-        fontSize: 11,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
-        cursor: "pointer",
-      }}
-    >
-      Demo v2 · autonomous email · guided
-    </button>
-  );
-}
+// (DemoV2EntryChip removed - the Customer Email trigger card on the
+// empty-inbox state is now the canonical entry point for demo v2.
+// AppShell's useDemoV2Active still listens for `?demo=v2` so the URL
+// param continues to work as a hidden entry during testing.)

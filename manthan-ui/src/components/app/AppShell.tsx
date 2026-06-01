@@ -99,62 +99,41 @@ export function AppShell() {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// RouteFader - opacity cross-fade between sidebar pages.
+// RouteFader - fade-in animation when the sidebar page group changes.
 //
-// Sidebar clicks used to swap the page content instantly, which read
-// as a jarring layout flicker on Inbox->Done->Policies-etc.
+// Earlier version tried to hold the old children for a fade-OUT before
+// the swap. That doesn't work cleanly here because `children` is a
+// single <Outlet /> reference - React Router renders the new page
+// component inside the same Outlet, so we can't snapshot the old
+// rendered tree without going around react-router's internals.
 //
-// The pattern: hold the previously-rendered children for ~180ms while
-// they fade out, swap to the new children, fade them in. Each swap is
-// keyed off the route's first path segment (so /app/case/123 navigation
-// inside the workspace doesn't re-fade - only inter-page moves do).
-// Pure CSS opacity transition - no animation library dep.
+// New approach: re-mount the wrapper on group change via React `key`,
+// which triggers a CSS keyframe animation. The new page tweens in
+// from opacity:0 + a tiny y-offset, which masks the hard swap visually
+// even without an outgoing fade. Same group (e.g. /app -> /app/case/x)
+// keeps the same key, so deep-navs don't re-animate.
 // ──────────────────────────────────────────────────────────────────────
 
 function RouteFader({ children }: { children: ReactNode }) {
   const location = useLocation();
-  // Group by the second path segment - "/app" + "/done" => "done";
-  // anything under /app/case/* or /app/policy/* stays in the same
-  // group so deep-nav inside a section doesn't trigger a fade.
   const groupKey = pageGroupKey(location.pathname);
-
-  const [displayed, setDisplayed] = useState<{
-    key: string;
-    node: ReactNode;
-  }>({ key: groupKey, node: children });
-  const [opacity, setOpacity] = useState(1);
-
-  useEffect(() => {
-    if (groupKey === displayed.key) {
-      // Same group - just keep the most recent children so nested
-      // route changes (e.g. opening a case) render normally.
-      setDisplayed({ key: groupKey, node: children });
-      return;
-    }
-    // Different group - fade out, swap, fade in.
-    setOpacity(0);
-    const t = window.setTimeout(() => {
-      setDisplayed({ key: groupKey, node: children });
-      // Force a tick before fading back in so the browser registers
-      // the opacity:0 frame and animates the next change.
-      requestAnimationFrame(() => setOpacity(1));
-    }, 160);
-    return () => window.clearTimeout(t);
-  }, [groupKey, children, displayed.key]);
-
   return (
     <div
+      key={groupKey}
       style={{
-        opacity,
-        transition: "opacity 180ms ease",
+        animation: "manthan-route-fade 280ms cubic-bezier(0.22, 1, 0.36, 1)",
         height: "100%",
         width: "100%",
-        // While faded out, the dimmed content shouldn't intercept
-        // clicks - prevents accidental hits on a half-gone page.
-        pointerEvents: opacity < 0.5 ? "none" : "auto",
+        willChange: "opacity, transform",
       }}
     >
-      {displayed.node}
+      <style>{`
+        @keyframes manthan-route-fade {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      {children}
     </div>
   );
 }
