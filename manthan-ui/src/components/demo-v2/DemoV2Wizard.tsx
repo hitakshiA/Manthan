@@ -38,6 +38,7 @@ import {
   loadState,
   resetPolicies,
   saveState,
+  seedPolicy,
 } from "@/lib/demo-v2";
 import { Spotlight } from "./Spotlight";
 
@@ -267,6 +268,26 @@ export function DemoV2Wizard({ loggedInEmail, onClose }: DemoV2WizardProps) {
     navigate("/app");
   }, [navigate, onClose]);
 
+  // "Do it for me" escape hatch on the form steps. Calls the seed-policy
+  // endpoint (idempotent) to create the rule directly, then jumps the
+  // tour past the form to the goto-inbox step. The user still drives
+  // every later step - this just spares them the dropdown fiddle on the
+  // rule editor if they'd rather skip.
+  const [autofillBusy, setAutofillBusy] = useState(false);
+  const handleAutofillPolicy = useCallback(async () => {
+    setAutofillBusy(true);
+    setErrorMsg(null);
+    try {
+      const r = await seedPolicy();
+      if (!r.ready) throw new Error("seed-policy did not report ready");
+      setStep("goto-inbox");
+    } catch (e) {
+      setErrorMsg(`Couldn't set up the policy: ${String(e)}`);
+    } finally {
+      setAutofillBusy(false);
+    }
+  }, [setStep]);
+
   // ── Render ────────────────────────────────────────────────────────
 
   return (
@@ -275,9 +296,11 @@ export function DemoV2Wizard({ loggedInEmail, onClose }: DemoV2WizardProps) {
       template={template}
       errorMsg={errorMsg}
       cancellable={cancellable}
+      autofillBusy={autofillBusy}
       onCancel={handleCancel}
       onStartNow={() => setStep("goto-policies")}
       onManualNext={onAdvance}
+      onAutofillPolicy={handleAutofillPolicy}
       onSentEmail={handleSentEmail}
       onAbortWaiting={handleAbortWaiting}
       onFinish={handleFinish}
@@ -294,14 +317,41 @@ function StepRenderer(props: {
   template: DemoV2Template | null;
   errorMsg: string | null;
   cancellable: boolean;
+  autofillBusy: boolean;
   onCancel: () => void;
   onStartNow: () => void;
   onManualNext: () => void;
+  onAutofillPolicy: () => void;
   onSentEmail: () => void;
   onAbortWaiting: () => void;
   onFinish: () => void;
 }) {
-  const { state, template, errorMsg, cancellable, onCancel } = props;
+  const { state, template, errorMsg, cancellable, autofillBusy, onCancel } = props;
+
+  // Tiny "skip the form" affordance for the policy-creation steps.
+  // Calls seed-policy then jumps straight to goto-inbox.
+  const skipAhead = (
+    <div style={{ marginTop: 10, fontSize: 11.5 }}>
+      <button
+        onClick={props.onAutofillPolicy}
+        disabled={autofillBusy}
+        style={{
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          color: "rgba(22,208,94,0.85)",
+          cursor: autofillBusy ? "wait" : "pointer",
+          textDecoration: "underline",
+          textUnderlineOffset: 3,
+          fontSize: 11.5,
+        }}
+      >
+        {autofillBusy
+          ? "Setting up…"
+          : "Or — set up the policy for me and skip ahead"}
+      </button>
+    </div>
+  );
   const stepNum = Math.max(0, STEP_ORDER.indexOf(state.step)) + 1;
   const totalSteps = STEP_ORDER.length - 1; // hide "done" from count
 
@@ -413,6 +463,7 @@ function StepRenderer(props: {
                 Names are kebab-case by convention. Anything works as long
                 as it's unique.
               </P>
+              {skipAhead}
             </>,
           )}
         />
@@ -437,6 +488,7 @@ function StepRenderer(props: {
               <ActionRow style={{ marginTop: 12 }}>
                 <Primary onClick={props.onManualNext}>Done — next</Primary>
               </ActionRow>
+              {skipAhead}
             </>,
           )}
         />
@@ -469,6 +521,7 @@ function StepRenderer(props: {
                 Click <strong>auto-execute</strong> so Manthan handles the
                 demo case without asking.
               </P>
+              {skipAhead}
             </>,
           )}
         />
@@ -485,6 +538,7 @@ function StepRenderer(props: {
                 Click <strong>Create rule</strong>. We'll detect it landed
                 and move you to the next step automatically.
               </P>
+              {skipAhead}
             </>,
           )}
         />
