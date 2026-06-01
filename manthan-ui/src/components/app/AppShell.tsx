@@ -82,7 +82,9 @@ export function AppShell() {
             live here; they're gone on purpose now so each page's
             Spectral title + eyebrow can carry the whole top weight. */}
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          <RouteFader>
+            <Outlet />
+          </RouteFader>
         </main>
       </div>
 
@@ -94,6 +96,78 @@ export function AppShell() {
       )}
     </div>
   );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// RouteFader - opacity cross-fade between sidebar pages.
+//
+// Sidebar clicks used to swap the page content instantly, which read
+// as a jarring layout flicker on Inbox->Done->Policies-etc.
+//
+// The pattern: hold the previously-rendered children for ~180ms while
+// they fade out, swap to the new children, fade them in. Each swap is
+// keyed off the route's first path segment (so /app/case/123 navigation
+// inside the workspace doesn't re-fade - only inter-page moves do).
+// Pure CSS opacity transition - no animation library dep.
+// ──────────────────────────────────────────────────────────────────────
+
+function RouteFader({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  // Group by the second path segment - "/app" + "/done" => "done";
+  // anything under /app/case/* or /app/policy/* stays in the same
+  // group so deep-nav inside a section doesn't trigger a fade.
+  const groupKey = pageGroupKey(location.pathname);
+
+  const [displayed, setDisplayed] = useState<{
+    key: string;
+    node: ReactNode;
+  }>({ key: groupKey, node: children });
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    if (groupKey === displayed.key) {
+      // Same group - just keep the most recent children so nested
+      // route changes (e.g. opening a case) render normally.
+      setDisplayed({ key: groupKey, node: children });
+      return;
+    }
+    // Different group - fade out, swap, fade in.
+    setOpacity(0);
+    const t = window.setTimeout(() => {
+      setDisplayed({ key: groupKey, node: children });
+      // Force a tick before fading back in so the browser registers
+      // the opacity:0 frame and animates the next change.
+      requestAnimationFrame(() => setOpacity(1));
+    }, 160);
+    return () => window.clearTimeout(t);
+  }, [groupKey, children, displayed.key]);
+
+  return (
+    <div
+      style={{
+        opacity,
+        transition: "opacity 180ms ease",
+        height: "100%",
+        width: "100%",
+        // While faded out, the dimmed content shouldn't intercept
+        // clicks - prevents accidental hits on a half-gone page.
+        pointerEvents: opacity < 0.5 ? "none" : "auto",
+      }}
+    >
+      {displayed.node}
+    </div>
+  );
+}
+
+function pageGroupKey(pathname: string): string {
+  // /app           -> "inbox"
+  // /app/done      -> "done"
+  // /app/policy/x  -> "policy"
+  // /app/case/abc  -> "case"
+  // anything else  -> the first segment after /app
+  if (pathname === "/app" || pathname === "/app/") return "inbox";
+  const m = pathname.match(/^\/app\/([^/]+)/);
+  return m ? m[1] : pathname;
 }
 
 // ──────────────────────────────────────────────────────────────────────
