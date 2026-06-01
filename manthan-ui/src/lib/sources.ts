@@ -2,10 +2,62 @@
  * Source catalog for Manthan - every SaaS Manthan reads (via Coral) or
  * writes to (via native action layer). Logos are sourced from simple-icons.
  *
- * Categories map to the operational dashboard sidebar grouping.
+ * Per-icon NAMED imports (NOT `import * as si`) so the bundler only
+ * ships the ~25 icons we actually use, not all ~3000 brands in the
+ * 5MB simple-icons catalog. simple-icons sets sideEffects=false; named
+ * imports tree-shake cleanly.
  */
 
-import * as si from "simple-icons";
+import {
+  siClerk,
+  siClickup,
+  siConfluence,
+  siDatadog,
+  siDiscord,
+  siGithub,
+  siGitlab,
+  siGmail,
+  siHubspot,
+  siIntercom,
+  siJira,
+  siLinear,
+  siMixpanel,
+  siNotion,
+  siOkta,
+  siPaddle,
+  siPagerduty,
+  siPosthog,
+  siRazorpay,
+  siSentry,
+  siStripe,
+  siZendesk,
+  type SimpleIcon,
+} from "simple-icons";
+
+const SI_BY_KEY: Record<string, SimpleIcon> = {
+  Clerk: siClerk,
+  Clickup: siClickup,
+  Confluence: siConfluence,
+  Datadog: siDatadog,
+  Discord: siDiscord,
+  Github: siGithub,
+  Gitlab: siGitlab,
+  Gmail: siGmail,
+  Hubspot: siHubspot,
+  Intercom: siIntercom,
+  Jira: siJira,
+  Linear: siLinear,
+  Mixpanel: siMixpanel,
+  Notion: siNotion,
+  Okta: siOkta,
+  Paddle: siPaddle,
+  Pagerduty: siPagerduty,
+  Posthog: siPosthog,
+  Razorpay: siRazorpay,
+  Sentry: siSentry,
+  Stripe: siStripe,
+  Zendesk: siZendesk,
+};
 
 export type SourceCategory =
   | "payments"
@@ -81,10 +133,7 @@ function icon(
   key: string,
 ): { hex: string; path: string; viewBox?: string } | undefined {
   if (ICON_OVERRIDES[key]) return ICON_OVERRIDES[key];
-  const k = `si${key.charAt(0).toUpperCase()}${key.slice(1)}`;
-  const found = (si as Record<string, unknown>)[k] as
-    | { hex: string; path: string }
-    | undefined;
+  const found = SI_BY_KEY[key];
   return found ? { hex: found.hex, path: found.path } : undefined;
 }
 
