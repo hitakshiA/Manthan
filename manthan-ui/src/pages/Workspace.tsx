@@ -29,7 +29,6 @@ import {
   type CaseStatus,
 } from "@/lib/api";
 import { useCaseEvents } from "@/lib/useCaseEvents";
-import { CaseWorkspace } from "@/components/app/workspace/CaseWorkspace";
 import type {
   Tone,
   WorkspaceAction,
@@ -591,22 +590,14 @@ export default function Workspace() {
     );
   }
 
-  // Fallback: legacy three-column workspace while we wait for the first
-  // detail fetch to land (or if status is unrecognised). Keeps the UI
-  // responsive instead of showing a blank screen.
+  // Loading state: we have a case_id in the URL but the detail row
+  // hasn't landed yet. Once it lands, the branch above takes over.
   return (
-    <div className="h-[calc(100vh-3.5rem)]">
-      <CaseWorkspace
-        cases={cases}
-        detailByNum={detailByNum}
-        activeCaseNum={activeCaseNum}
-        onActiveCaseChange={handleActiveCaseChange}
-        meOwner={meEmail}
-        activeCaseId={params.id}
-        streamedEvents={events}
-        isLive={isLive && !isComplete}
-        isComplete={isComplete}
-      />
+    <div
+      className="h-[calc(100vh-3.5rem)] flex items-center justify-center"
+      style={{ background: "var(--color-bg)", color: "var(--color-ink-faint)" }}
+    >
+      <div className="text-[12.5px]">Loading case…</div>
     </div>
   );
 }
