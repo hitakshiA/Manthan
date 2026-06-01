@@ -44,7 +44,36 @@ class CoralDescribeTableArgs(BaseModel):
 
 
 class RecordFindingArgs(BaseModel):
-    text: str = Field(description="1-2 sentences, present-tense, factual")
+    text: str = Field(
+        description=(
+            "ONE PLAIN-ENGLISH SENTENCE STATING THE CLAIM, optionally followed by "
+            "the precise evidence in parentheses. This text is rendered verbatim as "
+            "a numbered bullet in the case brief that a finance lead (often not an "
+            "engineer) reads.\n\n"
+            "SHAPE:\n"
+            "  '<plain-English claim in finance language>. (<precise evidence: "
+            "ids, exact numbers, system specifics>)'\n\n"
+            "GOOD examples (note the plain-English lede + parenthetical evidence):\n"
+            "  'The disputed charge is $8,400 for the customer's April subscription "
+            "cycle. (Stripe charge ch_3Tch1L..., disputed in full via du_1Tch1O...).'\n"
+            "  'Our monitoring confirms a 48-hour service outage during the billed "
+            "cycle, matching the customer's claim. (Datadog monitor 20175237 "
+            "documents SLA breach 2026-04-13 08:00 -> 04-15 08:00 on custom-reports-svc.)'\n"
+            "  'The relevant pro-rata refund policy is on file and authoritative. "
+            "(Notion page \"Documented Incident Pro-Rata Refund Credit Policy\", "
+            "id 37043656-c526-...)'\n\n"
+            "BAD (don't do):\n"
+            "  'Stripe dispute du_1Tch1O... amount 840000 reason "
+            "product_not_received/product_not_as_described status needs_response'\n"
+            "  -> raw IDs and enum strings in the lede. The bullet reads like a SQL "
+            "row dump, not a finding. Lead with the human claim.\n\n"
+            "Tone: finance-team English. Numbers with commas ($8,400 not $8400). "
+            "Don't drop raw enum strings ('product_not_as_described') into the lede - "
+            "say 'cited a degraded feature' or 'cited the product was not as described' "
+            "instead. Don't say system names like 'Stripe / Notion / Datadog' as the "
+            "subject of the sentence - they're SOURCES of the evidence, not the SUBJECT."
+        )
+    )
     citations: list[int] = Field(
         min_length=1, description="Indices into the case's Evidence list"
     )
@@ -64,7 +93,51 @@ class AskHumanArgs(BaseModel):
 
 
 class ConcludeArgs(BaseModel):
-    tldr: str = Field(description="2-3 sentences for a busy controller")
+    tldr: str = Field(
+        description=(
+            "The CFO-FACING SUMMARY of the recommendation. This is what a finance "
+            "lead (often NOT an engineer) reads FIRST when they open the brief. "
+            "Treat it as the opening paragraph of an internal memo.\n\n"
+            "STRUCTURE (3-5 sentences total):\n"
+            "  1. ONE sentence stating the recommendation: dollar amount + what "
+            "     percentage of the disputed total, in plain English. Open with "
+            "     'We recommend...' or the customer's name doing something, NOT "
+            "     with raw IDs.\n"
+            "  2. ONE-TWO sentences naming the customer, what they claimed, and "
+            "     what actually happened - in finance language. Don't reference "
+            "     internal system names ('Notion', 'Datadog', 'Stripe') by name; "
+            "     say 'our policy docs', 'our monitoring', 'the payment provider', "
+            "     'our support tool', etc.\n"
+            "  3. ONE sentence showing the pro-rata math in NATURAL LANGUAGE "
+            "     ('two affected days in a thirty-day cycle = $560, or roughly 7% "
+            "     of the invoice'), NOT computer syntax ('(2/30)*$8400=$560').\n"
+            "  4. (Optional) ONE sentence on supporting context - downgrade timing, "
+            "     credit-promise history, etc.\n\n"
+            "FORMATTING RULES:\n"
+            "  - Money: '$8,400' (comma), never '$8400'.\n"
+            "  - Math: 'two of thirty days', not '(2/30)*' or '2/30 × $8,400 = $560'.\n"
+            "  - No raw enum strings: 'product_not_received/product_not_as_described' "
+            "    -> 'cited a degraded feature' or 'cited that the product was not "
+            "    as described'.\n"
+            "  - No raw IDs in the lede ('du_1Tch1O...', 'ch_3Tch1L...', "
+            "    'INC-2026-04-13-customreports'). They'll be shown as chips below "
+            "    the prose; keep the prose readable.\n"
+            "  - Open with a normal English sentence, NOT 'AcmeCo) disputed...' or "
+            "    '(Customer Co) disputed...' - that pattern produces a chopped-"
+            "    looking opener.\n"
+            "  - End with a recommendation, not a peer verdict. 'We recommend "
+            "    issuing the partial refund' beats 'Legitimate partial claim only'.\n\n"
+            "EXAMPLE (FORMAT only - don't copy the numbers):\n"
+            "  'We recommend a $X partial refund on the customer's $Y disputed "
+            "  charge, roughly Z% of the invoice. The customer cited a service "
+            "  issue during their billed cycle, and our monitoring confirms N hours "
+            "  of degraded service during that window. Under our documented-"
+            "  incident policy, the owed credit is N days in a M-day cycle, which "
+            "  works out to $X. The customer downgraded their plan immediately "
+            "  after the issue and filed the chargeback W weeks later, after a "
+            "  promised credit was never processed.'"
+        )
+    )
     decision_action: str = Field(
         description=(
             "One of: fight | refund | accept | escalate. "
@@ -104,30 +177,34 @@ class ConcludeArgs(BaseModel):
             "TODO payloads are rejected. Pull identifiers (charge_id, "
             "dispute_id, customer_email, hubspot_company_id) from the "
             "case trigger_payload - do NOT leave them blank.\n\n"
-            "Worked examples (use as exact templates, swap in real ids):\n"
-            '  {"kind": "stripe_refund", "payload": {"charge_id": "ch_xxx", '
-            '"amount_minor": 56000, "currency": "usd", "reason": '
-            '"documented_incident_pro_rata"}, "description": "Refund $560 '
-            'against ch_xxx - 2/30 × $8,400 pro-rata", "reversibility": '
+            "Worked examples (FORMAT only - placeholders for shape, swap in "
+            "the real ids and the amount you DERIVED from this case's evidence; "
+            "don't copy the literal numbers below):\n"
+            '  {"kind": "stripe_refund", "payload": {"charge_id": "ch_REAL", '
+            '"amount_minor": 12300, "currency": "usd", "reason": '
+            '"requested_by_customer"}, "description": "Refund $<derived> '
+            'against ch_<real> - <one-line rationale>", "reversibility": '
             '"reversible"}\n'
             '  {"kind": "stripe_dispute_response", "payload": {"dispute_id": '
-            '"du_xxx", "submit": true, "evidence": {"uncategorized_text": '
-            '"Pro-rata credit issued - conceding remainder."}}, '
-            '"description": "Concede dispute du_xxx", "reversibility": '
+            '"du_REAL", "submit": true, "evidence": {"uncategorized_text": '
+            '"<short narrative of the math and why the credit was issued>."}}, '
+            '"description": "Concede dispute du_<real>", "reversibility": '
             '"partial"}\n'
             '  {"kind": "customer_email", "payload": {"to": '
-            '"customer@example.com", "subject": "Update on your dispute '
-            'du_xxx", "body_text": "Hi,\\n\\nWe issued a $560 credit..."}, '
-            '"description": "Email customer about credit", "reversibility": '
-            '"irreversible"}\n'
+            '"<customer email from stripe.customers>", "subject": "Update on '
+            'your dispute du_<real>", "body_text": "Hi,\\n\\n<one paragraph '
+            'stating the finding, the policy, the math, and the outcome>."}, '
+            '"description": "Email customer about the resolution", '
+            '"reversibility": "irreversible"}\n'
             '  {"kind": "hubspot_note", "payload": {"company_id": '
-            '"324968425171", "body_html": "<p>APR-xxx - partial_credit '
-            '($560)...</p>"}, "description": "Log resolution to HubSpot", '
-            '"reversibility": "reversible"}\n'
+            '"<derived from hubspot.companies>", "body_html": "<p><strong>'
+            '<case shortId> - <outcome></strong></p><p><one paragraph: amount, '
+            'policy, math, decision>.</p>"}, "description": "Log resolution to '
+            'HubSpot", "reversibility": "reversible"}\n'
             '  {"kind": "slack_brief", "payload": {"channel": "#billing-ops", '
-            '"text": "RESOLVED · APR-xxx · partial_credit ($560)..."}, '
-            '"description": "Post brief to #billing-ops", "reversibility": '
-            '"reversible"}'
+            '"text": "RESOLVED · <case shortId> · <customer> · <decision> ($'
+            '<amount>). <one line of context>."}, "description": "Post brief '
+            'to billing-ops", "reversibility": "reversible"}'
         ),
     )
     hitl_question: str = Field(
