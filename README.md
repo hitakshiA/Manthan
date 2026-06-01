@@ -36,7 +36,7 @@ Manthan is the autonomous investigator for B2B SaaS billing operations. The mome
 
 A senior analyst spends 5 hours on a chargeback. Manthan spends 3 minutes.
 
-The work happens on top of [**Coral**](https://coral.dev) - a unified Postgres-compatible SQL surface over 11 SaaS schemas. Instead of integrating 11 vendor SDKs and stitching results in Python, the agent writes one wide `SELECT` that joins Stripe + Salesforce + HubSpot + Intercom + Zendesk + Slack + Notion + PostHog + Sentry + Datadog + PagerDuty, gets one rowset back, and grounds every claim in the brief with a citation that links back to the underlying record. Click any citation chip and the source dashboard opens to the exact row.
+The work happens on top of [**Coral**](https://github.com/withcoral/coral) - a unified Postgres-compatible SQL surface over 11 SaaS schemas. Instead of integrating 11 vendor SDKs and stitching results in Python, the agent writes one wide `SELECT` that joins Stripe + Salesforce + HubSpot + Intercom + Zendesk + Slack + Notion + PostHog + Sentry + Datadog + PagerDuty, gets one rowset back, and grounds every claim in the brief with a citation that links back to the underlying record. Click any citation chip and the source dashboard opens to the exact row.
 
 ## How it works
 
@@ -100,7 +100,7 @@ One query. One round-trip. One rowset that contains everything needed to write t
 3. Coral fans the SQL out to each upstream API, normalizes results into Postgres-compatible rows, and returns one rowset.
 4. Each query's `(seq, source, sql, rows, ms)` is recorded as an event; the Workspace's **Coral mode** renders the raw SQL feed alongside the prettified prose so operators can see exactly what the agent asked.
 
-The agent code lives in [`agent/`](./agent) - a small Python loop (~hundreds of LOC, no framework) wired straight to OpenRouter. The Coral binary is built from the sibling [`coral`](https://github.com/coral-dev/coral) repo.
+The agent code lives in [`agent/`](./agent) - a small Python loop (~hundreds of LOC, no framework) wired straight to OpenRouter. The Coral binary is built from the sibling [`coral`](https://github.com/withcoral/coral) repo.
 
 ## Sources
 
@@ -149,7 +149,7 @@ When an upstream rejects an action (Stripe `charge_disputed`, Slack `channel_not
 - Node 20+ · `pnpm` or `npm`
 - Python 3.12+ · [`uv`](https://github.com/astral-sh/uv)
 - Docker (for the local Postgres)
-- The [Coral binary](https://github.com/coral-dev/coral) built and on your `PATH` (or available at `./coral/target/release/coral`)
+- The [Coral binary](https://github.com/withcoral/coral) built and on your `PATH` (or available at `./coral/target/release/coral`)
 
 ### Setup
 ```sh
@@ -224,7 +224,7 @@ Visit **[http://localhost:5173](http://localhost:5173)**, sign in via Clerk, the
 
 **Agent** · `agent/` is a ~hundreds-of-LOC Python loop (no framework) over the [OpenAI-compat](https://platform.openai.com/docs/api-reference) client pointed at [OpenRouter](https://openrouter.ai). Tools: `coral_sql`, `coral_list_catalog`, `coral_describe_table`, `record_finding`, `draft_action`, `draft_brief`.
 
-**Data plane** · [Coral](https://coral.dev) - Rust binary, MCP/stdio bridge, 11 SaaS schemas as Postgres SQL.
+**Data plane** · [Coral](https://github.com/withcoral/coral) - Rust binary, MCP/stdio bridge, 11 SaaS schemas as Postgres SQL.
 
 **Models** (all via OpenRouter)
 - Investigator + chat: `x-ai/grok-build-0.1`
