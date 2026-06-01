@@ -144,18 +144,32 @@ Source-plugin quirks worth knowing up front:
     short phrase ("pro-rata", "refund policy", "documented incident").
     Once you have the page_id, fetch the body with notion.pages.
 
-  - posthog.events REQUIRES `WHERE environment_id = '<id>'`. Find the
-    environment_id from `posthog.organizations` or `posthog.organizations`
-    first, then filter events by it + person/event/timestamp.
+  - datadog.incidents may be empty on accounts without Incident
+    Management. The rich incident narrative for THIS workspace lives
+    in `datadog.monitors.message` - the monitor body carries the full
+    incident timeline, primary impacted customer, resolution deploy,
+    and Slack/Zendesk linkage. ALWAYS check `datadog.monitors` (not
+    just incidents). Search the message field with ILIKE for the
+    customer name, the workflow tag, the incident id substring, etc.
 
-  - intercom.conversations + zendesk.tickets are keyed by the
-    customer's email. Use the email you got from `stripe.customers`
-    (NOT the operator's login email - that's the dev_email header,
-    not the customer of record).
+  - posthog.events requires `WHERE environment_id = '<id>'` and there
+    is NO simple entry table to discover that id. Try
+    `posthog.organizations` for the org_id; if you can't resolve a
+    usable environment_id from it within ONE follow-up query, drop
+    PostHog from your evidence set and note "PostHog usage data not
+    available via Coral" in the relevant finding. Don't grind on it.
 
-  - slack.messages requires a channel_id filter. Use `slack.channels`
-    to resolve `name ILIKE '%billing%'` etc. → channel_id, then filter
-    messages by that channel_id.
+  - slack.messages is NOT exposed by Coral's slack source. Only
+    `slack.channels` and `slack.users` are queryable. Use the
+    existence of a relevant channel (e.g. `name = 'billing-platform'`
+    or ILIKE '%incident%') as evidence that ops awareness existed
+    internally. Don't try `slack.messages` - it will error with
+    "table not found."
+
+  - intercom.conversations + zendesk.tickets + zendesk.users are
+    keyed by the customer's email. Use the email you got from
+    `stripe.customers` (NOT the operator's login email - that's
+    the dev_email header, not the customer of record).
 
 DISCOVERY PERSISTENCE - when a direct id lookup returns zero rows on
 a table you'd expect to have the record:
