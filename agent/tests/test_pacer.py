@@ -229,10 +229,10 @@ def test_r6_halt_when_budget_exceeded_with_no_findings() -> None:
 
 
 def test_round_budget_silent_at_realistic_turn_counts() -> None:
-    """The default max_rounds (25) should never halt a normal run."""
-    s = _stripe_snap(round_count=15, findings_count=2, findings_text=["a", "b"])
+    """The default max_rounds (100) should never halt a normal run."""
+    s = _stripe_snap(round_count=60, findings_count=2, findings_text=["a", "b"])
     d = judge_pre_round(s)
-    # R5/R6 shouldn't fire at 15 turns with default max_rounds=25
+    # R5/R6 shouldn't fire at 60 turns with default max_rounds=100
     assert d.rule_id not in ("R5_round_budget_wrap", "R6_round_budget_halt")
 
 

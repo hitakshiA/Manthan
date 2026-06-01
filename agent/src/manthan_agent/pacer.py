@@ -236,7 +236,7 @@ _PRE_ROUND_RULES = (
 )
 
 
-def judge_pre_round(s: CaseSnapshot, *, max_rounds: int = 25) -> PaceDecision:
+def judge_pre_round(s: CaseSnapshot, *, max_rounds: int = 100) -> PaceDecision:
     """Run all pre-round rules. Returns the first non-proceed decision
     whose rule hasn't already fired. Round-budget rule has priority over
     the nudges since halting beats nudging."""
