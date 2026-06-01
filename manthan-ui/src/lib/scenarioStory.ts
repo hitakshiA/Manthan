@@ -1,17 +1,13 @@
 /**
  * Story slides for the Aperture demo. The reader walks through these
- * seven beats before the case fires - building enough context that
- * watching the agent investigate feels like watching a thriller pay
- * off, not staring at a spinner.
+ * six beats BEFORE the case fires - they get the setup (what's at
+ * stake, why this is hard, how Manthan is going to attack it), then
+ * the agent actually runs and shows them the answer live. The story
+ * intentionally never pre-reveals the verdict (the brief, the math,
+ * the recommended credit amount) - that's what the investigation is
+ * for.
  *
- * Images live in /public/story/aperture/ - generated via
- * google/gemini-3.1-flash-image-preview (see /tmp/gen_aperture_story.py).
- *
- * Captions are written to explain WHY each step matters, not just
- * what's happening. The operator should finish slide 7 knowing the
- * dispute amount ($8,400), the recommended outcome ($560 partial
- * credit), why it's that exact number (pro-rata math from Notion
- * policy), and what each of the 8 sources is going to contribute.
+ * Images live in /public/story/aperture/ as WebP (~40-130KB each).
  */
 
 export interface SourceBeat {
@@ -44,7 +40,7 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
     ctaLabel: "Begin investigation",
     slides: [
       {
-        image: "/story/aperture/01-dispute-arrives.jpg",
+        image: "/story/aperture/01-dispute-arrives.webp",
         eyebrow: "Tuesday · 06:14 UTC",
         heading: "An $8,400 chargeback just landed.",
         body: [
@@ -55,7 +51,7 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
           "Dispute du_1Tch1OCNe0SBMhzIAppAdJjT · Charge ch_3Tch1LCNe0SBMhzI0FIYdCkF · Stripe",
       },
       {
-        image: "/story/aperture/02-the-weight.jpg",
+        image: "/story/aperture/02-the-weight.webp",
         eyebrow: "What's at stake",
         heading: "Two bad answers and a customer in the middle.",
         body: [
@@ -64,7 +60,7 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
         ],
       },
       {
-        image: "/story/aperture/03-eight-tab-scramble.jpg",
+        image: "/story/aperture/03-eight-tab-scramble.webp",
         eyebrow: "Why this is hard",
         heading: "The answer lives in eight different systems.",
         body: [
@@ -114,7 +110,7 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
         ],
       },
       {
-        image: "/story/aperture/04-gut-decision.jpg",
+        image: "/story/aperture/04-gut-decision.webp",
         eyebrow: "The old way",
         heading: "Five hours of tabs and gut.",
         body: [
@@ -123,7 +119,7 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
         ],
       },
       {
-        image: "/story/aperture/05-manthan-arrives.jpg",
+        image: "/story/aperture/05-manthan-arrives.webp",
         eyebrow: "Manthan",
         heading: "One agent. Eight systems. In parallel.",
         body: [
@@ -132,23 +128,12 @@ export const STORY_BY_SCENARIO: Record<string, ScenarioStory> = {
         ],
       },
       {
-        image: "/story/aperture/06-brief-lands.jpg",
-        eyebrow: "Two minutes later",
-        heading: "A brief with the math shown.",
-        body: [
-          "Datadog confirms a 48-hour SLA breach on Custom Reports between April 13 and April 15. PostHog shows usage of that exact feature collapsed during the same window. Intercom has Aperture's complaint logged on April 14. Notion's “Documented Incident Pro-Rata Credit” policy applies.",
-          "The math: 2 degraded days out of a 30-day cycle, times the $8,400 tier amount, equals $560. Not a refund, not a fight - a precise partial credit grounded in the policy you already wrote.",
-        ],
-        footer:
-          "Recommended: $560 partial credit · per Notion policy 37043656-c526-81ce-b985-e66ec3dd0ffd",
-      },
-      {
-        image: "/story/aperture/07-approve-execute.jpg",
+        image: "/story/aperture/05-manthan-arrives.webp",
         eyebrow: "Investigation begins",
         heading: "Now watch Manthan work.",
         body: [
-          "Manthan has live, read-write access to all eight connected sources - Stripe, HubSpot, Datadog, Notion, Intercom, Zendesk, PostHog, Slack. The moment you click Begin, it starts querying them in parallel as a unified data layer, and surfaces facts as they land.",
-          "You'll see every SQL it runs, every source it touches, every claim it makes - with citations back to the underlying record. Nothing hidden, nothing fabricated.",
+          "Manthan has live read access to all eight connected sources - Stripe, HubSpot, Datadog, Notion, Intercom, Zendesk, PostHog, Slack. The moment you click Begin, it starts querying them in parallel as a unified data layer and surfaces facts as they land.",
+          "You'll see every SQL it runs, every source it touches, every claim it makes - each one with a citation back to the underlying record. Nothing hidden, nothing fabricated.",
         ],
       },
     ],

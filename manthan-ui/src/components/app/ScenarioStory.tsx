@@ -165,7 +165,7 @@ export function ScenarioStory({
             mode="wait" here because back-to-back clicks of NEXT made
             the exit animation block and the slide content would freeze
             at index 1 while the indicator advanced. Plain <img> with
-            a key swap is enough - the browser caches the JPEG so the
+            a key swap is enough - the browser caches the WebP so the
             second-half-of-story slides flip instantly. */}
         <div
           className="relative overflow-hidden flex items-center justify-center"
@@ -175,6 +175,10 @@ export function ScenarioStory({
             key={slide.image}
             src={slide.image}
             alt={slide.heading}
+            width={1376}
+            height={768}
+            decoding="async"
+            loading="eager"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.32, ease: [0.22, 0.61, 0.36, 1] }}
