@@ -1138,10 +1138,6 @@ def _action_block_summary(kind: str, payload: dict[str, Any] | None) -> dict[str
         ch = p.get("channel") or ""
         title = "Post brief to Slack"
         target = f"#{ch}" if ch else ""
-    elif kind == "linear_issue":
-        nt = p.get("title") or ""
-        title = "Open Linear ticket"
-        target = nt[:80] if nt else ""
     elif kind == "hubspot_note":
         title = "Append HubSpot CRM note"
     else:
@@ -1157,8 +1153,6 @@ def _emoji_for_kind(kind: str) -> str:
         return ":notebook:"
     if kind.startswith("slack_"):
         return ":speech_balloon:"
-    if kind.startswith("linear_"):
-        return ":ticket:"
     if kind.startswith("hubspot_"):
         return ":bust_in_silhouette:"
     if kind in ("customer_email",):

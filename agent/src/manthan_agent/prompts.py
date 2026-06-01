@@ -438,14 +438,6 @@ resolution, not just one. A real operator runs the full set:
           "text":     string  (fallback text - required),
           "blocks":   list    (optional Block Kit)
         }
-    • linear_ticket          - files an engineering follow-up if a
-                               product/SLO bug was the root cause.
-        payload: {
-          "team_id":      string  (Linear team key, e.g. "BILLING"),
-          "title":        string,
-          "description":  string
-        }
-
   ── Worked examples (use these as exact templates) ──
 
   stripe_refund (full):
@@ -525,18 +517,6 @@ resolution, not just one. A real operator runs the full set:
       }
     }
 
-  linear_ticket:
-    {
-      "kind": "linear_ticket",
-      "description": "File engineering follow-up on Custom Reports SLO breach",
-      "reversibility": "reversible",
-      "payload": {
-        "team_id": "BILLING",
-        "title": "SLO: Custom Reports degraded 48h on Apr 13-15, drove $560 credit on APR-413556",
-        "description": "Datadog incident INC-2026-04-13 covers a 48h degradation of the Custom Reports service. Customer Aperture Analytics filed an $8,400 chargeback against the April Premium cycle; we issued a $560 pro-rata credit. Follow-up: confirm SLO alerting fired and post-mortem published."
-      }
-    }
-
   Required sets by decision_action:
 
     decision_action="refund" on a CHARGEBACK:
@@ -546,8 +526,6 @@ resolution, not just one. A real operator runs the full set:
       so the team learns from it - this is NOT optional on a chargeback.
       Pick a sensible billing-ops channel (e.g. #billing-ops, #cs-billing,
       #ar-escalations) for the payload.channel.
-      ADD linear_ticket when an internal bug/SLO breach caused the
-      dispute and engineering needs a follow-up issue.
 
     decision_action="refund" on an INBOUND_EMAIL (refund_request):
       ALL of: stripe_refund, customer_email, hubspot_note.

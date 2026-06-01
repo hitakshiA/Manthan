@@ -127,11 +127,7 @@ class ConcludeArgs(BaseModel):
             '  {"kind": "slack_brief", "payload": {"channel": "#billing-ops", '
             '"text": "RESOLVED · APR-xxx · partial_credit ($560)..."}, '
             '"description": "Post brief to #billing-ops", "reversibility": '
-            '"reversible"}\n'
-            '  {"kind": "linear_ticket", "payload": {"team_id": "BILLING", '
-            '"title": "SLO: Custom Reports degraded 48h", "description": '
-            '"Datadog INC-... covers a 48h degradation..."}, "description": '
-            '"File SLO follow-up", "reversibility": "reversible"}'
+            '"reversible"}'
         ),
     )
     hitl_question: str = Field(

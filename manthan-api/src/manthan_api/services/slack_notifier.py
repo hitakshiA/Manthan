@@ -190,6 +190,4 @@ def _ref_url(kind: str, ref: str) -> str | None:
         return f"https://dashboard.stripe.com/test/disputes/{ref}"
     if kind == "notion_decision_log":
         return f"https://www.notion.so/{ref.replace('-', '')}"
-    if kind == "linear_issue":
-        return f"https://linear.app/issue/{ref}"
     return None

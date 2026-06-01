@@ -629,10 +629,6 @@ export function actionTitle(row: ApiActionRow): string {
       const channel = (p.channel as string | undefined) ?? "";
       return channel ? `Slack post - #${channel}` : "Post brief to Slack";
     }
-    case "linear_issue": {
-      const t = (p.title as string | undefined) ?? "";
-      return t ? `Linear ticket - ${t.slice(0, 80)}` : "Create Linear ticket";
-    }
     case "hubspot_note": {
       return "Append HubSpot CRM note";
     }
@@ -666,8 +662,6 @@ export function actionTarget(row: ApiActionRow): string {
       const ch = (p.channel as string | undefined) ?? "-";
       return `chat.postMessage · #${ch}`;
     }
-    case "linear_issue":
-      return "linear.issueCreate";
     case "hubspot_note":
       return "hubspot.engagements.create";
     default:
@@ -726,8 +720,6 @@ export function actionExternalUrl(row: ApiActionRow): string | null {
       return `https://www.notion.so/${ref.replace(/-/g, "")}`;
     case "slack_brief":
       return null; // ts isn't enough to deep-link without channel id
-    case "linear_issue":
-      return `https://linear.app/issue/${ref}`;
     default:
       return null;
   }

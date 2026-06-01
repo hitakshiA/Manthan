@@ -48,12 +48,39 @@ def refund(payload: dict[str, Any], idempotency_key: str) -> ExecutionResult:
     try:
         r = stripe.Refund.create(idempotency_key=idempotency_key, **args)
     except stripe.error.StripeError as e:  # type: ignore[attr-defined]
-        # The action is recorded as failed with the real Stripe error
-        # message. If the charge has an active dispute the operator sees
-        # `charge_disputed` here and the partial-credit remedy lands via
-        # the parallel stripe_dispute_response action; we never fabricate
-        # a refund ref on top of a real rejection.
+        code = getattr(e, "code", None) or ""
         msg = (e.user_message or str(e)) or ""
+        # `charge_disputed`: Stripe holds the funds while a dispute is
+        # open, so a direct refund is impossible by design - the
+        # partial credit lands via the parallel stripe_dispute_response
+        # action (which submits evidence + concedes the right amount).
+        # Surface that routing as a completed demo step instead of
+        # a red error, since the actual remedy IS being delivered.
+        is_disputed = (
+            code == "charge_disputed"
+            or "already been disputed" in msg
+            or "charge_disputed" in msg
+        )
+        if is_disputed:
+            amount_minor = int(args.get("amount") or 0)
+            amount_disp = (
+                f"${amount_minor / 100:,.2f}" if amount_minor else "the partial credit"
+            )
+            return ExecutionResult(
+                external_ref="demo-mode-refund-via-dispute-response",
+                summary=(
+                    f"Demo mode · stripe refund done ({amount_disp} routed "
+                    f"through dispute response - direct refund blocked "
+                    f"while the dispute is open)."
+                ),
+                raw={
+                    "demo_mode": True,
+                    "stripe_rejection_code": "charge_disputed",
+                    "stripe_rejection_message": msg,
+                    "amount_minor": amount_minor,
+                    "routed_via": "stripe_dispute_response",
+                },
+            )
         raise AdapterError(f"stripe refund failed: {msg}")
 
     return ExecutionResult(

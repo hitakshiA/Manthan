@@ -154,7 +154,6 @@ class DraftedAction(BaseModel):
         "stripe_refund",
         "stripe_dispute_response",
         "customer_email",
-        "linear_ticket",
         "hubspot_note",
         "slack_brief",
     ]

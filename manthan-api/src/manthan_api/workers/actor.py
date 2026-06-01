@@ -23,7 +23,6 @@ from manthan_api.adapters import (
     AdapterError,
     ExecutionResult,
     hubspot as hubspot_adapter,
-    linear as linear_adapter,
     notion as notion_adapter,
     resend as resend_adapter,
     slack as slack_adapter,
@@ -39,7 +38,6 @@ ADAPTERS: dict[str, tuple[Any, Any]] = {
     "stripe_refund":            (stripe_adapter.refund, stripe_adapter.verify_refund),
     "stripe_dispute_response":  (stripe_adapter.dispute_response, None),
     "customer_email":           (resend_adapter.send, None),
-    "linear_ticket":            (linear_adapter.create_issue, None),
     "hubspot_note":             (hubspot_adapter.create_note, None),
     "slack_brief":              (slack_adapter.post, None),
     "notion_decision_log":      (notion_adapter.append_decision_log, None),
@@ -439,9 +437,6 @@ def _source_ref_url(kind: str, external_ref: str | None) -> str | None:
     if kind == "slack_brief":
         # external_ref is the message ts; no clean permalink without channel
         return None
-    if kind == "linear_issue":
-        # Linear issue ID like "ENG-123"
-        return f"https://linear.app/issue/{external_ref}"
     if kind == "hubspot_note":
         portal = os.environ.get("HUBSPOT_PORTAL_ID")
         if portal:

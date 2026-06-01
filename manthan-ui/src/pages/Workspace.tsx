@@ -412,7 +412,6 @@ function sourceFromActionKind(kind: string): string {
   if (k.startsWith("stripe_")) return "stripe";
   if (k.startsWith("notion_")) return "notion";
   if (k.startsWith("slack_")) return "slack";
-  if (k.startsWith("linear_")) return "linear";
   if (k.startsWith("hubspot_")) return "hubspot";
   if (k.startsWith("zendesk_")) return "zendesk";
   if (k.startsWith("intercom_")) return "intercom";
