@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { call as apiCall } from "@/lib/api";
 import {
   CANCELLABLE_STEPS,
   NAV_LOCKED_STEPS,
@@ -83,11 +84,16 @@ export function DemoV2Wizard({ loggedInEmail, onClose }: DemoV2WizardProps) {
 
   const cancellable = CANCELLABLE_STEPS.has(state.step);
 
+  // Hard exit. Wipes localStorage demo state + dismisses the wizard.
+  // Safe to call at any step - the underlying case (if any) continues
+  // running server-side; we're just abandoning the guided overlay.
+  // Also navigates back to /app so the user isn't stranded on a
+  // /app/case/{stale-id} URL if the case was deleted from under us.
   const handleCancel = useCallback(() => {
-    if (!cancellable) return;
     clearState();
     onClose();
-  }, [cancellable, onClose]);
+    navigate("/app");
+  }, [navigate, onClose]);
 
   // ── DOM polling helper (used by several step wait conditions) ─────
   const useDomCondition = (predicate: () => boolean, enabled: boolean) => {
@@ -213,6 +219,30 @@ export function DemoV2Wizard({ loggedInEmail, onClose }: DemoV2WizardProps) {
     const target = `/app/case/${state.caseId}`;
     if (!location.pathname.startsWith(target)) navigate(target);
   }, [state.step, state.caseId, location.pathname, navigate]);
+
+  // Trapped-state watchdog. If the caseId we're tracking returns 404
+  // (typical when an admin wiped cases mid-demo, or the user resumed
+  // from stale localStorage), don't sit forever on "Loading case…".
+  // Clear demo state and bounce the user back to the inbox so they can
+  // start fresh.
+  useEffect(() => {
+    if (state.step !== "case-opened" && state.step !== "case-resolved") return;
+    if (!state.caseId) return;
+    let cancelled = false;
+    apiCall(`/api/cases/${state.caseId}`)
+      .catch((e: Error) => {
+        if (cancelled) return;
+        if (String(e).includes("404")) {
+          // The case is gone. Bail cleanly.
+          clearState();
+          onClose();
+          navigate("/app");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.step, state.caseId, navigate, onClose]);
 
   useEffect(() => {
     if (state.step !== "case-opened") return;
@@ -371,23 +401,27 @@ function StepRenderer(props: {
       </div>
       {body}
       {errorMsg && <ErrorBox>{errorMsg}</ErrorBox>}
-      {cancellable && (
-        <div style={{ marginTop: 12, textAlign: "right" }}>
-          <button
-            onClick={onCancel}
-            style={{
-              background: "transparent",
-              color: "rgba(239,236,228,0.5)",
-              border: "none",
-              fontSize: 11,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            Cancel demo
-          </button>
-        </div>
-      )}
+      {/* Always-available exit: cancellable steps say "Cancel demo"
+          (nothing to abandon yet); locked steps say "Exit guide" with
+          a softer label since the underlying case will keep running
+          server-side regardless. */}
+      <div style={{ marginTop: 12, textAlign: "right" }}>
+        <button
+          onClick={onCancel}
+          style={{
+            background: "transparent",
+            color: "rgba(239,236,228,0.5)",
+            border: "none",
+            fontSize: 11,
+            cursor: "pointer",
+            padding: 0,
+          }}
+        >
+          {cancellable
+            ? "Cancel demo"
+            : "Exit guide (case keeps running)"}
+        </button>
+      </div>
     </>
   );
 
