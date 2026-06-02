@@ -177,3 +177,6 @@ manthan-*.log
 *.duckdb
 *.duckdb.wal
 *.vault_key
+
+# Demo video (referenced from README) - explicit exception to the *.mp4 rule above
+!manthan-ui/public/demo.mp4

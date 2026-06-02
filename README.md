@@ -30,6 +30,16 @@
   <a href="https://github.com/akash-mondal/manthan/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
 </p>
 
+<p align="center">
+  <video src="https://github.com/akash-mondal/manthan/raw/main/manthan-ui/public/demo.mp4" controls muted playsinline preload="metadata" width="720" poster="docs/banner.png">
+    Your browser can't render embedded video. <a href="https://github.com/akash-mondal/manthan/raw/main/manthan-ui/public/demo.mp4">Download the demo (8 MB)</a> or watch it on <a href="https://manthan.quest">manthan.quest</a>.
+  </video>
+</p>
+
+<p align="center">
+  <sub><em>Watch Manthan resolve a chargeback end-to-end · 2:50 · 720p</em></sub>
+</p>
+
 ## About Manthan
 
 Manthan is the autonomous investigator for B2B SaaS billing operations. The moment a chargeback hits Stripe, a refund request lands in your support inbox, or a teammate `@-mentions` Manthan in Slack, the agent reads across **every connected system in one query**, drafts a **cited decision brief**, and queues the right actions for one-click human approval.
