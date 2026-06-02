@@ -31,13 +31,15 @@
 </p>
 
 <p align="center">
-  <video src="https://github.com/akash-mondal/manthan/raw/main/manthan-ui/public/demo.mp4" controls muted playsinline preload="metadata" width="720" poster="docs/banner.png">
-    Your browser can't render embedded video. <a href="https://github.com/akash-mondal/manthan/raw/main/manthan-ui/public/demo.mp4">Download the demo (8 MB)</a> or watch it on <a href="https://manthan.quest">manthan.quest</a>.
-  </video>
+  <a href="https://manthan.quest/demo.mp4">
+    <video src="https://manthan.quest/demo.mp4" controls muted playsinline preload="metadata" width="720" poster="docs/banner.png">
+      Inline video didn't render. <a href="https://manthan.quest/demo.mp4">Watch the 2:50 demo</a> or grab the <a href="https://github.com/akash-mondal/manthan/raw/main/manthan-ui/public/demo.mp4">source file (8 MB)</a>.
+    </video>
+  </a>
 </p>
 
 <p align="center">
-  <sub><em>Watch Manthan resolve a chargeback end-to-end · 2:50 · 720p</em></sub>
+  <sub><em>Watch Manthan resolve a chargeback end-to-end · 2:50 · 720p · 8 MB</em></sub>
 </p>
 
 ## About Manthan
