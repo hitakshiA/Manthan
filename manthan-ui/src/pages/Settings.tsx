@@ -38,7 +38,7 @@ export default function Settings() {
       className="h-full w-full overflow-y-auto"
       style={{ background: "var(--color-bg)" }}
     >
-      <div className="mx-auto px-6 py-9" style={{ maxWidth: 1100 }}>
+      <div className="mx-auto px-4 sm:px-6 py-6 sm:py-9" style={{ maxWidth: 1100 }}>
         <PageHeader />
 
         {meError && (
@@ -163,7 +163,7 @@ function Card({
       }}
     >
       <header
-        className="flex items-center px-9 gap-4"
+        className="flex items-center px-5 sm:px-7 lg:px-9 gap-4"
         style={{
           minHeight: 52,
           paddingTop: 14,
@@ -182,7 +182,7 @@ function Card({
         </span>
         {trailing && <span className="ml-auto">{trailing}</span>}
       </header>
-      <div className="px-9 py-7">{children}</div>
+      <div className="px-5 sm:px-7 lg:px-9 py-6 lg:py-7">{children}</div>
     </article>
   );
 }
@@ -200,9 +200,8 @@ function Row({
 }) {
   return (
     <div
-      className="grid items-baseline gap-6 py-3"
+      className="grid items-baseline gap-2 sm:gap-6 py-3 grid-cols-1 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]"
       style={{
-        gridTemplateColumns: "minmax(0, 220px) minmax(0, 1fr)",
         borderBottom: "1px solid var(--color-rule-soft)",
       }}
     >
@@ -380,9 +379,8 @@ function DemoCard() {
         {DEMO_ENTRIES.map((entry) => (
           <li
             key={entry.label}
-            className="grid items-baseline gap-6 py-3"
+            className="grid items-baseline gap-2 sm:gap-6 py-3 grid-cols-1 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]"
             style={{
-              gridTemplateColumns: "minmax(0, 220px) minmax(0, 1fr)",
               borderBottom: "1px solid var(--color-rule-soft)",
             }}
           >

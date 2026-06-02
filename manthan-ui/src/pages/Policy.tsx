@@ -156,7 +156,7 @@ export default function PolicyPage() {
           </div>
         )}
 
-        <div className="px-12 pb-10 pt-2 flex flex-col gap-5">
+        <div className="px-5 sm:px-8 lg:px-12 pb-10 pt-2 flex flex-col gap-5">
           {rules === null ? (
             <LoadingNote>Loading rules…</LoadingNote>
           ) : rules.length === 0 ? (
@@ -171,7 +171,7 @@ export default function PolicyPage() {
         </div>
 
         <div
-          className="px-12 pt-10 pb-12"
+          className="px-5 sm:px-8 lg:px-12 pt-10 pb-12"
           style={{ borderTop: "1px solid var(--color-rule-soft)" }}
         >
           <Eyebrow>Recent matches</Eyebrow>
@@ -200,7 +200,7 @@ function PageHeader({
   onNewRule: () => void;
 }) {
   return (
-    <header className="px-12 pt-12 pb-9">
+    <header className="px-5 sm:px-8 lg:px-12 pt-8 sm:pt-10 lg:pt-12 pb-7 sm:pb-9">
       <Eyebrow>Policies</Eyebrow>
       <div className="mt-3 flex items-end justify-between gap-6 flex-wrap">
         <div className="min-w-0">
@@ -290,12 +290,7 @@ function RuleMemo({
       }}
     >
       <RuleHeaderStrip rule={rule} onToggle={onToggle} />
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
-        }}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <RuleWhenColumn rule={rule} />
         <RuleDecisionColumn rule={rule} />
       </div>

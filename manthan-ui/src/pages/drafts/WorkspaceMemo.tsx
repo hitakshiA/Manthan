@@ -318,7 +318,7 @@ function HeaderStrip({
 }) {
   return (
     <header
-      className="flex items-center px-9 shrink-0"
+      className="flex items-center px-4 sm:px-6 lg:px-9 shrink-0 gap-2 overflow-x-auto"
       style={{
         height: 56,
         borderBottom: "1px solid var(--color-rule-soft)",

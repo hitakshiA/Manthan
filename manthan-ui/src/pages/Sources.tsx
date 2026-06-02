@@ -86,7 +86,7 @@ export default function Sources() {
       className="h-full w-full overflow-y-auto"
       style={{ background: "var(--color-bg)" }}
     >
-      <div className="mx-auto px-6 py-9" style={{ maxWidth: 1280 }}>
+      <div className="mx-auto px-4 sm:px-6 py-6 sm:py-9" style={{ maxWidth: 1280 }}>
         <PageHeader
           totals={totals}
           q={q}
@@ -442,9 +442,8 @@ function SourceCoralModal({
                     {detail.env_vars.map((v) => (
                       <li
                         key={v.name}
-                        className="grid items-baseline"
+                        className="grid items-baseline grid-cols-1 sm:grid-cols-[minmax(180px,240px)_minmax(0,1fr)] gap-y-1"
                         style={{
-                          gridTemplateColumns: "minmax(180px, 240px) minmax(0, 1fr)",
                           columnGap: 16,
                         }}
                       >
@@ -537,9 +536,8 @@ function SourceCoralModal({
                 }}
               >
                 <div
-                  className="grid"
+                  className="grid grid-cols-1 sm:grid-cols-[minmax(180px,240px)_minmax(0,1fr)]"
                   style={{
-                    gridTemplateColumns: "minmax(180px, 240px) minmax(0, 1fr)",
                     columnGap: 16,
                     rowGap: 8,
                   }}

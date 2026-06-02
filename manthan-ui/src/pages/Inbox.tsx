@@ -156,10 +156,10 @@ export default function Inbox() {
       style={{ background: "var(--color-bg)" }}
     >
       <div
-        className="mx-auto flex flex-col"
+        className="mx-auto flex flex-col px-4 sm:px-6 py-8 sm:py-10"
         style={{
           maxWidth: 1100,
-          padding: "40px 24px 64px",
+          paddingBottom: 64,
           color: "var(--color-ink-strong)",
         }}
       >
@@ -1133,11 +1133,11 @@ function InboxEmptyState() {
 
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center px-8 select-none"
+      className="h-full w-full flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-10 select-none"
       style={{
         maxWidth: 1240,
         margin: "0 auto",
-        gap: "clamp(56px, 7vh, 96px)",
+        gap: "clamp(32px, 6vh, 96px)",
       }}
     >
       {/* Hero: just the title + the prompt. No subtitle prose, no
@@ -1150,7 +1150,10 @@ function InboxEmptyState() {
           className="leading-[0.95]"
           style={{
             fontFamily: "Spectral, serif",
-            fontSize: "clamp(72px, 9vw, 128px)",
+            // Smaller minimum so the title doesn't dominate the
+            // empty-state viewport on phones - clamp now starts at
+            // 56px instead of 72px.
+            fontSize: "clamp(56px, 11vw, 128px)",
             color: "var(--color-ink-strong)",
             letterSpacing: "-0.028em",
             fontWeight: 400,
