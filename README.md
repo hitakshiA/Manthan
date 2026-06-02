@@ -30,11 +30,7 @@
   <a href="https://github.com/akash-mondal/manthan/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
 </p>
 
-<p align="center">
-  <a href="https://manthan.quest/demo.mp4">
-    <img src="https://img.shields.io/badge/%E2%96%B6%EF%B8%8E_Watch_the_2:50_demo-16d05e?style=for-the-badge&labelColor=0a0c0a" alt="Watch the 2:50 demo">
-  </a>
-</p>
+https://github.com/user-attachments/assets/afa2105c-3cc1-40e2-a799-6fcd2ee2f3f8
 
 ## About Manthan
 
