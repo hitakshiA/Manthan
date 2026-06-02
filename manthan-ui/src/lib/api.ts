@@ -105,13 +105,13 @@ export interface ApiCase {
   /** One-line Gemini-Flash-written summary for the inbox cards.
    *  Populated by `listCases`, null on detail fetches. */
   card_summary?: string | null;
-  /** True when this case was opened via the demo-v2 guided flow + the
-   *  webhook grafted seeded Stripe/HubSpot IDs onto trigger_payload.
-   *  WorkspaceMemo shows a small annotation strip above the brief when
-   *  set, explaining why the case references Maya Patel Design /
-   *  hitakshi220@gmail.com even though the operator is logged in with
-   *  their own email. */
+  /** Backwards-compat alias for `demo_mode === 'v2'`. */
   is_demo_v2?: boolean;
+  /** Which guided demo grafted seeded data onto this case:
+   *    'v2' - email demo, Maya Patel scenario
+   *    'v3' - Slack demo, Vermillion Studios scenario
+   *    null - real case */
+  demo_mode?: "v2" | "v3" | null;
 }
 
 export interface ApiBriefSummary {

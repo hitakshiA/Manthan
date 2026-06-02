@@ -59,12 +59,13 @@ export interface MemoCaseData {
   policyMatched?: string | null;
   policyMode?: string | null;
   tldr: string;
-  /** True when this case opened via demo-v2 + the webhook grafted
-   *  seeded Stripe IDs onto the trigger so the agent had real billing
-   *  data to investigate against. When true, we show a small banner
-   *  above the brief explaining the Maya Patel / hitakshi220 reference
-   *  the user is otherwise going to find baffling. */
+  /** Backwards-compat alias for demoMode === 'v2'. */
   isDemoV2?: boolean;
+  /** Which guided demo grafted seeded data onto this case:
+   *    'v2' - email demo, Maya Patel scenario
+   *    'v3' - Slack demo, Vermillion Studios scenario
+   *    null - real case, no banner shown */
+  demoMode?: "v2" | "v3" | null;
   /** The operator's own email - shown in the banner so the user can
    *  see at a glance that the case + reply are routed to them, even
    *  though the investigation references the seeded customer. */
@@ -541,8 +542,11 @@ function BriefCanvas({
           )}
         </div>
 
-        {caseData.isDemoV2 && (
-          <DemoV2Banner loggedInEmail={caseData.loggedInEmail} />
+        {(caseData.demoMode || caseData.isDemoV2) && (
+          <DemoBanner
+            mode={caseData.demoMode ?? (caseData.isDemoV2 ? "v2" : null)}
+            loggedInEmail={caseData.loggedInEmail}
+          />
         )}
 
         <div
@@ -796,14 +800,30 @@ function BriefCanvas({
 // ──────────────────────────────────────────────────────────────────────
 
 // ──────────────────────────────────────────────────────────────────────
-// DemoV2Banner - shown above the brief when the case landed via the
-// guided autonomous-email demo. Explains why the case prose references
-// Maya Patel Design / hitakshi220@gmail.com instead of the operator's
-// own email - the inbound webhook grafted seeded Stripe IDs onto the
-// case so the agent had real billing records to investigate against.
+// DemoBanner - shown above the brief when the case landed via either
+// guided demo (v2 = email + Maya Patel, v3 = Slack + Vermillion). The
+// copy adapts by mode so the user knows why the case prose references
+// a seeded customer instead of their own account.
 // ──────────────────────────────────────────────────────────────────────
 
-function DemoV2Banner({ loggedInEmail }: { loggedInEmail?: string }) {
+function DemoBanner({
+  mode,
+  loggedInEmail,
+}: {
+  mode: "v2" | "v3" | null;
+  loggedInEmail?: string;
+}) {
+  if (!mode) return null;
+  const isV3 = mode === "v3";
+  const seededCustomer = isV3 ? "Vermillion Studios" : "Maya Patel Design";
+  const seededEmail = isV3 ? null : "hitakshi220@gmail.com";
+  const triggerWord = isV3 ? "Slack mention" : "demo email";
+  const triggerOrigin = isV3
+    ? "the ManthanDemo workspace"
+    : "your own inbox";
+  const replyDestination = isV3
+    ? "the Slack thread where you posted the mention"
+    : "your own inbox instead of Maya's";
   return (
     <div
       style={{
@@ -830,26 +850,24 @@ function DemoV2Banner({ loggedInEmail }: { loggedInEmail?: string }) {
           marginBottom: 4,
         }}
       >
-        Demo · why this case mentions Maya Patel
+        Demo · why this case mentions {seededCustomer}
       </div>
-      Manthan needs real billing records to investigate against. Your
-      demo email
+      Manthan needs real billing records to investigate against. Your{" "}
+      {triggerWord}
       {loggedInEmail ? (
         <>
           {" "}from <strong style={{ color: "var(--color-ink-strong)" }}>
             {loggedInEmail}
-          </strong>{" "}
+          </strong>
         </>
-      ) : (
-        " "
-      )}
-      was matched to a seeded customer in the test environment —
-      "Maya Patel Design" / <code>hitakshi220@gmail.com</code> — so the
-      agent could pull actual Stripe charges + Notion policy + HubSpot
-      records to reason against. The refund decision, the policy match,
-      and the reply email all genuinely fire; the reply just lands back
-      in your own inbox instead of Maya's, since that's where you sent
-      the test from.
+      ) : null}
+      {" "}— sent from {triggerOrigin} — was matched to a seeded customer in
+      the test environment: "{seededCustomer}"
+      {seededEmail ? <> / <code>{seededEmail}</code></> : null} — so the
+      agent could pull actual Stripe + Notion + HubSpot records to
+      reason against. The decision, the policy match, and the resulting
+      actions all genuinely fire; the reply just lands in{" "}
+      {replyDestination}.
     </div>
   );
 }

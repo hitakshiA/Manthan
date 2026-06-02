@@ -66,46 +66,117 @@ async def open_case_from_slack(
 ) -> tuple[UUID, str]:
     """Open a case from a Slack mention/DM. Returns (case_id, short_id).
 
-    The investigate worker will pick it up via NOTIFY and start
-    investigating. We don't post the brief here - that happens later when
-    brief_drafted fires (see `post_brief_to_thread` below, called from the
-    actor or a dedicated dispatcher).
+    Tenancy rule (mirrors email_webhook's per-sender routing):
+      1. Look up the mentioning Slack user's email via users.info.
+         If that email matches a row in the Manthan `members` table,
+         OVERRIDE the URL-slug-derived org_id and route the case into
+         that member's personal org. This is how we share one
+         Slack workspace + one bot token across all signed-in users.
+      2. If no match, the case stays in the org passed by the caller
+         (resolved from the URL slug, typically `acme`).
+
+    Demo-v3 graft:
+      When the matched member's mention lands in #all-manthandemo (or
+      any channel whose name contains 'manthan-demo'), attach the
+      Vermillion Studios seeded Stripe IDs onto trigger_payload so the
+      agent can SELECT against real records, not the runner's own
+      personal email which has no Stripe history.
+
+    The investigate worker picks the case up via NOTIFY and starts the
+    agent loop. We don't post the brief here - that happens later when
+    brief_drafted fires (see `post_brief_to_thread`).
     """
     import secrets
 
     thread_id = uuid.uuid4()
     short_id = f"SLK-{secrets.randbelow(900000) + 100000}"
 
-    # Strip the bot mention from the text if present (the Events API
-    # delivers "<@U123456> text..." - drop the leading mention).
     cleaned = text.strip()
     if cleaned.startswith("<@") and ">" in cleaned:
         cleaned = cleaned.split(">", 1)[1].strip()
 
     surface = "slack_dm" if is_dm else "slack_mention"
 
+    # Resolve the mentioning Slack user's email so we can route the case
+    # into their personal Manthan org if they're a signed-in member.
+    mentioned_email = _slack_user_email(user_id)
+    routed_via_member = False
     async with get_pool().acquire() as conn:
+        if mentioned_email:
+            member_row = await conn.fetchrow(
+                """
+                SELECT o.id AS org_id, o.slug AS org_slug
+                FROM members m
+                JOIN orgs o ON o.id = m.org_id
+                WHERE lower(m.email) = $1
+                ORDER BY m.created_at ASC
+                LIMIT 1
+                """,
+                mentioned_email.lower(),
+            )
+            if member_row is not None:
+                org_id = member_row["org_id"]
+                routed_via_member = True
+                logger.info(
+                    "slack mention routed to member's own org: slack_user=%s email=%s org=%s",
+                    user_id, mentioned_email, member_row["org_slug"],
+                )
+
+        # Demo-v3 graft - signed-in member mentioned the bot in the
+        # demo channel. Attach Vermillion's seeded Stripe IDs so the
+        # agent has real billing data to investigate.
+        chan_lower = (channel_name or "").lower()
+        demo_v3_active = (
+            routed_via_member
+            and ("manthan-demo" in chan_lower or "manthandemo" in chan_lower)
+        )
+        demo_graft: dict[str, Any] = {}
+        if demo_v3_active:
+            demo_graft = _vermillion_graft()
+            logger.info(
+                "demo-v3 graft applied: short_id=%s channel=%s",
+                short_id, channel_name,
+            )
+
+        trigger_payload = {
+            "slack_user_id": user_id,
+            "slack_user_name": user_name,
+            "slack_channel_id": channel_id,
+            "slack_channel_name": channel_name,
+            "slack_event_ts": event_ts,
+            "raw_text": text,
+            "cleaned_text": cleaned,
+            "mentioned_by_email": mentioned_email,
+            **demo_graft,
+        }
+
+        trigger_text = cleaned
+        if demo_v3_active:
+            trigger_text = (
+                f"{cleaned}\n\n"
+                f"-- demo-v3 enrichment (auto-attached) --\n"
+                f"Customer:       Vermillion Studios ({demo_graft['customer_id']})\n"
+                f"Disputed charge: {demo_graft['charge_id']}\n"
+                f"Dispute id:     {demo_graft['dispute_id']}\n"
+                f"Amount:         $4,500 USD"
+            )
+
         async with conn.transaction():
             case_row = await conn.fetchrow(
                 """
                 INSERT INTO cases (
                     org_id, thread_id, short_id, status, trigger_surface,
-                    trigger_payload, case_type
+                    trigger_payload, case_type, customer_ref, amount_minor, currency
                 )
-                VALUES ($1, $2, $3, 'investigating', $4, $5, $6)
+                VALUES ($1, $2, $3, 'investigating', $4, $5, $6, $7, $8, $9)
                 RETURNING id
                 """,
                 org_id, thread_id, short_id, surface,
-                json.dumps({
-                    "slack_user_id": user_id,
-                    "slack_user_name": user_name,
-                    "slack_channel_id": channel_id,
-                    "slack_channel_name": channel_name,
-                    "slack_event_ts": event_ts,
-                    "raw_text": text,
-                    "cleaned_text": cleaned,
-                }),
-                "slack_request",
+                json.dumps(trigger_payload),
+                "chargeback" if demo_v3_active else "slack_request",
+                "Vermillion Studios" if demo_v3_active else None,
+                450000 if demo_v3_active else None,
+                "usd" if demo_v3_active else None,
             )
             case_id = case_row["id"]
             await conn.execute(
@@ -118,16 +189,53 @@ async def open_case_from_slack(
                     "case_id": str(case_id),
                     "short_id": short_id,
                     "trigger_surface": surface,
-                    "trigger_text": cleaned,
+                    "trigger_text": trigger_text,
                     "slack_user_id": user_id,
                     "slack_user_name": user_name,
                     "slack_channel_id": channel_id,
                     "slack_channel_name": channel_name,
                     "slack_event_ts": event_ts,
+                    "mentioned_by_email": mentioned_email,
+                    **demo_graft,
                 }),
             )
-    logger.info("slack opened case %s (surface=%s user=%s)", short_id, surface, user_name)
+    logger.info(
+        "slack opened case %s (surface=%s user=%s member_routed=%s demo_v3=%s)",
+        short_id, surface, user_name, routed_via_member, bool(demo_graft),
+    )
     return case_id, short_id
+
+
+def _slack_user_email(user_id: str) -> str | None:
+    """Look up a Slack user's email via users.info. Requires the bot
+    token to have the users:read.email scope. Returns None on any
+    failure - the caller falls back to URL-slug org routing."""
+    try:
+        resp = _client().users_info(user=user_id)
+    except SlackApiError as e:
+        logger.warning("slack users.info failed for %s: %s", user_id, e)
+        return None
+    except Exception as e:  # noqa: BLE001
+        logger.warning("slack users.info unexpected error for %s: %s", user_id, e)
+        return None
+    user = resp.get("user") or {}
+    profile = user.get("profile") or {}
+    email = profile.get("email")
+    return str(email).strip().lower() if email else None
+
+
+def _vermillion_graft() -> dict[str, Any]:
+    """Seeded Vermillion Studios chargeback IDs the agent will use when
+    a Manthan member mentions the bot in #all-manthandemo. Mirrors the
+    demo_v2 Maya graft over email; uses the existing `vermillion`
+    scenario's Stripe IDs (see api/demo.py)."""
+    return {
+        "demo_v3": True,
+        "customer_id": "cus_UbE7T8oTOj7vBT",
+        "charge_id": "ch_3Tc2QNCNe0SBMhzI1ZxM1yrK",
+        "dispute_id": "du_1Tc2QQCNe0SBMhzImPgJOJiO",
+        "hubspot_company_id": "324968425171",
+    }
 
 
 # ──────────────────────────────────────────────────────────────────────

@@ -1081,11 +1081,12 @@ type TriggerCard = {
   sourceId: string;
   label: string;
   comingSoon?: boolean;
-  // When true, clicking the card opens the guided Demo v2 wizard
-  // (autonomous-email flow) instead of firing a pre-baked scenario.
-  // The scenarioId is still used as a stable key; it doesn't drive any
-  // backend trigger for demo-v2 cards.
+  // Clicking the card opens the guided wizard for the matching demo
+  // mode instead of firing a pre-baked scenario.
+  //   demoV2 -> ?demo=v2 (autonomous-email flow, Maya seeded scenario)
+  //   demoV3 -> ?demo=v3 (Slack-mention flow, Vermillion scenario)
   demoV2?: boolean;
+  demoV3?: boolean;
 };
 
 const TRIGGER_CARDS: TriggerCard[] = [
@@ -1100,7 +1101,11 @@ const TRIGGER_CARDS: TriggerCard[] = [
     scenarioId: "vermillion",
     sourceId: "slack",
     label: "Slack Thread",
-    comingSoon: true,
+    // Now wired to the guided Demo v3 wizard. The scenarioId stays
+    // as 'vermillion' (it's a stable key for the card render) but
+    // clicking the card flips ?demo=v3 instead of firing the
+    // synthetic vermillion scenario.
+    demoV3: true,
   },
 ];
 
@@ -1110,24 +1115,26 @@ function InboxEmptyState() {
   const [, setParams] = useSearchParams();
 
   // Resolve the simplified card configs against the live scenario list.
-  // Coming-soon AND demo-v2 cards are kept regardless (they don't need
-  // a backend scenario row); real scenario cards degrade gracefully if
-  // a scenario id is renamed/removed upstream.
+  // Coming-soon, demo-v2 AND demo-v3 cards are kept regardless (they
+  // don't need a backend scenario row); real scenario cards degrade
+  // gracefully if a scenario id is renamed/removed upstream.
   const visible = scenarios
     ? TRIGGER_CARDS.filter(
         (c) =>
           c.comingSoon ||
           c.demoV2 ||
+          c.demoV3 ||
           scenarios.some((s) => s.id === c.scenarioId),
       )
-    : TRIGGER_CARDS.filter((c) => c.comingSoon || c.demoV2);
+    : TRIGGER_CARDS.filter((c) => c.comingSoon || c.demoV2 || c.demoV3);
 
   const handleCardFire = (card: TriggerCard) => {
-    if (card.demoV2) {
-      // Flip ?demo=v2 - AppShell sees the param and mounts the wizard.
+    if (card.demoV2 || card.demoV3) {
+      // Flip ?demo=v2 or v3 - AppShell sees the param and mounts the
+      // matching wizard.
       setParams((prev) => {
         const next = new URLSearchParams(prev);
-        next.set("demo", "v2");
+        next.set("demo", card.demoV2 ? "v2" : "v3");
         return next;
       });
       return;

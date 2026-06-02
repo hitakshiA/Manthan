@@ -224,7 +224,12 @@ async def get_case(
                    customer_ref, amount_minor, currency,
                    decision_action, decision_amount_minor, decision_confidence,
                    assigned_member_id, created_at, resolved_at,
-                   COALESCE(trigger_payload->>'demo_v2', 'false')::boolean AS is_demo_v2
+                   COALESCE(trigger_payload->>'demo_v2', 'false')::boolean AS is_demo_v2,
+                   CASE
+                     WHEN (trigger_payload->>'demo_v3')::boolean IS TRUE THEN 'v3'
+                     WHEN (trigger_payload->>'demo_v2')::boolean IS TRUE THEN 'v2'
+                     ELSE NULL
+                   END AS demo_mode
             FROM cases
             WHERE org_id = $1 AND id = $2
             """,

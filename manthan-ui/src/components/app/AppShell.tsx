@@ -30,12 +30,14 @@ import { DemoTriggerMenu } from "@/components/app/DemoTriggerMenu";
 import { Logo } from "@/components/Logo";
 import { useTheme } from "@/lib/theme";
 import { DemoV2Wizard } from "@/components/demo-v2/DemoV2Wizard";
+import { DemoV3SlackWizard } from "@/components/demo-v2/DemoV3SlackWizard";
 import { loadState as loadDemoV2State } from "@/lib/demo-v2";
+import { loadState as loadDemoV3State } from "@/lib/demo-v3";
 
 export function AppShell() {
   const metrics = useDashboardMetrics();
   const me = useMe();
-  const demoV2 = useDemoV2Active(me);
+  const demo = useDemoActive(me);
   const location = useLocation();
 
   // Mobile drawer open/close. Closed on every route change so tapping
@@ -193,10 +195,16 @@ export function AppShell() {
         </main>
       </div>
 
-      {demoV2.active && me?.member.email && (
+      {demo.kind === "v2" && me?.member.email && (
         <DemoV2Wizard
           loggedInEmail={me.member.email}
-          onClose={demoV2.dismiss}
+          onClose={demo.dismiss}
+        />
+      )}
+      {demo.kind === "v3" && me?.member.email && (
+        <DemoV3SlackWizard
+          loggedInEmail={me.member.email}
+          onClose={demo.dismiss}
         />
       )}
     </div>
@@ -255,30 +263,37 @@ function pageGroupKey(pathname: string): string {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// Demo v2 mount controller. Returns active=true when ANY of:
-//   - URL has `?demo=v2` (explicit launch)
-//   - localStorage has a non-stale saved session (resume after refresh)
-// dismiss() clears both signals.
+// Unified demo mount controller. Returns which wizard (if any) should
+// be mounted, derived from:
+//   - URL `?demo=v2` or `?demo=v3` (explicit launch from a card click)
+//   - non-stale saved localStorage state for v2 or v3 (resume after a
+//     refresh / tab close mid-flow)
+// dismiss() clears both signals (the URL param + any saved state for
+// the active wizard).
 // ──────────────────────────────────────────────────────────────────────
 
-function useDemoV2Active(me: MeResponse | null): {
-  active: boolean;
+type DemoKind = "v2" | "v3" | null;
+
+function useDemoActive(me: MeResponse | null): {
+  kind: DemoKind;
   dismiss: () => void;
 } {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
-  const [hasSavedState, setHasSavedState] = useState<boolean>(() => {
-    return loadDemoV2State() !== null;
-  });
+  const [v2Saved, setV2Saved] = useState<boolean>(() => loadDemoV2State() !== null);
+  const [v3Saved, setV3Saved] = useState<boolean>(() => loadDemoV3State() !== null);
 
-  // Re-check saved state on route change - if the wizard wrote /
-  // cleared its own state, we want to reflect that without a refresh.
   useEffect(() => {
-    setHasSavedState(loadDemoV2State() !== null);
+    setV2Saved(loadDemoV2State() !== null);
+    setV3Saved(loadDemoV3State() !== null);
   }, [location.pathname]);
 
-  const urlFlag = params.get("demo") === "v2";
-  const active = !!me?.member.email && (urlFlag || hasSavedState);
+  const urlFlag = params.get("demo");
+  let kind: DemoKind = null;
+  if (me?.member.email) {
+    if (urlFlag === "v3" || (!urlFlag && v3Saved)) kind = "v3";
+    else if (urlFlag === "v2" || (!urlFlag && v2Saved)) kind = "v2";
+  }
 
   const dismiss = () => {
     if (urlFlag) {
@@ -286,10 +301,11 @@ function useDemoV2Active(me: MeResponse | null): {
       next.delete("demo");
       setParams(next, { replace: true });
     }
-    setHasSavedState(false);
+    setV2Saved(false);
+    setV3Saved(false);
   };
 
-  return { active, dismiss };
+  return { kind, dismiss };
 }
 
 // ──────────────────────────────────────────────────────────────────────

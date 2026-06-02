@@ -250,7 +250,15 @@ async def receive_email(
         # nothing (their address isn't a seeded customer), and stalls.
         # customer_ref stays the user's actual email so the auto-ack +
         # the agent's reply both land in their inbox.
-        demo_hookup = _maybe_demo_graft(subject, text)
+        # Demo graft is now keyed on sender-identity, not message
+        # content. If the sender is a known Manthan member they're a
+        # demo runner (their email landed at manthan@doraro.resend.app
+        # via the wizard); attach the seeded Maya IDs regardless of
+        # what they typed in the body. Real customers (no member match)
+        # bypass the graft and follow the normal customer-email path.
+        demo_hookup = _maybe_demo_graft(
+            subject=subject, body=text, sender_is_member=member_match is not None
+        )
 
         payload_dict: dict[str, Any] = {
             "message_id": msg_id,
@@ -443,42 +451,45 @@ def _b64(data: bytes) -> str:
 # ──────────────────────────────────────────────────────────────────────
 
 
-def _maybe_demo_graft(subject: str, body: str) -> dict[str, Any] | None:
-    """If this inbound matches the demo-v2 email template, return the
-    seeded Stripe IDs the agent will need to do a real investigation.
+def _maybe_demo_graft(
+    *, subject: str, body: str, sender_is_member: bool,
+) -> dict[str, Any] | None:
+    """Attach seeded Maya scenario Stripe IDs onto the case trigger
+    when the inbound is from a demo runner, so the agent has real
+    billing records to investigate against instead of failing the
+    customer lookup on the runner's personal email.
 
-    The demo's template asks the user to send "Charged twice for my
-    Caldera Pro subscription" with a $89 dupe charge claim. Seeded Coral
-    data has a matching customer (cus_UbF7BXDTnXgUCt) + the two charges
-    (original ch_3Tc2dRC…/dupe ch_3Tc2dTC…) from the Maya scenario. When
-    we recognise the demo language, we attach those ids onto the new
-    case's trigger_payload so the agent can SELECT against real records
-    instead of failing the customer lookup by the user's personal email.
+    Gating:
+      - `sender_is_member=True`: the sender's email matches a row in
+        the `members` table -> they're a signed-in Manthan user; the
+        only reason their email would land at our inbound mailbox is
+        the demo-v2 wizard told them to send it. Always graft.
+      - Otherwise: fall through to legacy content-matching as a
+        safety net so the original "Caldera Pro" smoke tests still
+        work for non-member senders.
 
-    The reply still goes to the user's own address because we don't
-    touch customer_ref - the auto-ack + outbound `customer_email` action
-    both read it from there.
+    The customer_ref / auto-ack / outbound customer_email all read
+    from the sender's actual address; we never touch identity. The
+    graft only adds Stripe IDs so the agent can do real SQL.
 
-    Returns None for any inbound that isn't the demo template; the
-    handler then opens a regular EML- case.
+    Returns None for any inbound that should be treated as a real
+    customer email; the webhook handler then opens a regular EML- case
+    with no seeded hooks.
     """
-    if not (subject or body):
-        return None
-    blob = f"{subject}\n{body}".lower()
-    # Two markers must both hit for us to graft - "caldera pro" alone
-    # could be a real future customer; pairing it with the demo's
-    # specific duplicate-charge claim keeps the false-positive risk
-    # low.
-    if "caldera pro" not in blob:
-        return None
-    if not any(
-        token in blob
-        for token in ("charged twice", "duplicate", "two charges", "double charged")
-    ):
-        return None
-    return {
+    seeded_graft = {
         "demo_v2": True,
         "customer_id": "cus_UbF7BXDTnXgUCt",
         "original_charge_id": "ch_3Tc2dRCNe0SBMhzI1z6GoLeI",
         "duplicate_charge_id": "ch_3Tc2dTCNe0SBMhzI0vIpjd62",
     }
+    if sender_is_member:
+        return seeded_graft
+    # Legacy content-keyword path. Only used when the sender isn't a
+    # known Manthan member - mostly a fallback for synthetic tests.
+    blob = f"{subject or ''}\n{body or ''}".lower()
+    if "caldera pro" in blob and any(
+        token in blob
+        for token in ("charged twice", "duplicate", "two charges", "double charged")
+    ):
+        return seeded_graft
+    return None

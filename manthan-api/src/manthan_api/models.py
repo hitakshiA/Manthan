@@ -119,7 +119,14 @@ class Case(BaseModel):
     # UI reads this to show a small "demo" annotation above the brief
     # explaining why the case references Maya Patel Design / hitakshi220
     # even though the operator is logged in with their own email.
+    # Kept for backwards-compat with older clients; new code reads
+    # `demo_mode` which carries the specific demo flavour.
     is_demo_v2: bool = False
+    # Which guided demo grafted seeded data onto this case:
+    #   "v2" - inbound-email demo, Maya Patel scenario IDs attached
+    #   "v3" - Slack-mention demo, Vermillion Studios scenario IDs attached
+    #   None - real case, no seeded graft
+    demo_mode: str | None = None
 
 
 class BriefSummary(BaseModel):
