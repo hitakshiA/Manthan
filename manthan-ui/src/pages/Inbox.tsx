@@ -1174,10 +1174,15 @@ function InboxEmptyState() {
       </div>
 
       {visible.length > 0 && (
+        // Responsive grid: stacks 1-column on phones, 2-up on tablets,
+        // full N-up on lg+. Without this each card got crushed to ~33%
+        // viewport width on mobile and the labels overflowed.
         <div
-          className="w-full grid"
+          className={
+            "w-full grid grid-cols-1 sm:grid-cols-2 " +
+            (visible.length >= 3 ? "lg:grid-cols-3" : "lg:grid-cols-2")
+          }
           style={{
-            gridTemplateColumns: `repeat(${visible.length}, minmax(0, 1fr))`,
             gap: 20,
             maxWidth: 1080,
           }}

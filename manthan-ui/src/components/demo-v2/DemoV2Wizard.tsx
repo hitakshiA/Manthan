@@ -792,7 +792,9 @@ function CenterModal({ children }: { children: React.ReactNode }) {
         WebkitBackdropFilter: "blur(6px)",
         display: "grid",
         placeItems: "center",
-        padding: 24,
+        // Outer padding shrinks below 480px so the modal can use more
+        // of the viewport on phones. clamp keeps it reasonable.
+        padding: "clamp(12px, 4vw, 24px)",
       }}
     >
       <div
@@ -801,7 +803,9 @@ function CenterModal({ children }: { children: React.ReactNode }) {
           background: "#15171a",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: 16,
-          padding: "26px 26px 20px",
+          // Inner padding: tighter horizontal on mobile so prose +
+          // copy buttons don't overflow on narrow screens.
+          padding: "clamp(18px, 4vw, 26px) clamp(18px, 4vw, 26px) 20px",
           color: "#efece4",
           fontFamily:
             'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',

@@ -435,15 +435,22 @@ function BriefCanvas({
 }) {
   const isClosed = state === "fired";
   return (
+    // Below `lg` (1024px) we stack the postmortem on top and the
+    // actions panel underneath - the fixed 2-column grid was crushing
+    // both columns into unreadable narrow strips on phones. lg+ keeps
+    // the original side-by-side layout.
     <div
-      className="h-full grid overflow-hidden"
-      style={{
-        gridTemplateColumns: "minmax(0, 1.35fr) minmax(0, 1fr)",
-        gridTemplateRows: "minmax(0, 1fr)",
-      }}
+      className="
+        h-full
+        grid lg:overflow-hidden
+        grid-cols-1 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]
+        grid-rows-[auto_auto] lg:grid-rows-[minmax(0,1fr)]
+      "
     >
-      {/* LEFT - postmortem */}
-      <div className="px-14 pt-12 pb-8 overflow-y-auto flex flex-col gap-7">
+      {/* LEFT - postmortem.
+            Padding: aggressive on desktop, tight on mobile so prose
+            doesn't have a 56px gutter eating half the viewport. */}
+      <div className="px-5 sm:px-8 lg:px-14 pt-6 lg:pt-12 pb-6 lg:pb-8 overflow-y-auto flex flex-col gap-7">
         <Eyebrow>Brief</Eyebrow>
 
         <h2
@@ -598,10 +605,17 @@ function BriefCanvas({
       </div>
 
       {/* RIGHT - suggested actions while awaiting; fired-actions
-          ledger (with results + external refs) once the case closes. */}
+          ledger (with results + external refs) once the case closes.
+          On mobile this stacks UNDER the brief - so it gets a top
+          border instead of a left border, and slimmer paddings. */}
       <div
-        className="pt-12 pb-8 pl-11 pr-14 flex flex-col"
-        style={{ borderLeft: "1px solid var(--color-rule-soft)" }}
+        className="
+          pt-8 lg:pt-12 pb-6 lg:pb-8
+          px-5 sm:px-8 lg:pl-11 lg:pr-14
+          flex flex-col
+          border-t lg:border-t-0 lg:border-l
+        "
+        style={{ borderColor: "var(--color-rule-soft)" }}
       >
         <Eyebrow>
           {isClosed ? "Actions fired" : "Suggested actions"}

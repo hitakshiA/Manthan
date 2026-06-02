@@ -11,8 +11,10 @@ import { NavLink, Outlet, useLocation, useSearchParams } from "react-router-dom"
 import {
   ChevronsUpDown,
   LogOut,
+  Menu,
   Moon,
   Sun,
+  X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useClerk, useUser } from "@clerk/react";
@@ -34,18 +36,69 @@ export function AppShell() {
   const metrics = useDashboardMetrics();
   const me = useMe();
   const demoV2 = useDemoV2Active(me);
+  const location = useLocation();
+
+  // Mobile drawer open/close. Closed on every route change so tapping
+  // a nav row navigates AND collapses the drawer in one motion.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  // Shared nav-row markup so desktop sidebar + mobile drawer stay in
+  // sync. Single source of truth for what's in the menu.
+  const navRows = (
+    <>
+      <NavRow iconSlug="inbox" to="/app" label="Inbox" count={metrics?.inbox_count} alert={!!metrics && metrics.awaiting_count > 0} />
+      <NavRow iconSlug="done" to="/app/done" label="Done" count={metrics?.done_count} />
+      <NavRow iconSlug="policies" to="/app/policy" label="Policies" />
+      <NavRow iconSlug="sources" to="/app/sources" label="Sources" count={metrics?.sources_count} />
+      <NavRow iconSlug="audit" to="/app/audit" label="Audit" />
+      <NavRow iconSlug="settings" to="/app/settings" label="Settings" />
+    </>
+  );
 
   return (
     <div
       // Fixed to viewport height so the sidebar (and its UserWidget
       // pinned at the bottom) never get pushed off-screen by a long
       // main column. The main area handles its own scroll inside.
-      className="h-screen flex overflow-hidden"
+      className="h-screen flex flex-col lg:flex-row overflow-hidden"
       style={{
         background: "var(--color-bg)",
         color: "var(--color-ink)",
       }}
     >
+      {/* MOBILE TOP BAR - below lg only. Hamburger + workspace name.
+            Desktop has the sidebar visible at all times so it doesn't
+            need this. The bar shrinks to 44px tall so it doesn't eat
+            into the editorial title block of each page. */}
+      <div
+        className="lg:hidden flex items-center gap-3 px-4 h-11 shrink-0 border-b"
+        style={{
+          background: "var(--color-bg)",
+          borderColor: "var(--color-rule-soft)",
+        }}
+      >
+        <button
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open navigation"
+          className="p-1.5 -ml-1.5"
+          style={{ color: "var(--color-ink-muted)" }}
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div
+          className="text-[12px] tracking-[0.16em] uppercase truncate"
+          style={{
+            color: "var(--color-ink-faint)",
+            fontFamily: "Geist Mono, ui-monospace, monospace",
+          }}
+        >
+          Manthan · {me?.org.name ?? "workspace"}
+        </div>
+      </div>
+
       {/* SIDEBAR - focused six-item nav.
             We deliberately cut the long sectioned list (15 rows across
             five groups) down to the surfaces a Director actually opens
@@ -64,16 +117,68 @@ export function AppShell() {
         <WorkspaceSwitch me={me} />
 
         <nav className="flex-1 overflow-y-auto px-2.5 pb-3 pt-3 flex flex-col gap-px">
-          <NavRow iconSlug="inbox" to="/app" label="Inbox" count={metrics?.inbox_count} alert={!!metrics && metrics.awaiting_count > 0} />
-          <NavRow iconSlug="done" to="/app/done" label="Done" count={metrics?.done_count} />
-          <NavRow iconSlug="policies" to="/app/policy" label="Policies" />
-          <NavRow iconSlug="sources" to="/app/sources" label="Sources" count={metrics?.sources_count} />
-          <NavRow iconSlug="audit" to="/app/audit" label="Audit" />
-          <NavRow iconSlug="settings" to="/app/settings" label="Settings" />
+          {navRows}
         </nav>
 
         <UserWidget me={me} />
       </aside>
+
+      {/* MOBILE NAV DRAWER - slides from left below lg.
+            Same nav rows + workspace switch + user widget as desktop,
+            just inside a portal-ish overlay. The drawer is below the
+            demo wizard (z-9000) so the wizard always wins. */}
+      {mobileNavOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex"
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(0,0,0,0.55)" }}
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <aside
+            className="relative w-[260px] max-w-[80vw] h-full flex flex-col border-r animate-[manthan-drawer-in_180ms_ease]"
+            style={{
+              background: "var(--color-bg)",
+              borderColor: "var(--color-rule-soft)",
+            }}
+          >
+            <div className="flex items-center justify-between px-3 h-11 shrink-0 border-b"
+              style={{ borderColor: "var(--color-rule-soft)" }}>
+              <div
+                className="text-[11px] tracking-[0.18em] uppercase"
+                style={{
+                  color: "var(--color-ink-faint)",
+                  fontFamily: "Geist Mono, ui-monospace, monospace",
+                }}
+              >
+                Menu
+              </div>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close navigation"
+                className="p-1.5 -mr-1.5"
+                style={{ color: "var(--color-ink-muted)" }}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <WorkspaceSwitch me={me} />
+            <nav className="flex-1 overflow-y-auto px-2.5 pb-3 pt-2 flex flex-col gap-px">
+              {navRows}
+            </nav>
+            <UserWidget me={me} />
+          </aside>
+          <style>{`
+            @keyframes manthan-drawer-in {
+              from { transform: translateX(-100%); }
+              to   { transform: translateX(0); }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col min-w-0">
