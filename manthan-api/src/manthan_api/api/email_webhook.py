@@ -186,21 +186,31 @@ async def receive_email(
         # "Open" = anything not in a terminal state. If there's a
         # resolved-recently case (last 7 days) we ALSO match - the
         # customer is likely following up on the same issue.
-        case_row = await conn.fetchrow(
-            """
-            SELECT id, thread_id, short_id FROM cases
-            WHERE org_id = $1
-              AND trigger_surface = 'inbound_email'
-              AND lower(customer_ref) = $2
-              AND (
-                  status IN ('investigating','awaiting_approval','acting')
-                  OR (status = 'resolved' AND resolved_at > now() - interval '7 days')
-              )
-            ORDER BY created_at DESC
-            LIMIT 1
-            """,
-            org_id, from_addr,
-        )
+        #
+        # EXCEPTION: demo-runner emails (sender is a Manthan member)
+        # should ALWAYS open a fresh case, never thread into a stale
+        # one. Repeated demo runs from the same logged-in user would
+        # otherwise get folded into the first resolved case forever,
+        # which freezes the wizard's "check-inbound since X" poll
+        # because no new case row appears.
+        if member_match is not None:
+            case_row = None
+        else:
+            case_row = await conn.fetchrow(
+                """
+                SELECT id, thread_id, short_id FROM cases
+                WHERE org_id = $1
+                  AND trigger_surface = 'inbound_email'
+                  AND lower(customer_ref) = $2
+                  AND (
+                      status IN ('investigating','awaiting_approval','acting')
+                      OR (status = 'resolved' AND resolved_at > now() - interval '7 days')
+                  )
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                org_id, from_addr,
+            )
 
         if case_row is not None:
             # Same customer, open or recent case - append a follow-up.
