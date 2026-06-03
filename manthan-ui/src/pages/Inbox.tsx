@@ -1031,6 +1031,11 @@ function useDemoScenarios() {
 function useScenarioWithStory() {
   const { scenarios, firingId, fire, userEmail } = useDemoScenarios();
   const [storyScenarioId, setStoryScenarioId] = useState<string | null>(null);
+  // Set when the last-slide CTA on a guided-wizard story fires. The
+  // outer handler reads this to flip ?demo=v2 / ?demo=v3 (instead of
+  // firing the synthetic scenario) once the operator has walked the
+  // story.
+  const [pendingWizard, setPendingWizard] = useState<"v2" | "v3" | null>(null);
 
   const onCardFire = useCallback(
     (id: string) => {
@@ -1044,22 +1049,58 @@ function useScenarioWithStory() {
     [fire],
   );
 
+  // Same entry-point as onCardFire, but for the demo-v2/v3 cards: open
+  // the story overlay, then on the last-slide CTA the caller flips the
+  // ?demo= param to mount the guided wizard. Synthetic scenarios fire
+  // through `fire(id)` instead; wizard flows skip that.
+  const onWizardCardFire = useCallback(
+    (id: string, demoMode: "v2" | "v3") => {
+      const story = storyFor(id);
+      if (story) {
+        setStoryScenarioId(id);
+        setPendingWizard(demoMode);
+      }
+    },
+    [],
+  );
+
   const activeStory = storyScenarioId ? storyFor(storyScenarioId) : null;
 
   return {
     scenarios,
     firingId,
     onCardFire,
+    onWizardCardFire,
+    pendingWizard,
+    clearPendingWizard: () => setPendingWizard(null),
+    closeStory: () => {
+      setStoryScenarioId(null);
+      setPendingWizard(null);
+    },
     storyOverlay: activeStory && storyScenarioId ? (
       <ScenarioStory
         story={activeStory}
         scenarioId={storyScenarioId}
-        firing={firingId === storyScenarioId}
+        firing={pendingWizard ? false : firingId === storyScenarioId}
         userEmail={userEmail}
         onClose={() => {
+          if (pendingWizard) {
+            setStoryScenarioId(null);
+            setPendingWizard(null);
+            return;
+          }
           if (firingId !== storyScenarioId) setStoryScenarioId(null);
         }}
-        onFire={() => fire(storyScenarioId)}
+        onFire={() => {
+          if (pendingWizard) {
+            // Last-slide CTA on a guided-wizard story. Close the
+            // overlay; the outer handler reads pendingWizard and flips
+            // ?demo= so the wizard mounts.
+            setStoryScenarioId(null);
+            return;
+          }
+          fire(storyScenarioId);
+        }}
       />
     ) : null,
   };
@@ -1110,8 +1151,15 @@ const TRIGGER_CARDS: TriggerCard[] = [
 ];
 
 function InboxEmptyState() {
-  const { scenarios, firingId, onCardFire, storyOverlay } =
-    useScenarioWithStory();
+  const {
+    scenarios,
+    firingId,
+    onCardFire,
+    onWizardCardFire,
+    pendingWizard,
+    clearPendingWizard,
+    storyOverlay,
+  } = useScenarioWithStory();
   const [, setParams] = useSearchParams();
 
   // Resolve the simplified card configs against the live scenario list.
@@ -1130,8 +1178,15 @@ function InboxEmptyState() {
 
   const handleCardFire = (card: TriggerCard) => {
     if (card.demoV2 || card.demoV3) {
-      // Flip ?demo=v2 or v3 - AppShell sees the param and mounts the
-      // matching wizard.
+      // If the wizard card has a registered story, walk it FIRST. The
+      // story's last-slide CTA closes the overlay and falls through to
+      // the ?demo= flip below via the useEffect on pendingWizard. If
+      // there is no story, mount the wizard immediately as before.
+      const story = storyFor(card.scenarioId);
+      if (story) {
+        onWizardCardFire(card.scenarioId, card.demoV2 ? "v2" : "v3");
+        return;
+      }
       setParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set("demo", card.demoV2 ? "v2" : "v3");
@@ -1141,6 +1196,19 @@ function InboxEmptyState() {
     }
     onCardFire(card.scenarioId);
   };
+
+  // When the wizard-card story's last-slide CTA fires, pendingWizard
+  // is set. Flip ?demo= so AppShell mounts the matching wizard, then
+  // clear the pending flag so we do not re-fire on re-renders.
+  useEffect(() => {
+    if (!pendingWizard) return;
+    setParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("demo", pendingWizard);
+      return next;
+    });
+    clearPendingWizard();
+  }, [pendingWizard, setParams, clearPendingWizard]);
 
   return (
     <div
