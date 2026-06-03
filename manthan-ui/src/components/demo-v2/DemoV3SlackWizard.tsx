@@ -372,9 +372,46 @@ function StepBody(props: {
             automatically.
           </P>
           <PulsingDot />
-          <P style={{ color: "rgba(239,236,228,0.55)", fontSize: 12.5, marginTop: 16 }}>
-            Stuck? Make sure you joined with the email you're logged in
-            with above. Re-check the invite tab if needed.
+          <div
+            style={{
+              marginTop: 18,
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 10,
+              fontSize: 12.5,
+              lineHeight: 1.55,
+              color: "rgba(239,236,228,0.78)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.16em",
+                color: "rgba(239,236,228,0.45)",
+                marginBottom: 6,
+                textTransform: "uppercase",
+              }}
+            >
+              Don't have an account on this workspace yet?
+            </div>
+            That message from Slack means you tried to sign in <em>before</em>{" "}
+            accepting the invite. You need to open the invite link first —
+            Slack will then let you create a fresh workspace account using{" "}
+            <code>{state.loggedInEmail}</code>.
+          </div>
+          {template?.invite_url ? (
+            <ActionRow style={{ marginTop: 12 }}>
+              <PrimaryButton onClick={props.onOpenInvite}>
+                Open invite link again
+              </PrimaryButton>
+            </ActionRow>
+          ) : null}
+          <P style={{ color: "rgba(239,236,228,0.55)", fontSize: 12.5, marginTop: 14 }}>
+            Tip: when Slack asks for an email during the invite flow, use{" "}
+            <strong>{state.loggedInEmail}</strong> — the same email
+            you're signed into Manthan with. That's how we route the
+            case back to your workspace.
           </P>
         </>
       );
