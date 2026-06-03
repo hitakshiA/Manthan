@@ -162,6 +162,14 @@ async def open_case_from_slack(
             )
 
         async with conn.transaction():
+            # asyncpg's JSONB codec auto-encodes dicts (see db._init_connection).
+            # Passing json.dumps(...) here double-encodes → JSONB stores the
+            # serialized string as a JSONB string scalar, and the first
+            # `trigger_payload || jsonb_build_object(...)` flips it into an
+            # array. Side effect: trigger_payload->>'mentioned_by_email' (and
+            # every other key) returns NULL, the demo-v3 poll never matches,
+            # the wizard hangs on "Listening for your mention" forever even
+            # though cases ARE being opened. Pass the dict directly.
             case_row = await conn.fetchrow(
                 """
                 INSERT INTO cases (
@@ -172,7 +180,7 @@ async def open_case_from_slack(
                 RETURNING id
                 """,
                 org_id, thread_id, short_id, surface,
-                json.dumps(trigger_payload),
+                trigger_payload,
                 "chargeback" if demo_v3_active else "slack_request",
                 "Vermillion Studios" if demo_v3_active else None,
                 450000 if demo_v3_active else None,
@@ -185,7 +193,7 @@ async def open_case_from_slack(
                 VALUES ($1, $2, 1, 'case_opened', $3, $4)
                 """,
                 org_id, thread_id, f"slack:user:{user_id}",
-                json.dumps({
+                {
                     "case_id": str(case_id),
                     "short_id": short_id,
                     "trigger_surface": surface,
@@ -197,7 +205,7 @@ async def open_case_from_slack(
                     "slack_event_ts": event_ts,
                     "mentioned_by_email": mentioned_email,
                     **demo_graft,
-                }),
+                },
             )
     logger.info(
         "slack opened case %s (surface=%s user=%s member_routed=%s demo_v3=%s)",
@@ -349,14 +357,14 @@ async def route_thread_reply(
                     """,
                     org_id, thread_id,
                     f"slack:user:{user_id}",
-                    json.dumps({
+                    {
                         "message": text,
                         "intent": "general",
                         "slack_user_id": user_id,
                         "slack_user_name": user_name,
                         "slack_channel_id": channel_id,
                         "via": "slack_thread",
-                    }),
+                    },
                 )
                 break
             except asyncpg.UniqueViolationError:
@@ -464,14 +472,14 @@ async def _consume_signature_and_approve(
                             """,
                             org_id, thread_id,
                             f"slack:user:{slack_user_id}",
-                            json.dumps({
+                            {
                                 "action_ids": [str(r["id"]) for r in approved],
                                 "signature": signature,
                                 "full_name": full_name,
                                 "role": role,
                                 "slack_user_name": slack_user_name,
                                 "via": "slack_chat",
-                            }),
+                            },
                         )
                         break
                     except Exception:

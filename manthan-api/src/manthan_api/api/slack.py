@@ -453,7 +453,7 @@ async def _do_hold(
                         """,
                         org_id, thread_id,
                         f"slack:user:{slack_user_id}",
-                        json.dumps({"slack_user_name": slack_user_name, "via": "slack"}),
+                        {"slack_user_name": slack_user_name, "via": "slack"},
                     )
                     break
                 except Exception:
@@ -544,7 +544,7 @@ async def _do_approve_with_signature(
                             """,
                             org_id, thread_id,
                             f"slack:user:{slack_user_id}",
-                            json.dumps({
+                            {
                                 "action_ids": [str(r["id"]) for r in approved],
                                 "signature": signature,
                                 "full_name": full_name,
@@ -552,7 +552,7 @@ async def _do_approve_with_signature(
                                 "note": note,
                                 "slack_user_name": slack_user_name,
                                 "via": "slack",
-                            }),
+                            },
                         )
                         break
                     except Exception:
