@@ -226,15 +226,25 @@ def _slack_user_email(user_id: str) -> str | None:
 
 def _vermillion_graft() -> dict[str, Any]:
     """Seeded Vermillion Studios chargeback IDs the agent will use when
-    a Manthan member mentions the bot in #all-manthandemo. Mirrors the
-    demo_v2 Maya graft over email; uses the existing `vermillion`
-    scenario's Stripe IDs (see api/demo.py)."""
+    a Manthan member mentions the bot in #all-manthandemo.
+
+    IDs verified live via `coral sql` against the seeded plugin data:
+      - cus_UbEuWVuVP0iuIr (Vermillion Studios, finance@vermillion-design.test)
+      - ch_3Tc2QNCNe0SBMhzI1ZxM1yrK ($4,500 Pro Annual seat invoice)
+      - du_1Tc2QQCNe0SBMhzImPgJOJiO (product_not_received dispute)
+      - 324832463559 (HubSpot company id, domain vermillion-design.test)
+
+    The charge.description in seeded data carries rich context the
+    agent will surface in the brief: '25 seats x $180/mo. CFO Marcus
+    Webb claim "billed for 25 seats but only have 15." Reality: COO
+    Sarah Chen signed +10 seat addendum 2026-02-08; team uses 24/25.'
+    """
     return {
         "demo_v3": True,
-        "customer_id": "cus_UbE7T8oTOj7vBT",
+        "customer_id": "cus_UbEuWVuVP0iuIr",
         "charge_id": "ch_3Tc2QNCNe0SBMhzI1ZxM1yrK",
         "dispute_id": "du_1Tc2QQCNe0SBMhzImPgJOJiO",
-        "hubspot_company_id": "324968425171",
+        "hubspot_company_id": "324832463559",
     }
 
 

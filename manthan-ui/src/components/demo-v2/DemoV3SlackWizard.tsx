@@ -383,22 +383,30 @@ function StepBody(props: {
       if (!template) return <P>Loading…</P>;
       return (
         <>
-          <H2>Type this in <code>{template.channel}</code></H2>
-          <P>
-            One mention, sent from{" "}
-            <strong>{state.slackDisplayName ?? "your account"}</strong>.
-            The bot autocompletes the handle when you type{" "}
-            <code>@manth</code>; pick <code>@manthantest</code> from the
-            menu, then paste the rest.
+          <H2>Tag the bot in <code>{template.channel}</code></H2>
+          <P style={{ marginBottom: 8 }}>
+            Important: you have to <strong>type the tag yourself</strong> -
+            pasting <code>@manthantest</code> as plain text won't trigger
+            an actual mention. Two steps:
           </P>
+          <NumberedStep n={1}>
+            In <code>{template.channel}</code>, click the message box and
+            type <code>@manth</code>. Slack's autocomplete will surface
+            <code> @manthantest</code> — press <kbd>Tab</kbd> or click it
+            to accept the blue pill.
+          </NumberedStep>
+          <NumberedStep n={2}>
+            After the <code>@manthantest</code> pill appears, paste or
+            type this message and hit Enter:
+          </NumberedStep>
           <CopyBlock value={template.mention_text} />
           <VideoOrFallback
             src="/demo-v3/slack-mention.mp4"
             captionFallback={
               <>
-                Click into the message box, type <code>@manth</code> to
-                trigger autocomplete, accept <code>@manthantest</code>,
-                paste the rest, press Enter.
+                Recording: click message box → type <code>@manth</code> →
+                accept autocomplete → paste/type the message above →
+                press Enter → bot replies in-thread.
               </>
             }
           />
@@ -728,6 +736,47 @@ function KVCard({ rows }: { rows: { label: string; value: string }[] }) {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function NumberedStep({
+  n,
+  children,
+}: {
+  n: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "22px 1fr",
+        gap: 10,
+        marginBottom: 10,
+        fontSize: 13.5,
+        lineHeight: 1.5,
+        color: "rgba(239,236,228,0.85)",
+      }}
+    >
+      <span
+        style={{
+          background: "rgba(22,208,94,0.16)",
+          color: "#16d05e",
+          borderRadius: 4,
+          width: 22,
+          height: 22,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 12,
+          fontWeight: 600,
+          fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+        }}
+      >
+        {n}
+      </span>
+      <div>{children}</div>
     </div>
   );
 }

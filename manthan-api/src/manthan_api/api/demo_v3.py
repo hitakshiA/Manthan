@@ -62,10 +62,19 @@ DEMO_SLACK_INVITE_URL = (
 DEMO_SLACK_WORKSPACE = "ManthanDemo"
 DEMO_SLACK_CHANNEL = "#all-manthandemo"
 DEMO_SLACK_BOT_HANDLE = "@manthantest"
-DEMO_SLACK_MENTION_TEXT = (
-    "@manthantest look into the chargeback from Vermillion Studios for "
-    "$4,500 - they say we billed for 25 seats but they only have 15"
+# The MESSAGE the user pastes/types AFTER they've tagged the bot via
+# Slack's autocomplete. The wizard step explains the two-part pattern:
+# type `@manth` -> accept the autocomplete pill -> then paste/type
+# this. We DELIBERATELY don't include "@manthantest" here because a
+# pasted "@manthantest" string is a plain text token (not a real user
+# mention), which means Slack delivers a `message` event instead of
+# `app_mention` and our handler never fires.
+DEMO_SLACK_MENTION_BODY = (
+    "look into the chargeback from Vermillion Studios for $4,500 - "
+    "they say we billed for 25 seats but they only have 15"
 )
+# Back-compat alias: the v3 wizard component reads `mention_text`.
+DEMO_SLACK_MENTION_TEXT = DEMO_SLACK_MENTION_BODY
 
 
 # ──────────────────────────────────────────────────────────────────────
