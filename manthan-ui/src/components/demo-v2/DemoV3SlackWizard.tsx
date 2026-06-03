@@ -83,6 +83,12 @@ export function DemoV3SlackWizard({ loggedInEmail, onClose }: DemoV3WizardProps)
             ...p,
             step: "send-mention",
             slackDisplayName: r.slack_display_name,
+            // Start the wait window NOW so that any mention the user
+            // posts during the send-mention step still falls inside
+            // the time filter when they click "I've sent it" - even if
+            // they post in Slack before clicking. Was being set only
+            // after the click, which excluded already-posted cases.
+            waitingStartedAt: Date.now(),
           }));
         }
       } catch {
@@ -270,7 +276,11 @@ export function DemoV3SlackWizard({ loggedInEmail, onClose }: DemoV3WizardProps)
             setState((p) => ({
               ...p,
               step: "waiting-for-mention",
-              waitingStartedAt: Date.now(),
+              // Preserve the timestamp we stamped on send-mention entry
+              // (which is well before the user typed in Slack); only
+              // fall back to "60s ago" if for some reason it was missed
+              // so a just-posted mention still falls inside the window.
+              waitingStartedAt: p.waitingStartedAt ?? Date.now() - 60_000,
             }));
           }}
           onAbortWaiting={() =>
