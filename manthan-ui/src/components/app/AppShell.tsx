@@ -279,14 +279,14 @@ function useDemoActive(me: MeResponse | null): {
   dismiss: () => void;
 } {
   const [params, setParams] = useSearchParams();
-  const location = useLocation();
-  const [v2Saved, setV2Saved] = useState<boolean>(() => loadDemoV2State() !== null);
-  const [v3Saved, setV3Saved] = useState<boolean>(() => loadDemoV3State() !== null);
-
-  useEffect(() => {
-    setV2Saved(loadDemoV2State() !== null);
-    setV3Saved(loadDemoV3State() !== null);
-  }, [location.pathname]);
+  // Derive saved-state inline on every render. Used to be cached in
+  // useState and only refreshed on pathname change, which meant when
+  // the Inbox cleared localStorage to open a story BEFORE the wizard
+  // mounted, AppShell didn't see the change until the next route
+  // navigation - the wizard rendered ON TOP of the story slide. Inline
+  // reads are cheap (single localStorage key) and always fresh.
+  const v2Saved = loadDemoV2State() !== null;
+  const v3Saved = loadDemoV3State() !== null;
 
   const urlFlag = params.get("demo");
   let kind: DemoKind = null;
@@ -301,8 +301,9 @@ function useDemoActive(me: MeResponse | null): {
       next.delete("demo");
       setParams(next, { replace: true });
     }
-    setV2Saved(false);
-    setV3Saved(false);
+    // clearState() on the wizard side wipes localStorage; nothing for
+    // us to do here on the React side because v2Saved/v3Saved derive
+    // inline on the next render.
   };
 
   return { kind, dismiss };

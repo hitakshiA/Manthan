@@ -33,6 +33,8 @@ import { useInboxStream } from "@/lib/useInboxStream";
 import { getSource } from "@/lib/sources";
 import { storyFor } from "@/lib/scenarioStory";
 import { ScenarioStory } from "@/components/app/ScenarioStory";
+import { clearState as clearDemoV2State } from "@/lib/demo-v2";
+import { clearState as clearDemoV3State } from "@/lib/demo-v3";
 
 // ──────────────────────────────────────────────────────────────────────
 // Status presentation - colors + labels for the right edge of the
@@ -1184,6 +1186,21 @@ function InboxEmptyState() {
       // there is no story, mount the wizard immediately as before.
       const story = storyFor(card.scenarioId);
       if (story) {
+        // Critical: AppShell auto-mounts the wizard whenever ?demo= is
+        // in the URL OR there is a saved-state blob for that wizard in
+        // localStorage (resume-after-refresh). If we open the story
+        // without clearing both signals, the wizard renders ON TOP of
+        // the story and the operator sees the modal-over-modal mess.
+        // Clear ?demo= AND wipe the wizard's localStorage so the story
+        // shows clean; the story CTA below will set ?demo= back when
+        // we genuinely want the wizard to mount.
+        setParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("demo");
+          return next;
+        });
+        if (card.demoV2) clearDemoV2State();
+        else clearDemoV3State();
         onWizardCardFire(card.scenarioId, card.demoV2 ? "v2" : "v3");
         return;
       }
