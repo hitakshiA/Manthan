@@ -25,6 +25,15 @@ class ApprovePayload(BaseModel):
         default=None,
         description="Optional: specific action ids. Default = approve all drafted.",
     )
+    # Optional signer info. When the Slack interactive flow approves a
+    # case it collects Full Name + Role through a modal and stamps both
+    # on every action payload + the case's trigger_payload (so the
+    # case-closed card in Slack credits the human). UI approvals are
+    # one-click and don't ask, so we derive a default from the member
+    # row (member_email's username + member_role) - clients can pass
+    # explicit values to override.
+    full_name: str | None = None
+    role: str | None = None
 
 
 class ApprovedAction(BaseModel):
@@ -38,6 +47,27 @@ class ApproveResponse(BaseModel):
     case_id: UUID
 
 
+def _derive_signer(
+    full_name: str | None, role: str | None, email: str, member_role: str,
+) -> tuple[str, str, str, str]:
+    """Resolve (full_name, role, signature, display) for the approve
+    side-effects. When the caller passes explicit values we trust them;
+    otherwise we derive a reasonable default from the authenticated
+    member - that beats stamping NULL and showing "(autonomous)" in
+    every downstream surface."""
+    if not full_name:
+        local = email.split("@", 1)[0] if "@" in email else email
+        full_name = " ".join(
+            part.capitalize() for part in local.replace(".", " ").replace("_", " ").split()
+            if part
+        ) or email
+    if not role:
+        role = member_role or "Operator"
+    signature = f"{full_name}, {role}"
+    display = f"{full_name} · {role}"
+    return full_name, role, signature, display
+
+
 @router.post("/{case_id}/approve", response_model=ApproveResponse)
 async def approve_case(
     case_id: UUID,
@@ -45,6 +75,9 @@ async def approve_case(
     ctx: TenantCtx = Depends(get_ctx),
 ) -> ApproveResponse:
     """Mark drafted actions approved so the Action Executor will fire them."""
+    full_name, role, signature, signer_display = _derive_signer(
+        body.full_name, body.role, ctx.member_email, ctx.member_role,
+    )
     async with get_conn() as conn:
         case_exists = await conn.fetchval(
             "SELECT 1 FROM cases WHERE org_id=$1 AND id=$2",
@@ -53,32 +86,52 @@ async def approve_case(
         if not case_exists:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="case not found")
 
+        # Stamp the signer info onto every approved action payload so
+        # downstream renderers (Slack close card, audit page, exported
+        # PDF) credit the real human instead of saying "(autonomous)".
+        payload_overlay = {
+            "approved_via": "ui",
+            "approval_signature": signature,
+            "approval_full_name": full_name,
+            "approval_role": role,
+            "approver_email": ctx.member_email,
+        }
         if body.action_ids:
             rows = await conn.fetch(
                 """
                 UPDATE actions
-                SET status='approved', approved_by=$1, approved_at=now()
+                SET status='approved', approved_by=$1, approved_at=now(),
+                    payload = payload || $5::jsonb
                 WHERE org_id=$2 AND case_id=$3 AND id = ANY($4::uuid[])
                   AND status='drafted'
                 RETURNING id, type AS kind, status
                 """,
                 ctx.member_id, ctx.org_id, case_id, body.action_ids,
+                payload_overlay,
             )
         else:
             rows = await conn.fetch(
                 """
                 UPDATE actions
-                SET status='approved', approved_by=$1, approved_at=now()
+                SET status='approved', approved_by=$1, approved_at=now(),
+                    payload = payload || $4::jsonb
                 WHERE org_id=$2 AND case_id=$3 AND status='drafted'
                 RETURNING id, type AS kind, status
                 """,
                 ctx.member_id, ctx.org_id, case_id,
+                payload_overlay,
             )
 
-        # Flip case status to acting so the UI reflects the transition.
+        # Flip case status to acting + stash the signer display so the
+        # Slack close card later reads it instead of NULL.
         await conn.execute(
-            "UPDATE cases SET status='acting' WHERE id=$1",
-            case_id,
+            """
+            UPDATE cases
+            SET status='acting',
+                trigger_payload = trigger_payload || $2::jsonb
+            WHERE id=$1
+            """,
+            case_id, {"slack_signer_display": signer_display},
         )
 
         # Append a single human_approved event with the action ids.
@@ -92,6 +145,10 @@ async def approve_case(
                 {
                     "action_ids": [str(r["id"]) for r in rows],
                     "member_email": ctx.member_email,
+                    "signature": signature,
+                    "full_name": full_name,
+                    "role": role,
+                    "via": "ui",
                 },
             )
 

@@ -117,7 +117,7 @@ async def maybe_notify_case_closed_card(
     async with get_pool().acquire() as conn:
         case = await conn.fetchrow(
             """
-            SELECT short_id, customer_ref, trigger_surface,
+            SELECT status, short_id, customer_ref, trigger_surface,
                    trigger_payload->>'slack_thread_ts' AS ts,
                    trigger_payload->>'slack_thread_channel' AS channel,
                    trigger_payload->>'slack_signer_display' AS signer
@@ -128,6 +128,17 @@ async def maybe_notify_case_closed_card(
         if case is None:
             return
         if case["trigger_surface"] not in ("slack_mention", "slack_dm"):
+            return
+        # Guard against the agent's premature case_closed event (emitted
+        # when the investigation phase ends, before the operator has
+        # approved and before the actor has fired anything). The close
+        # card represents "actions performed", which is only true once
+        # the actor has finalized. Use case.status as the signal: only
+        # `resolved` (or `errored`) means the case is genuinely closed.
+        # Statuses 'investigating', 'awaiting_approval', and 'acting'
+        # are not closed - the previous behavior posted a misleading
+        # "Approved by (autonomous), Actions performed: -" card mid-run.
+        if case["status"] not in ("resolved", "errored"):
             return
         channel_id = channel_id or case["channel"]
         # DMs: post flat (thread_ts=None) so the close card lands directly

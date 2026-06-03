@@ -928,20 +928,15 @@ class InvestigateWorker:
         )
 
         # Side-effect: notify Slack if this case was opened from a Slack
-        # mention/DM. brief_drafted → post the brief card to the thread;
-        # case_closed → post a one-line completion notice.
-        if agent_evt.kind in ("brief_drafted", "case_closed"):
-            try:
-                from manthan_api.services.slack_notifier import maybe_notify
-                await maybe_notify(
-                    org_id=org_id,
-                    thread_id=thread_id,
-                    case_id=case_id,
-                    event_type=agent_evt.kind,
-                    event_data=data if isinstance(data, dict) else None,
-                )
-            except Exception:  # noqa: BLE001
-                pass
+        # mention/DM. The notify call needs to see the actions table
+        # already populated for brief_drafted (the brief card lists
+        # the suggested actions), so we DEFER it until the projection
+        # block below has run. The case_closed branch also defers to
+        # keep the dispatch path consistent, but its notifier has a
+        # status='resolved' guard so the agent's premature case_closed
+        # (emitted when the investigation phase ends, before the actor
+        # has fired anything) does not double-post.
+        _notify_slack_after = agent_evt.kind in ("brief_drafted", "case_closed")
 
         # Project findings into the findings table so the UI doesn't have
         # to scan events on every read.
@@ -1068,6 +1063,24 @@ class InvestigateWorker:
                             )
                         except Exception:  # noqa: BLE001
                             pass
+
+        # Deferred Slack notify - runs AFTER all projection side-effects
+        # (decision update + actions insertion). Was running before the
+        # actions table got populated, so the brief card said "No
+        # actions drafted - nothing for you to approve" even though
+        # three actions were about to land.
+        if _notify_slack_after:
+            try:
+                from manthan_api.services.slack_notifier import maybe_notify
+                await maybe_notify(
+                    org_id=org_id,
+                    thread_id=thread_id,
+                    case_id=case_id,
+                    event_type=agent_evt.kind,
+                    event_data=data if isinstance(data, dict) else None,
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
     async def _append_event(
         self,
