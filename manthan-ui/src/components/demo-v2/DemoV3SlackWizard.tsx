@@ -858,7 +858,28 @@ function VideoOrFallback({
   src: string;
   captionFallback: React.ReactNode;
 }) {
-  const [missing, setMissing] = useState(false);
+  // HEAD-probe the video so we render the fallback caption directly
+  // instead of briefly painting a broken-video placeholder while the
+  // browser races to discover the 404 on its own. Default to `missing`
+  // and flip to `false` only when the asset confirms reachable. Net
+  // result: when the recording isn't shipped, users see the clean text
+  // instructions immediately.
+  const [missing, setMissing] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(src, { method: "HEAD" })
+      .then((r) => {
+        if (cancelled) return;
+        if (r.ok) setMissing(false);
+      })
+      .catch(() => {
+        // Stay in fallback state - network failure or 404 both mean
+        // we can't promise a video to the user.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
   if (missing) {
     return (
       <div
