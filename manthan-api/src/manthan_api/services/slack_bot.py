@@ -504,6 +504,89 @@ async def _consume_signature_and_approve(
 # ──────────────────────────────────────────────────────────────────────
 
 
+_CITATION_SOURCE_EMOJI: dict[str, str] = {
+    "stripe": ":credit_card:",
+    "hubspot": ":busts_in_silhouette:",
+    "salesforce": ":cloud:",
+    "intercom": ":speech_balloon:",
+    "zendesk": ":ticket:",
+    "notion": ":pencil:",
+    "slack": ":speech_balloon:",
+    "datadog": ":dog:",
+    "sentry": ":bug:",
+    "pagerduty": ":rotating_light:",
+    "posthog": ":bar_chart:",
+    "github": ":octopus:",
+    "linear": ":straight_ruler:",
+    "manthan": ":mag:",
+}
+
+
+def _citation_url(source: str, table: str, ref: str) -> str | None:
+    """Build a deep-link to a citation's source record when we know how.
+
+    Falls back to None for sources we can't address - the renderer shows
+    the citation as plain `source:table/ref` text in that case.
+    """
+    s = (source or "").lower()
+    t = (table or "").lower()
+    if not ref:
+        return None
+    if s == "stripe":
+        if t == "disputes":
+            return f"https://dashboard.stripe.com/test/disputes/{ref}"
+        if t == "charges":
+            return f"https://dashboard.stripe.com/test/charges/{ref}"
+        if t == "customers":
+            return f"https://dashboard.stripe.com/test/customers/{ref}"
+        if t == "refunds":
+            return f"https://dashboard.stripe.com/test/refunds/{ref}"
+        if t == "invoices":
+            return f"https://dashboard.stripe.com/test/invoices/{ref}"
+        if t == "payment_intents":
+            return f"https://dashboard.stripe.com/test/payments/{ref}"
+    if s == "hubspot":
+        if t == "companies":
+            return f"https://app.hubspot.com/contacts/_/company/{ref}"
+        if t == "deals":
+            return f"https://app.hubspot.com/contacts/_/deal/{ref}"
+        if t == "contacts":
+            return f"https://app.hubspot.com/contacts/_/contact/{ref}"
+    if s == "notion" and ref:
+        return f"https://www.notion.so/{ref.replace('-', '')}"
+    return None
+
+
+def _render_citation_chips(citations: list[dict[str, Any]] | None, limit: int = 4) -> str:
+    """Format a citations list as a Slack-mrkdwn line of small chips.
+
+    Each chip becomes either `<url|source:table/ref>` (when we can link
+    it) or inline-code `source:table/ref`. Up to `limit` chips per
+    finding to keep the brief card scannable.
+    """
+    if not citations:
+        return ""
+    chips: list[str] = []
+    for c in citations[:limit]:
+        if not isinstance(c, dict):
+            continue
+        source = str(c.get("source") or "manthan").lower()
+        table = str(c.get("table") or "")
+        ref = str(c.get("ref") or "")
+        if not ref and not table:
+            continue
+        emoji = _CITATION_SOURCE_EMOJI.get(source, ":link:")
+        # Compact `source:table/ref` label; trim long Stripe-style ids.
+        label_ref = ref if len(ref) <= 16 else ref[:8] + "…" + ref[-4:]
+        label_core = f"{source}:{table}/{label_ref}" if table else f"{source}/{label_ref}"
+        url = _citation_url(source, table, ref)
+        if url:
+            chips.append(f"{emoji} <{url}|`{label_core}`>")
+        else:
+            chips.append(f"{emoji} `{label_core}`")
+    return "  ·  ".join(chips)
+
+
 def build_brief_blocks(
     *,
     short_id: str,
@@ -512,7 +595,7 @@ def build_brief_blocks(
     tldr: str,
     decision_action: str,
     decision_confidence: float | None,
-    top_findings: list[str],
+    top_findings: list[str] | list[dict[str, Any]],
     suggested_actions: list[dict[str, str]],
     deep_link: str,
     case_id: str,
@@ -525,10 +608,16 @@ def build_brief_blocks(
       - Greeting line `hey @user, I have completed my analysis.`
       - TL;DR (one paragraph)
       - Recommendation pill + confidence
-      - Top findings (3)
+      - Top findings (3) - each with inline citation chips
       - Suggested actions ("I suggest the following actions")
       - Inline hint: reply `approve` here to fire them
       - Approve / Hold / Open buttons
+
+    `top_findings` accepts either a list of plain strings (legacy) or a
+    list of `{text, citations}` dicts. When dicts are provided we render
+    a citations sub-line under each finding bullet so the brief carries
+    the source pointers the agent reasoned from - matching the
+    handwritten-flow note: "summarization with citations".
 
     Suggested actions come in as a list of {emoji, title, target} dicts -
     rendered as a bullet list with the source emoji at the start.
@@ -542,7 +631,20 @@ def build_brief_blocks(
 
     conf_pct = f"{int((decision_confidence or 0) * 100)}%" if decision_confidence else "-"
 
-    findings_text = "\n".join(f"• {f}" for f in top_findings[:3]) or "_No findings yet._"
+    def _find_line(item: Any) -> str:
+        if isinstance(item, dict):
+            text = str(item.get("text") or "").strip()
+            cites_line = _render_citation_chips(item.get("citations"))
+            if not text:
+                return ""
+            if cites_line:
+                return f"• {text}\n     ↳ {cites_line}"
+            return f"• {text}"
+        return f"• {item}"
+
+    findings_text = "\n".join(
+        line for line in (_find_line(f) for f in (top_findings or [])[:3]) if line
+    ) or "_No findings yet._"
 
     if suggested_actions:
         actions_text = "\n".join(
@@ -1123,7 +1225,7 @@ async def post_brief_to_thread(
         )
         finding_rows = await conn.fetch(
             """
-            SELECT text FROM findings
+            SELECT text, citations FROM findings
             WHERE case_id = $1
             ORDER BY confidence DESC NULLS LAST, seq ASC
             LIMIT 3
@@ -1142,7 +1244,23 @@ async def post_brief_to_thread(
 
     brief_data = (brief_row["data"] if isinstance(brief_row["data"], dict) else {}) if brief_row else {}
     tldr = str(brief_data.get("tldr") or "")
-    top_findings = [r["text"] for r in finding_rows]
+    # Pass findings as dicts so build_brief_blocks renders citation chips
+    # under each bullet ("summarization with citations" per the flow notes).
+    top_findings = [
+        {
+            "text": r["text"],
+            "citations": (
+                r["citations"]
+                if isinstance(r["citations"], list)
+                else (
+                    json.loads(r["citations"])
+                    if isinstance(r["citations"], str) and r["citations"].strip().startswith("[")
+                    else []
+                )
+            ),
+        }
+        for r in finding_rows
+    ]
 
     customer = case_row["customer_ref"] or "(unknown customer)"
     amount = case_row["amount_minor"] or 0
@@ -1171,13 +1289,18 @@ async def post_brief_to_thread(
     )
 
     client = _client()
+    post_kwargs: dict[str, Any] = {
+        "channel": channel_id,
+        "text": f"Manthan brief - {case_row['short_id']} · {customer}",
+        "blocks": blocks,
+    }
+    # Omit thread_ts entirely when None - matters for DM flat posting so
+    # the brief lands at the top level of the conversation, not buried
+    # in a "View replies" thread under the investigating ack.
+    if thread_ts:
+        post_kwargs["thread_ts"] = thread_ts
     try:
-        resp = client.chat_postMessage(
-            channel=channel_id,
-            thread_ts=thread_ts,
-            text=f"Manthan brief - {case_row['short_id']} · {customer}",
-            blocks=blocks,
-        )
+        resp = client.chat_postMessage(**post_kwargs)
     except SlackApiError as e:
         logger.exception("failed to post Slack brief: %s", e)
         return None
@@ -1220,17 +1343,20 @@ async def post_brief_to_thread(
 async def post_reply_to_thread(
     *,
     channel_id: str,
-    thread_ts: str,
+    thread_ts: str | None,
     text: str,
 ) -> None:
-    """Plain text reply in a Slack thread. Used for chat follow-up replies."""
+    """Plain text reply in a Slack thread, or flat in the channel/DM.
+
+    When `thread_ts` is None we omit it from the API call so the message
+    posts at the top level (the right surface for DMs where threading
+    would hide the response behind a "View replies" tap)."""
     client = _client()
+    kwargs: dict[str, Any] = {"channel": channel_id, "text": text}
+    if thread_ts:
+        kwargs["thread_ts"] = thread_ts
     try:
-        client.chat_postMessage(
-            channel=channel_id,
-            thread_ts=thread_ts,
-            text=text,
-        )
+        client.chat_postMessage(**kwargs)
     except SlackApiError as e:
         logger.warning("slack thread reply failed: %s", e)
 
@@ -1238,20 +1364,25 @@ async def post_reply_to_thread(
 async def post_blocks_to_thread(
     *,
     channel_id: str,
-    thread_ts: str,
+    thread_ts: str | None,
     text: str,
     blocks: list[dict[str, Any]],
 ) -> None:
-    """Block Kit reply in a Slack thread - used for the actions-performed
-    card. `text` is the fallback shown on notification previews."""
+    """Block Kit reply in a Slack thread, or flat in the channel/DM.
+
+    When `thread_ts` is None we omit it so the card posts top-level. Used
+    by both the in-thread case-closed card (channels) and the flat
+    case-closed card (DMs)."""
     client = _client()
+    kwargs: dict[str, Any] = {
+        "channel": channel_id,
+        "text": text,
+        "blocks": blocks,
+    }
+    if thread_ts:
+        kwargs["thread_ts"] = thread_ts
     try:
-        client.chat_postMessage(
-            channel=channel_id,
-            thread_ts=thread_ts,
-            text=text,
-            blocks=blocks,
-        )
+        client.chat_postMessage(**kwargs)
     except SlackApiError as e:
         logger.warning("slack blocks reply failed: %s", e)
 

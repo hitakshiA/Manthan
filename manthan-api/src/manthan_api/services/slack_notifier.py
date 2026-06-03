@@ -55,7 +55,15 @@ async def maybe_notify(
     # Use the saved thread ts/channel if the brief was posted; otherwise
     # fall back to the original mention/DM channel + ts.
     channel_id = row["channel_id"] or row["origin_channel_id"]
-    thread_ts = row["thread_ts"] or row["event_ts"]
+    # For channel mentions: thread under the ack so the conversation stays
+    # in one anchor. For DMs: post FLAT (thread_ts=None) - DM threads are
+    # hidden behind a "View replies" tap and users would miss the brief.
+    # The user's DM thread IS the conversation, so flat is the natural
+    # surface; matches the handwritten-flow note "agent reachable from DM".
+    if surface == "slack_dm":
+        thread_ts = None
+    else:
+        thread_ts = row["thread_ts"] or row["event_ts"]
     if not channel_id:
         return
 
@@ -122,9 +130,18 @@ async def maybe_notify_case_closed_card(
         if case["trigger_surface"] not in ("slack_mention", "slack_dm"):
             return
         channel_id = channel_id or case["channel"]
-        thread_ts = thread_ts or case["ts"]
-        if not channel_id or not thread_ts:
-            return
+        # DMs: post flat (thread_ts=None) so the close card lands directly
+        # in the DM and the user actually sees it. Channel mentions: keep
+        # threading under the original ack/brief anchor.
+        is_dm_surface = case["trigger_surface"] == "slack_dm"
+        if is_dm_surface:
+            thread_ts = None
+            if not channel_id:
+                return
+        else:
+            thread_ts = thread_ts or case["ts"]
+            if not channel_id or not thread_ts:
+                return
 
         action_rows = await conn.fetch(
             """
