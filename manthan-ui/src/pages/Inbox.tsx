@@ -1033,10 +1033,19 @@ function useDemoScenarios() {
 function useScenarioWithStory() {
   const { scenarios, firingId, fire, userEmail } = useDemoScenarios();
   const [storyScenarioId, setStoryScenarioId] = useState<string | null>(null);
-  // Set when the last-slide CTA on a guided-wizard story fires. The
-  // outer handler reads this to flip ?demo=v2 / ?demo=v3 (instead of
-  // firing the synthetic scenario) once the operator has walked the
-  // story.
+  // What the active story's last-slide CTA should do:
+  //   "scenario" - call fire(scenarioId) and let the backend seed a
+  //                synthetic case (the aperture flow).
+  //   "v2"/"v3"  - close the story and flip ?demo= so AppShell mounts
+  //                the guided wizard.
+  // Storing intent (NOT the trigger) so the outer "should I mount the
+  // wizard now" useEffect only fires AFTER the operator hits CTA, not
+  // the moment the story opens. Previously a single pendingWizard flag
+  // was set at story-open time, which flipped ?demo= immediately and
+  // mounted the wizard ON TOP of the story slides.
+  const [storyMode, setStoryMode] = useState<"scenario" | "v2" | "v3">("scenario");
+  // The actual trigger consumed by the parent. Stays null until the
+  // operator hits the CTA on a wizard-mode story.
   const [pendingWizard, setPendingWizard] = useState<"v2" | "v3" | null>(null);
 
   const onCardFire = useCallback(
@@ -1044,6 +1053,7 @@ function useScenarioWithStory() {
       const story = storyFor(id);
       if (story) {
         setStoryScenarioId(id);
+        setStoryMode("scenario");
       } else {
         fire(id);
       }
@@ -1051,22 +1061,19 @@ function useScenarioWithStory() {
     [fire],
   );
 
-  // Same entry-point as onCardFire, but for the demo-v2/v3 cards: open
-  // the story overlay, then on the last-slide CTA the caller flips the
-  // ?demo= param to mount the guided wizard. Synthetic scenarios fire
-  // through `fire(id)` instead; wizard flows skip that.
   const onWizardCardFire = useCallback(
     (id: string, demoMode: "v2" | "v3") => {
       const story = storyFor(id);
       if (story) {
         setStoryScenarioId(id);
-        setPendingWizard(demoMode);
+        setStoryMode(demoMode);
       }
     },
     [],
   );
 
   const activeStory = storyScenarioId ? storyFor(storyScenarioId) : null;
+  const isWizardStory = storyMode !== "scenario";
 
   return {
     scenarios,
@@ -1077,28 +1084,37 @@ function useScenarioWithStory() {
     clearPendingWizard: () => setPendingWizard(null),
     closeStory: () => {
       setStoryScenarioId(null);
+      setStoryMode("scenario");
       setPendingWizard(null);
     },
     storyOverlay: activeStory && storyScenarioId ? (
       <ScenarioStory
         story={activeStory}
         scenarioId={storyScenarioId}
-        firing={pendingWizard ? false : firingId === storyScenarioId}
+        // For wizard stories, the CTA never enters a "firing" spinner -
+        // it just transitions to the wizard. The spinner is only for
+        // scenario stories where the backend has to seed a case.
+        firing={isWizardStory ? false : firingId === storyScenarioId}
         userEmail={userEmail}
         onClose={() => {
-          if (pendingWizard) {
+          if (isWizardStory) {
             setStoryScenarioId(null);
-            setPendingWizard(null);
+            setStoryMode("scenario");
             return;
           }
           if (firingId !== storyScenarioId) setStoryScenarioId(null);
         }}
         onFire={() => {
-          if (pendingWizard) {
-            // Last-slide CTA on a guided-wizard story. Close the
-            // overlay; the outer handler reads pendingWizard and flips
-            // ?demo= so the wizard mounts.
+          if (isWizardStory) {
+            // Wizard-mode CTA: close the overlay and set pendingWizard
+            // NOW (not at story-open time). The outer useEffect reads
+            // pendingWizard and flips ?demo= so the wizard mounts. The
+            // delay means the operator never sees the wizard rendered
+            // on top of a story slide.
+            const mode = storyMode as "v2" | "v3";
             setStoryScenarioId(null);
+            setStoryMode("scenario");
+            setPendingWizard(mode);
             return;
           }
           fire(storyScenarioId);
