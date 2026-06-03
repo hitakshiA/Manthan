@@ -323,7 +323,9 @@ async def receive_email(
                 RETURNING id
                 """,
                 org_id, thread_id, short_id,
-                json.dumps(payload_dict),
+                # asyncpg JSONB codec serializes dicts - don't json.dumps
+                # (double-encoded → trigger_payload->>'k' returns NULL).
+                payload_dict,
                 "refund_request",  # default; investigation may refine
                 from_addr,
                 8900 if demo_hookup else None,
@@ -349,7 +351,7 @@ async def receive_email(
                 """,
                 org_id, thread_id,
                 f"email:{from_addr}",
-                json.dumps(event_data),
+                event_data,
             )
 
     logger.info("email opened case %s from=%s subject=%r", short_id, from_addr, subject[:60])
@@ -438,7 +440,7 @@ async def _append_event_with_retry(
                 INSERT INTO events (org_id, thread_id, seq, type, actor, data)
                 SELECT $1, $2, s, $3, $4, $5 FROM next
                 """,
-                org_id, thread_id, type_, actor, json.dumps(data),
+                org_id, thread_id, type_, actor, data,
             )
             return
         except Exception:

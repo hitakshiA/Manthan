@@ -200,8 +200,9 @@ async def seed_policy(ctx: TenantCtx = Depends(get_ctx)) -> PolicyReadyResponse:
             ctx.org_id,
             DEMO_POLICY_NAME,
             DEMO_POLICY_DESCRIPTION,
-            json.dumps(DEMO_POLICY_CONDITIONS),
-            json.dumps(DEMO_POLICY_DECISION),
+            # asyncpg JSONB codec serializes dicts - don't json.dumps.
+            DEMO_POLICY_CONDITIONS,
+            DEMO_POLICY_DECISION,
             DEMO_POLICY_PRIORITY,
         )
     return PolicyReadyResponse(

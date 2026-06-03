@@ -105,7 +105,8 @@ async def create_rule(
             RETURNING id, name, description, conditions, decision, priority, enabled
             """,
             ctx.org_id, body.name, body.description,
-            json.dumps(body.conditions), json.dumps(body.decision),
+            # asyncpg JSONB codec serializes dicts - don't json.dumps.
+            body.conditions, body.decision,
             body.priority, body.enabled, ctx.member_id,
         )
     conds = row["conditions"] if isinstance(row["conditions"], dict) else json.loads(row["conditions"])
@@ -191,12 +192,15 @@ async def patch_rule(
     if body.description is not None:
         sets.append(f"description = ${len(params) + 1}")
         params.append(body.description)
+    # asyncpg JSONB codec serializes dicts - don't json.dumps and don't
+    # use ::jsonb cast (the cast on a codec-bound value re-parses the
+    # double-encoded string as a JSONB string scalar, same bug).
     if body.conditions is not None:
-        sets.append(f"conditions = ${len(params) + 1}::jsonb")
-        params.append(json.dumps(body.conditions))
+        sets.append(f"conditions = ${len(params) + 1}")
+        params.append(body.conditions)
     if body.decision is not None:
-        sets.append(f"decision = ${len(params) + 1}::jsonb")
-        params.append(json.dumps(body.decision))
+        sets.append(f"decision = ${len(params) + 1}")
+        params.append(body.decision)
     if not sets:
         raise HTTPException(status_code=400, detail="no fields to update")
     sets.append("updated_at = now()")

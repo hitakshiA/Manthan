@@ -90,7 +90,8 @@ async def main() -> None:
                     """,
                     org_id,
                     thread_id,
-                    json.dumps({"sample": True}),
+                    # asyncpg JSONB codec serializes dicts - don't json.dumps.
+                    {"sample": True},
                 )
                 await conn.execute(
                     """
@@ -99,7 +100,7 @@ async def main() -> None:
                     """,
                     org_id,
                     thread_id,
-                    json.dumps({"sample": True, "short_id": "CASE-4821"}),
+                    {"sample": True, "short_id": "CASE-4821"},
                 )
                 await conn.execute(
                     """
