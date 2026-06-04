@@ -118,6 +118,12 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps) {
   const [state, setState] = useState<"awaiting" | "firing" | "fired">(
     isCaseTerminal ? "fired" : "awaiting",
   );
+  // True after the cinematic has walked every action through its
+  // MIN_DWELL_MS. Used by the terminal-state useEffect below to allow
+  // the "firing" → "fired" flip ONCE the cinematic has done its job,
+  // not the moment SSE delivers case_closed (which can land sub-second
+  // when the actor is fast - faster than the first ProgressDot animates).
+  const [cinematicDone, setCinematicDone] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
   const [verdictPending, setVerdictPending] = useState<
     null | "deny" | "hold" | "escalate"
@@ -133,16 +139,31 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps) {
   const coralSteps = useMemo(() => collectCoralSteps(events), [events]);
   const currentSource = useMemo(() => latestSource(events), [events]);
 
-  // Backend reached terminal state? Flip "firing" → "fired" the moment
-  // the API confirms (via case_closed SSE event OR a refetch returning
-  // resolved/errored). The cinematic finishes its sequence independently;
-  // this just makes sure local state doesn't lie when the API hasn't
-  // caught up yet (or the case was already closed when we mounted).
+  // Backend reached terminal state? Flip to "fired" the moment the API
+  // confirms (via case_closed SSE event OR a refetch returning
+  // resolved/errored). Critical detail: we ONLY do this when state is
+  // "awaiting", never while state is "firing" - the cinematic must be
+  // allowed to walk every action with its MIN_DWELL_MS dwell time. The
+  // previous version unmounted the cinematic the instant case_closed
+  // arrived, so when the actor finished fast (Stripe + Resend + Slack
+  // all returned in <1s) the operator saw the first action card animate
+  // in and then the workspace just flipped to the Closed Brief - they
+  // never got to see the other actions land. handleCinematicComplete
+  // below takes care of flipping "firing" → "fired" once the cinematic
+  // has actually walked through every step.
   useEffect(() => {
-    if (isCaseTerminal && state !== "fired") {
+    if (!isCaseTerminal) return;
+    // Two valid moments to flip to "fired":
+    //   1. We mounted with the case already terminal (state="awaiting"
+    //      means the operator never clicked Approve - they navigated
+    //      to an already-closed case).
+    //   2. The cinematic has finished its walk AND the backend has
+    //      confirmed terminal. cinematicDone is set by
+    //      handleCinematicComplete.
+    if (state === "awaiting" || (state === "firing" && cinematicDone)) {
       setState("fired");
     }
-  }, [isCaseTerminal, state]);
+  }, [isCaseTerminal, state, cinematicDone]);
 
   async function handleApprove() {
     if (state !== "awaiting") return;
@@ -160,18 +181,19 @@ export default function WorkspaceMemo(props: WorkspaceMemoProps) {
   }
 
   function handleCinematicComplete() {
-    // The cinematic finished walking through its sequence. If the
-    // backend has ALREADY confirmed terminal state we can flip to
-    // "fired" right now; otherwise we stay in "firing" so the
-    // cinematic's "settling…" state stays up until the case_closed
-    // event arrives via SSE. Always trigger a refetch so the parent
-    // can refresh action statuses + case row.
+    // The cinematic finished walking through its sequence. Mark
+    // cinematicDone so the terminal-state useEffect can flip us to
+    // "fired" once the backend confirms (or right now if it already
+    // has). Always trigger a refetch so the parent refreshes action
+    // statuses + case row.
+    setCinematicDone(true);
     onActionsExecuted?.();
     if (isCaseTerminal) {
       setState("fired");
     }
-    // else: stay in "firing"; the SSE useEffect above will flip us when
-    // case_closed lands.
+    // else: stay in "firing"; the terminal-state useEffect will flip
+    // us once isCaseTerminal becomes true, because cinematicDone is
+    // now set.
   }
 
   // Escalate / Hold / Deny - the three operator overrides on the brief.

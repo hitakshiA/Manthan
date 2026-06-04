@@ -289,10 +289,17 @@ class ActorWorker:
                 cid = trig.get("hubspot_company_id") or trig.get("company_id")
                 if cid:
                     out["company_id"] = cid
-                elif trig.get("demo_v2"):
-                    # In demo mode the seeded HubSpot company isn't
-                    # always pre-resolved; flag the action so the
-                    # adapter can soft-skip instead of red-FAILED.
+                else:
+                    # HubSpot CRM logging is a side-effect action - useful
+                    # but never the central thing the operator is approving.
+                    # When the actor can't resolve a company_id (agent
+                    # didn't capture it during investigation, no graft on
+                    # trigger_payload, etc.), soft-skip the action so the
+                    # adapter returns a synthetic success marker instead
+                    # of raising AdapterError. Was previously gated on the
+                    # demo_v2 flag, so the Aperture flow (and any future
+                    # surface that doesn't set demo_v2) red-FAILED the
+                    # CRM note even though every other action succeeded.
                     out["_demo_skip_if_missing"] = True
 
         elif kind == "customer_email":
