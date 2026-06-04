@@ -135,22 +135,50 @@ function Section1Hero() {
         style={{ y: heroY, opacity: heroOpacity }}
         className="relative z-20 px-6 mt-10 md:mt-14 flex flex-col items-center text-center"
       >
-        {/* Announcement pill - liquid-glass with "Beta" badge */}
+        {/* Announcement pill - now points at the latest essay. Becomes
+            a Link so the whole pill is clickable; subtle hover lift +
+            border highlight signals it's tappable without screaming. */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0 }}
-          className="liquid-glass inline-flex items-center gap-2 px-3 py-2 rounded-lg mb-6"
+          className="mb-6"
         >
-          <span
-            className="rounded-md text-sm font-medium px-2 py-0.5"
-            style={{ background: "#fff", color: "#000" }}
+          <Link
+            to="/blog/tokens-are-the-new-salary"
+            className="liquid-glass inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 hover:-translate-y-[1px]"
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow =
+                "0 0 0 1px rgba(255,255,255,0.18) inset, 0 8px 22px rgba(0,0,0,0.18)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "";
+            }}
           >
-            Beta
-          </span>
-          <span className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.65)" }}>
-            Manthan v1 · now accepting design partners
-          </span>
+            <span
+              className="rounded-md text-sm font-medium px-2 py-0.5"
+              style={{ background: "#fff", color: "#000" }}
+            >
+              New
+            </span>
+            <span
+              className="text-sm font-medium"
+              style={{ color: "rgba(255,255,255,0.78)" }}
+            >
+              Tokens are the new salary
+            </span>
+            <span
+              className="text-sm"
+              style={{ color: "rgba(255,255,255,0.55)" }}
+              aria-hidden
+            >
+              →
+            </span>
+          </Link>
         </motion.div>
 
         {/* Headline - operations framing, italic wedge accent */}

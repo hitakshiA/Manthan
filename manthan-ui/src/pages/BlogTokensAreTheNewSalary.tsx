@@ -306,7 +306,7 @@ export default function BlogTokensAreTheNewSalary() {
               letterSpacing: "0.06em",
             }}
           >
-            <span>By Akash Mondal</span>
+            <span>By Hitakshi</span>
             <span style={{ opacity: 0.4 }}>·</span>
             <span>June 4, 2026</span>
             <span style={{ opacity: 0.4 }}>·</span>
@@ -427,18 +427,25 @@ export default function BlogTokensAreTheNewSalary() {
           </Para>
 
           <Para>
-            Plug in Sonnet pricing at $3.30 per million input. A
-            medium-complexity case. Forty thousand input tokens of
-            replayed context across the loop plus prompts plus reasoning
-            plus the final brief. Roughly thirty cents per investigation,
-            just at the model.
+            Plug in Claude Sonnet 4.6 at the current $3.00 per million
+            input. That ten-step naive loop is{" "}
+            <strong>$1.42 per investigation</strong> on inference alone.
+            On Opus 4.7 (the model most teams default to for agentic
+            work) it is closer to $2.40. At a small fintech doing ten
+            thousand disputes a month that is fourteen to twenty-four
+            thousand dollars of inference. At a hundred thousand it is
+            a hundred and forty to two hundred and forty thousand.
+            Before infrastructure. Before the human reviewers we still
+            need on the high-stakes cases. Before salaries. Before
+            margin.
           </Para>
 
           <Para>
-            At ten thousand disputes a month (a small fintech), $3,000 of
-            pure inference. At a hundred thousand, $30,000. Before
-            infrastructure. Before the human reviewers we still need on
-            the high-stakes cases. Before salaries. Before margin.
+            The same case on a disciplined build (Coral-shaped, what
+            we'll get to in a second) lands at roughly forty cents
+            instead of $1.42. Not because the model is cheaper. Because
+            the architecture spends fewer tokens on the protocol and
+            more on the reasoning.
           </Para>
 
           <Para>
@@ -499,15 +506,15 @@ export default function BlogTokensAreTheNewSalary() {
           </Para>
 
           <Para>
-            In the language of someone reading their P&L: instead of eight
-            tool calls, each carrying the full prior context, the agent
-            issues four joins. Instead of forty thousand input tokens of
-            replayed context, it gets back typed rows with provenance
-            attached. Every claim in the final brief cites a real source
-            record. A Stripe dispute id. A HubSpot company id. A Notion
-            page id. Click the citation, the underlying record opens in a
-            new tab. Nothing gets fabricated because nothing leaves the
-            data store as prose.
+            In the language of someone reading their P&L: instead of
+            eight tool calls each carrying the full prior context, the
+            agent issues a handful of focused queries (one within-Stripe
+            JOIN, one per other connected source) and gets back typed
+            rows with provenance attached. Every claim in the final
+            brief cites a real source record. A Stripe dispute id. A
+            HubSpot company id. A Notion page id. Click the citation,
+            the underlying record opens in a new tab. Nothing gets
+            fabricated because nothing leaves the data store as prose.
           </Para>
 
           <PullQuote>
@@ -552,7 +559,7 @@ export default function BlogTokensAreTheNewSalary() {
           <Para>
             The code is open at{" "}
             <a
-              href="https://github.com/akash-mondal/manthan"
+              href="https://github.com/hitakshiA/Manthan"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -561,7 +568,7 @@ export default function BlogTokensAreTheNewSalary() {
                 textUnderlineOffset: 3,
               }}
             >
-              github.com/akash-mondal/manthan
+              github.com/hitakshiA/Manthan
             </a>
             . The deployed product is{" "}
             <Link
@@ -574,68 +581,144 @@ export default function BlogTokensAreTheNewSalary() {
             >
               manthan.quest
             </Link>
-            . Below is the engineering rationale, no code. If you want
-            the receipts they are in the repo.
+            . Below is the engineering rationale. No code. If you want
+            the receipts they are in the repo, file paths and all.
           </Para>
 
-          <H3>Evidence over strings.</H3>
+          <H3>One Coral session per case, spawned as a stdio subprocess.</H3>
           <Para>
-            Every tool call we make returns an Evidence object. Source.
-            Table. Record id. Fields. The SQL that produced it. A
-            timestamp. The model never sees a raw row as prose. It sees a
-            typed wrapper with provenance baked in. When the agent
-            records a finding, the finding cites Evidence by index. The
-            model never has to remember which Stripe charge it was,
-            because the citation is structural. No second tool call to
-            recover what was already retrieved. No prose "Stripe says…"
-            the model has to disambiguate. Across a typical investigation
-            that saves two or three turns.
+            The Coral integration is sixty lines in{" "}
+            <code>agent/coral_session.py</code>. It spawns{" "}
+            <code>coral mcp-stdio</code> as a subprocess for the case,
+            yields an MCP ClientSession, binds it to a Python{" "}
+            <code>contextvars.ContextVar</code>, then resets the
+            contextvar when the case ends. The per-tool handlers in{" "}
+            <code>agent/tools.py</code> dispatch through that contextvar
+            instead of being passed the session as an argument. The
+            subprocess dies with the session. No pool. No warm-up cache.
+            No shared-session optimisation. The simplicity is the
+            feature.
           </Para>
 
-          <H3>One Coral session per case.</H3>
+          <H3>Six tools. Three of them write. That is the entire agent surface.</H3>
           <Para>
-            The Coral MCP context binds to the case at the start of the
-            agent loop and tears down at the end. Tools are not redefined
-            turn to turn. The agent does not pay tokens to re-read the
-            catalogue every step. We did this even though it is more
-            plumbing than the obvious approach, because the alternative
-            is a flat 5k token tax per turn for a meaningful tool
-            surface. Times ten thousand cases a month.
+            Read-only:{" "}
+            <code>coral_sql</code>, <code>coral_list_catalog</code>,{" "}
+            <code>coral_describe_table</code>. State-changing or
+            terminal: <code>record_finding</code>,{" "}
+            <code>ask_human</code>, <code>conclude</code>. There is no{" "}
+            <code>stripe_get_charge</code>, no{" "}
+            <code>hubspot_search_company</code>, no{" "}
+            <code>notion_fetch_page</code>. The agent reaches all thirty
+            connected sources through one call:{" "}
+            <code>coral_sql</code>. It learns Stripe, HubSpot, Notion,
+            Datadog as schemas in a catalog. The mental load on the
+            model is one query language, not thirty REST APIs.
           </Para>
 
-          <H3>Citations resolved at emit time, not at render time.</H3>
+          <H3>Discover, then query.</H3>
           <Para>
-            When the agent records a finding, the Evidence index it cites
-            is resolved to its full structured shape inside the agent
-            loop. The brief PDF, the Slack card, the email body, all
-            three downstream surfaces, never need to re-query Coral to
-            assemble the brief. The data they need is already on the
-            event. One write, many reads, zero additional model spend.
+            The catalog is not baked into the system prompt. The first
+            thing the agent does on a new case is{" "}
+            <code>coral_list_catalog()</code> to see which schemas are
+            present for that org's connections, then{" "}
+            <code>coral_describe_table()</code> only for tables whose
+            columns it does not already know. That is how we keep the
+            system prompt from carrying thirty source-schemas worth of
+            dead context every turn. The agent reads what it needs.
           </Para>
 
-          <H3>The HITL gate is policy, not prompt.</H3>
+          <H3>Evidence wraps every read.</H3>
           <Para>
-            Whether a case auto-fires, needs one click, or requires
-            two-person approval is a deterministic function of the typed
-            decision payload. Computed by Python. The model never burns
-            tokens deciding "is this a $50 case or a $50,000 case." It
-            writes a typed decision. The gate evaluates it. Sounds boring
-            until you realise a 5,000 token reasoning chain about HITL
-            thresholds was happening before, on every case.
+            Each <code>coral_sql</code> call returns rows wrapped in an
+            Evidence object: source, table, record_id, fields, query,
+            retrieved_at. The Python handler parses the MCP JSON once,
+            normalises into rows + columns, and tags the Evidence with
+            which sources the SQL touched (one regex in tools.py finds{" "}
+            <code>schema.table</code> patterns). The LLM never sees the
+            raw row as prose. It sees a typed ToolResult whose data
+            payload includes an <code>evidence_indices</code> array
+            pointing into the Evidence pool. That pool is what citations
+            resolve against.
           </Para>
 
-          <H3>The event log is the source of truth, state is derived.</H3>
+          <H3>Findings cite Evidence by index, resolved at emit time.</H3>
           <Para>
-            This is the 12-Factor Agents pattern. Every meaningful change
-            is an event. The case row, the findings table, the actions
-            table, all projections of events. We never ask the model to
-            reconstruct what happened by replaying its context. The state
-            is queryable in SQL, by humans, after the fact, without an
-            LLM in the loop. Auditors love it. Token bills love it more.
+            When the agent calls{" "}
+            <code>record_finding(citations=[1, 3, 5])</code>, the loop
+            in <code>agent/loop.py</code> resolves those indices to{" "}
+            <code>{`{source, table, record_id}`}</code> dicts inside the
+            same turn, using <code>executor.evidence[idx]</code>. The
+            brief PDF, the Slack card, and the case-detail UI all read
+            the resolved citations from the finding event. Three
+            downstream surfaces, zero additional Coral queries to
+            assemble the brief.
+          </Para>
+
+          <H3>Tools are exposed with constrained decoding.</H3>
+          <Para>
+            <code>_enforce_strict()</code> in tools.py walks every
+            Pydantic JSON schema and adds{" "}
+            <code>additionalProperties: false</code> to every nested
+            object, marks every property required, uses null unions for
+            optionals. The OpenRouter client carries the{" "}
+            <code>structured-outputs-2025-11-13</code> header. The model
+            literally cannot emit a malformed tool call. Sounds small.
+            Most teams I have talked to are still burning turns on
+            retry-bad-JSON loops. We just stopped paying for that.
+          </Para>
+
+          <H3>Reflexion every three steps, anti-padding.</H3>
+          <Para>
+            Defined in <code>prompts.REFLEXION</code>. Every third ReAct
+            step the model classifies the run as one of CONVERGING /
+            GAP / CONTRADICTION / THIN_FINDINGS / SATURATED / STUCK. The
+            branch that saves the most tokens is THIN_FINDINGS:{" "}
+            <em>
+              "if you have a fat row but only 2 findings recorded, walk
+              the column groups and emit one Finding per group from the
+              row you already have. Do NOT issue a new coral_sql."
+            </em>{" "}
+            The agent's natural failure mode is shallow extraction and
+            over-querying to compensate. Reflexion catches it before
+            the bill does.
+          </Para>
+
+          <H3>The HITL gate is a JSON DSL evaluated in Python.</H3>
+          <Para>
+            <code>services/policy.py:evaluate_for_case()</code> pulls
+            enabled rules in priority order and evaluates conditions
+            against a flat context dict. Conditions are{" "}
+            <code>{`{"all": [...], "any": [...], "not": ...}`}</code>{" "}
+            with leaf clauses like{" "}
+            <code>
+              {`{"case.amount_minor": {"lte": 20000}}`}
+            </code>
+            . Pure Python. No LLM. The model emits a typed decision
+            payload at <code>conclude()</code>; the gate evaluates it;
+            the case routes to auto / one-click / two-person. The model
+            never burns tokens deciding whether a $50 case auto-fires
+            or a $50K case needs a second signer.
+          </Para>
+
+          <H3>The event log is the source of truth.</H3>
+          <Para>
+            This is the 12-Factor Agents pattern. The agent loop yields
+            Event objects from <code>run_case()</code>; the investigate
+            worker in{" "}
+            <code>manthan-api/workers/investigate.py</code> mirrors
+            every event into the Postgres <code>events</code> table,
+            then projects into <code>cases</code>,{" "}
+            <code>findings</code>, <code>actions</code>. Nothing about
+            case state is reconstructed by the LLM. The audit trail is
+            queryable in SQL by humans. The brief PDF is generated from
+            events. The Slack card is generated from events. A case can
+            be replayed by reading its event log without re-running the
+            agent.
           </Para>
 
           <Para>
-            Each of those choices is the same choice in different
+            Each one of those choices is the same choice in different
             clothing. Do not let the model do work the architecture
             should do. Let it reason. Let infrastructure handle
             communication. Let policy handle decision gates. Let the
@@ -718,7 +801,7 @@ export default function BlogTokensAreTheNewSalary() {
             </Link>
             . The code is at{" "}
             <a
-              href="https://github.com/akash-mondal/manthan"
+              href="https://github.com/hitakshiA/Manthan"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -727,7 +810,7 @@ export default function BlogTokensAreTheNewSalary() {
                 textUnderlineOffset: 3,
               }}
             >
-              github.com/akash-mondal/manthan
+              github.com/hitakshiA/Manthan
             </a>
             . The dispute Manthan was built to handle is one of a hundred
             problems shaped like this. Pick yours. Use Coral. Earn the
@@ -748,11 +831,11 @@ export default function BlogTokensAreTheNewSalary() {
               letterSpacing: "-0.002em",
             }}
           >
-            Akash Mondal builds Manthan, an AI-native operations layer
-            for revenue disputes. Coral Protocol is at coralprotocol.org.
-            If you read this far and want to argue,{" "}
+            Hitakshi builds Manthan, an AI-native operations layer for
+            revenue disputes. Coral Protocol is at coralprotocol.org. If
+            you read this far and want to argue,{" "}
             <a
-              href="mailto:akash@manthan.quest"
+              href="mailto:hitakshi220@gmail.com"
               style={{
                 color: "#C97B2A",
                 textDecoration: "underline",
@@ -760,7 +843,7 @@ export default function BlogTokensAreTheNewSalary() {
                 fontStyle: "normal",
               }}
             >
-              akash@manthan.quest
+              hitakshi220@gmail.com
             </a>
             .
           </div>

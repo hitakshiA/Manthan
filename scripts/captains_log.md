@@ -70,7 +70,7 @@ Coral is the most production-ready substrate for that posture today. It is not t
 
 ### How we actually built Manthan on top of it
 
-The code is open at github.com/akash-mondal/manthan. The deployed product is manthan.quest. Below is the engineering rationale, no code. If you want the receipts they are in the repo.
+The code is open at github.com/hitakshiA/Manthan. The deployed product is manthan.quest. Below is the engineering rationale, no code. If you want the receipts they are in the repo.
 
 **Evidence over strings.** Every tool call we make returns an Evidence object. Source. Table. Record id. Fields. The SQL that produced it. A timestamp. The model never sees a raw row as prose. It sees a typed wrapper with provenance baked in. When the agent records a finding, the finding cites Evidence by index. The model never has to remember which Stripe charge it was, because the citation is structural. No second tool call to recover what was already retrieved. No prose "Stripe says…" the model has to disambiguate. Across a typical investigation that saves two or three turns.
 
@@ -104,13 +104,13 @@ Do not start with the agent loop. Start with the data layer. Make every source l
 
 Coral is the easiest way to do this today. If you are building in this category and you have not looked at it seriously, you are leaving margin on the table you will not get back later.
 
-We are at manthan.quest. The code is at github.com/akash-mondal/manthan. The dispute Manthan was built to handle is one of a hundred problems shaped like this. Pick yours. Use Coral. Earn the margin.
+We are at manthan.quest. The code is at github.com/hitakshiA/Manthan. The dispute Manthan was built to handle is one of a hundred problems shaped like this. Pick yours. Use Coral. Earn the margin.
 
 The category is here. The architecture is the moat.
 
 ---
 
-*Akash Mondal builds Manthan, an AI-native operations layer for revenue disputes. Coral Protocol is at coralprotocol.org. If you read this far and want to argue, akash@manthan.quest.*
+*Hitakshi builds Manthan, an AI-native operations layer for revenue disputes. Coral Protocol is at coralprotocol.org. If you read this far and want to argue, hitakshi220@gmail.com.*
 
 ---
 

@@ -30,7 +30,7 @@ const POSTS: Post[] = [
     cover: "/blog/01-cover-many-to-one.webp",
     coverAlt:
       "Editorial illustration: vendor-shaped translucent ribbons collapsing through a coral-shaped lens into one clean amber line",
-    author: "Akash Mondal",
+    author: "Hitakshi",
     date: "June 4, 2026",
     readMinutes: 11,
     tags: ["AI-native services", "Coral", "engineering"],
