@@ -25,6 +25,10 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const DPA = lazy(() => import("./pages/DPA"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogTokensAreTheNewSalary = lazy(
+  () => import("./pages/BlogTokensAreTheNewSalary"),
+);
 
 const Workspace = lazy(() => import("./pages/Workspace"));
 const Sources = lazy(() => import("./pages/Sources"));
@@ -87,6 +91,11 @@ export function AppRouter() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/dpa" element={<DPA />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route
+            path="/blog/tokens-are-the-new-salary"
+            element={<BlogTokensAreTheNewSalary />}
+          />
 
           {/* App shell */}
           <Route path="/app" element={<AppShell />}>
