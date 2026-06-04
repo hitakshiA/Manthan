@@ -10,7 +10,7 @@
 
 In April, Uber's CTO admitted to *The Information* that the company had burned through its entire 2026 AI coding tools budget in four months. Engineering leaderboards. Public ranking of who used the tools most. The tools worked. Then the bill came in.
 
-I read that piece in the back of a Bangalore Uber, which felt about right.
+I read that piece in the back of an Uber, which felt about right.
 
 Microsoft is scaling back internal AI use over the same surprise. ServiceNow flagged AI cost-of-revenue compression on its January call, first time the company has used that phrase. Deloitte's Q4 2025 enterprise report found teams discovering "tens of millions" of monthly bills from agentic loops they had quietly shipped six months earlier. Gartner says forty percent of agentic projects will be killed by 2027. Not because the AI is bad. Because the unit economics inverted before the founder had time to refactor.
 

@@ -338,8 +338,8 @@ export default function BlogTokensAreTheNewSalary() {
           </Para>
 
           <Para>
-            I read that piece in the back of a Bangalore Uber, which felt
-            about right.
+            I read that piece in the back of an Uber, which felt about
+            right.
           </Para>
 
           <Para>
