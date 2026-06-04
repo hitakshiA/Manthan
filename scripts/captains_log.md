@@ -52,7 +52,7 @@ This is the part demos never show. The models are fine. They were fine in 2024. 
 
 ### Why we bet on Coral, and not on better tool wiring
 
-When we started Manthan I almost did exactly what every team in this category does. Wire up Stripe through the SDK. Wire up HubSpot through the SDK. Wire up Notion. Wire up Slack. Give each tool to the model. Let the planner figure it out.
+When we started Manthan I almost did exactly what every team in this category does in 2026. Wire up Stripe's MCP server. Wire up HubSpot's MCP server. Wire up Notion's. Wire up Slack's. Six or seven MCP servers, each one carrying its own tool catalog the model has to read every turn, each one speaking a slightly different vocabulary for the same idea. Give all of it to the planner. Let it figure out which call to make next.
 
 We did the back-of-envelope cost math one Sunday in March and stopped.
 
@@ -116,7 +116,7 @@ The category is here. The architecture is the moat.
 
 ---
 
-*Hitakshi builds Manthan, an AI-native operations layer for revenue disputes. Coral Protocol is at coralprotocol.org. If you read this far and want to argue, hitakshi220@gmail.com.*
+*Hitakshi builds Manthan, an AI-native operations layer for revenue disputes. Coral is at github.com/withcoral/coral. If you read this far and want to argue, hitakshi220@gmail.com.*
 
 ---
 
@@ -183,7 +183,7 @@ A portrait carousel (1080x1350) using the four blog illustrations as anchors. Ei
 
 > We sat down one Sunday in March and did the back-of-envelope cost math on what we had built so far.
 >
-> What we had: an agent loop wired to Stripe, HubSpot, Notion, and three other vendors via SDKs. It worked on demos. Production cost model: a $30,000-a-month inference bill at our target customer scale.
+> What we had: an agent loop wired to Stripe, HubSpot, Notion, and three other vendors via their own MCP servers. It worked on demos. Production cost model: a $30,000-a-month inference bill at our target customer scale, because every turn paid to re-read six separate tool catalogs.
 >
 > Inference. Not infrastructure. Not salaries. Just talking to the model.
 >

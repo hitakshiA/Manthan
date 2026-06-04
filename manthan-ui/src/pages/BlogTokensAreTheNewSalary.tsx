@@ -473,9 +473,13 @@ export default function BlogTokensAreTheNewSalary() {
 
           <Para>
             When we started Manthan I almost did exactly what every team
-            in this category does. Wire up Stripe through the SDK. Wire
-            up HubSpot through the SDK. Wire up Notion. Wire up Slack.
-            Give each tool to the model. Let the planner figure it out.
+            in this category does in 2026. Wire up Stripe's MCP server.
+            Wire up HubSpot's MCP server. Wire up Notion's. Wire up
+            Slack's. Six or seven MCP servers, each one carrying its
+            own tool catalog the model has to read every turn, each one
+            speaking a slightly different vocabulary for the same idea.
+            Give all of it to the planner. Let it figure out which call
+            to make next.
           </Para>
 
           <Para>
@@ -486,7 +490,7 @@ export default function BlogTokensAreTheNewSalary() {
           <Para>
             The path we took instead is built on{" "}
             <a
-              href="https://coralprotocol.org"
+              href="https://github.com/withcoral/coral"
               target="_blank"
               rel="noreferrer"
               style={{
@@ -812,8 +816,8 @@ export default function BlogTokensAreTheNewSalary() {
             }}
           >
             Hitakshi builds Manthan, an AI-native operations layer for
-            revenue disputes. Coral Protocol is at coralprotocol.org. If
-            you read this far and want to argue,{" "}
+            revenue disputes. Coral is at github.com/withcoral/coral.
+            If you read this far and want to argue,{" "}
             <a
               href="mailto:hitakshi220@gmail.com"
               style={{
