@@ -180,3 +180,14 @@ manthan-*.log
 
 # Demo video (referenced from README) - explicit exception to the *.mp4 rule above
 !manthan-ui/public/demo.mp4
+
+# ── Fundraise / blog scratch (local only, never push) ────────────────
+# The live blog post is the .tsx page + its referenced /public/blog/*.webp.
+# Everything below is the *source* / generator / pitch surface that
+# stays on the founder's machine and does not belong in the public repo.
+manthan-pitch-deck.pdf
+scripts/captains_log.md
+scripts/deck_copy.md
+scripts/gen_blog_images.py
+scripts/gen_deck_images.py
+manthan-ui/public/deck/
