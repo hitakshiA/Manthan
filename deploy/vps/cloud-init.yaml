@@ -1,0 +1,51 @@
+#cloud-config
+# Manthan - one-click VPS bootstrap.
+#
+# Paste the body of this file into the "Startup Script" / "User Data"
+# field when provisioning an Ubuntu 22.04 / 24.04 VPS (DigitalOcean,
+# Vultr, Linode, Hetzner, AWS Lightsail - anywhere that takes
+# cloud-init). The VM boots, installs Docker, clones the repo, and
+# starts the stack. SSH in afterwards to paste your GEMINI_API_KEY
+# into /opt/manthan/.env, then restart compose.
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - lsb-release
+  - ufw
+
+write_files:
+  - path: /etc/systemd/system/manthan-bootstrap.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Manthan first-boot bootstrap
+      After=network-online.target docker.service
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/bin/bash -lc 'curl -fsSL https://raw.githubusercontent.com/akash-mondal/manthan/main/deploy/vps/setup.sh | bash'
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - curl -fsSL https://get.docker.com | sh
+  - systemctl enable --now docker
+  - systemctl enable --now manthan-bootstrap.service
+
+final_message: |
+  Manthan VPS bootstrap kicked off. Watch with:
+    journalctl -u manthan-bootstrap -f
+  When the unit reports active, edit /opt/manthan/.env to add your
+  GEMINI_API_KEY and restart compose:
+    docker compose -f /opt/manthan/docker-compose.yml restart

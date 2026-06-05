@@ -1,0 +1,37 @@
+# Manthan + Caddy + Let's Encrypt reverse proxy.
+#
+# Copy this to /etc/caddy/Caddyfile on your VPS, replace
+# `your-domain.com` with the real hostname pointed at the VPS IP, then:
+#
+#   apt-get install -y caddy
+#   systemctl restart caddy
+#
+# Caddy will issue a Let's Encrypt cert automatically on the first
+# request to https://your-domain.com - no extra config needed.
+
+your-domain.com {
+    reverse_proxy localhost:8000
+    encode gzip
+
+    # SSE endpoints need no proxy buffering and a long response timeout
+    # so the agent loop's streaming events flow through without delay.
+    @sse {
+        path /agent/query
+        path /audit/*
+    }
+    handle @sse {
+        reverse_proxy localhost:8000 {
+            flush_interval -1
+            transport http {
+                response_header_timeout 30m
+            }
+        }
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+    }
+}

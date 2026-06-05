@@ -193,10 +193,14 @@ scripts/gen_deck_images.py
 manthan-ui/public/deck/
 
 # ── Operational dirs (local only) ────────────────────────────────────
-# scripts/  infra/  docs/  hold deploy scripts, VPS config, internal
-# docs, build images. None of these are required to build or run
-# Manthan; they live on the founder's machine and on the VPS, not in
-# the public repo.
+# scripts/  infra/  docs/  hold one-off ops scripts, VPS backups,
+# internal docs, build images, founder-only experiments. None of
+# these are required to build or run Manthan; they live on the
+# founder's machine and on the VPS, not in the public repo.
+#
+# Publicly-distributable deploy artifacts live at deploy/ (not in
+# this ignore list) - that's where cloud-init.yaml, setup.sh, the
+# Caddyfile.example, and the deploy README ship from.
 scripts/
 infra/
 docs/

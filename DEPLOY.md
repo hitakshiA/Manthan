@@ -48,7 +48,7 @@ Pick any Ubuntu 22.04 / 24.04 box with root SSH. Two bootstrap paths:
 
 ### A) One-click cloud-init (DigitalOcean, Vultr, Linode)
 
-Paste [`infra/vps/cloud-init.yaml`](infra/vps/cloud-init.yaml) into the
+Paste [`deploy/vps/cloud-init.yaml`](deploy/vps/cloud-init.yaml) into the
 provider's "User data" / "Startup script" field. The box installs
 Docker, clones the repo into `/opt/manthan`, writes a placeholder
 `.env`, and brings the docker-compose stack up. Three to five minutes.
@@ -64,7 +64,7 @@ docker compose -f /opt/manthan/docker-compose.yml restart
 
 If your provider doesn't have a cloud-init field, SSH in and run:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/akash-mondal/manthan/main/infra/vps/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/akash-mondal/manthan/main/deploy/vps/setup.sh | bash
 ```
 
 This is the same script the cloud-init runs. Idempotent, safe to
@@ -153,7 +153,7 @@ Caddy ships with the cloud-init / setup.sh path. Drop in the real
 domain:
 
 ```bash
-cp /opt/manthan/infra/vps/Caddyfile.example /etc/caddy/Caddyfile
+cp /opt/manthan/deploy/vps/Caddyfile.example /etc/caddy/Caddyfile
 sed -i 's/your-domain.com/manthan.quest/g' /etc/caddy/Caddyfile
 systemctl restart caddy
 ```
