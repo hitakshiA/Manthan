@@ -138,7 +138,7 @@ uv venv && uv pip install -e .
 
 # Point at OpenRouter + the Coral binary.
 cp .env.example .env
-$EDITOR .env   # set OPENROUTER_API_KEY + CORAL_BIN
+$EDITOR .env   # set OPENROUTER_API_KEY; CORAL_BINARY defaults to `coral` on PATH
 
 # Run a single case end-to-end against a local Coral.
 uv run python -m manthan_agent.smoke aperture
@@ -173,8 +173,9 @@ Coral instance.
   No registration step.
 - Changing the system prompt: edit `prompts.py`. There is no
   templating. The trigger text is appended verbatim by `loop.py`.
-- Changing the model: `MANTHAN_AGENT_MODEL=...` in the env. Default
-  is `deepseek/deepseek-v4-pro:exacto` (cheap, smart enough).
+- Changing the model: `MANTHAN_MODEL=...` in the env. Default is
+  `deepseek/deepseek-v4-pro:exacto` (cheap, smart enough). Any
+  OpenRouter model with function-calling support works.
 - Changing the budget: `Budget` in `loop.py`. Max prompt tokens,
   max steps, max wall-clock.
 
