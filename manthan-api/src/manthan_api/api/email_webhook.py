@@ -1,0 +1,589 @@
+"""Inbound email webhook - Resend delivers parsed messages here.
+
+Routing rule (per the design sketch - "email doesn't have to be in the
+same thread, but same email of user; main identifier is email of user"):
+
+  1. Dedupe by message_id (skip exact replays).
+  2. **Lookup any open email-originated case for this sender email.**
+     If found → append `human_followup` event to that case. The agent's
+     chat_loop replies via Resend. The fact that the customer started a
+     new email thread doesn't matter - we identify them by address.
+  3. Otherwise open a new case.
+  4. Either way: schedule an immediate Manthan-branded ack email back
+     to the customer (only on new-case path - follow-ups don't get
+     re-acked because the agent will produce a real reply shortly).
+
+Resend signs payloads with svix (svix-id / svix-timestamp / svix-signature
+headers). Verify, then process.
+
+Inbound payload shape (Resend):
+    {
+      "type": "email.received",
+      "data": {
+        "from": "jane@example.com",
+        "from_name": "Jane Patel",
+        "to": ["manthan@miny-labs.com"],
+        "subject": "Charged twice for ...",
+        "text": "Hi, I was charged twice on May 22 ...",
+        "html": "...",
+        "message_id": "<abc@gmail.com>",
+        "received_at": "2026-05-22T14:30:00Z"
+      }
+    }
+
+For dev mode (no signature secret set), we accept any payload - useful for
+local testing via curl.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import hmac
+import json
+import logging
+import re
+import uuid
+from base64 import b64decode
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
+
+from manthan_api.config import get_settings
+from manthan_api.db import get_conn
+
+router = APIRouter(prefix="/webhooks/email", tags=["email"])
+logger = logging.getLogger("manthan_api.email")
+
+
+@router.post("/{org_slug}", status_code=status.HTTP_200_OK)
+async def receive_email(
+    org_slug: str,
+    request: Request,
+    background: BackgroundTasks,
+) -> dict[str, Any]:
+    body = await request.body()
+    headers = {k.lower(): v for k, v in request.headers.items()}
+    settings = get_settings()
+
+    # Verify svix-style signature if secret is configured.
+    secret = settings.resend_inbound_webhook_secret
+    if secret:
+        if not _verify_svix(body, headers, secret):
+            raise HTTPException(status_code=401, detail="invalid webhook signature")
+    elif not settings.is_dev:
+        raise HTTPException(
+            status_code=500,
+            detail="RESEND_INBOUND_WEBHOOK_SECRET not configured",
+        )
+    else:
+        logger.warning("RESEND_INBOUND_WEBHOOK_SECRET unset - skipping signature check (dev only)")
+
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+
+    # Resend wraps the email in {type, data}; accept either shape.
+    email_data = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+    event_type = payload.get("type") or ""
+
+    # The Resend `email.received` webhook delivers metadata only - text +
+    # html are NOT in the payload (see Resend's docs). Detect the new shape
+    # and fetch the body via the Receiving API keyed by `email_id`. We
+    # MERGE the API response over the webhook payload so the downstream
+    # code below sees a fully-populated dict regardless of which path we
+    # came in on. Synthetic / dev callers that include `text`/`html`
+    # inline still work - the merge prefers webhook fields when present.
+    email_id = email_data.get("email_id") or email_data.get("id") or ""
+    needs_body_fetch = (
+        event_type == "email.received"
+        and not (email_data.get("text") or email_data.get("html"))
+        and bool(email_id)
+    )
+    if needs_body_fetch:
+        from manthan_api.services.resend_inbound import fetch_received_email
+        fetched = await fetch_received_email(email_id)
+        if fetched is not None:
+            # API response shape (per docs): id, to, from, subject, html,
+            # text, created_at, headers, attachments, raw. Map onto the
+            # field names downstream code expects.
+            for key in ("from", "subject", "text", "html", "to", "headers"):
+                if fetched.get(key) is not None and not email_data.get(key):
+                    email_data[key] = fetched[key]
+            # `created_at` from the API maps to our `received_at` slot.
+            if fetched.get("created_at") and not email_data.get("received_at"):
+                email_data["received_at"] = fetched["created_at"]
+        else:
+            logger.warning(
+                "email.received body fetch failed for id=%s - case will open with metadata only",
+                email_id,
+            )
+
+    msg_id = email_data.get("message_id") or email_data.get("id") or ""
+    from_addr = _normalise_address(email_data.get("from"))
+    from_name = email_data.get("from_name") or ""
+    subject = email_data.get("subject") or "(no subject)"
+    text = email_data.get("text") or email_data.get("body_text") or ""
+    html_body = email_data.get("html") or ""
+
+    if not from_addr:
+        raise HTTPException(status_code=400, detail="missing from address")
+
+    # Resolve org. Two-step rule:
+    #   1. If the sender email matches a `members` row in any org, route
+    #      the case INTO that org. This is how multi-tenant routing
+    #      works when we hold one Resend inbound mailbox shared across
+    #      all signed-in users - each user's personal org is identified
+    #      by the email they signed up with.
+    #   2. Otherwise fall back to the org named by the URL slug
+    #      (typically `acme` - the seeded demo / shared org).
+    async with get_conn() as conn:
+        member_match = await conn.fetchrow(
+            """
+            SELECT o.id AS org_id, o.slug AS org_slug
+            FROM members m
+            JOIN orgs o ON o.id = m.org_id
+            WHERE lower(m.email) = $1
+            ORDER BY m.created_at ASC
+            LIMIT 1
+            """,
+            from_addr,
+        )
+        if member_match is not None:
+            org_id = member_match["org_id"]
+            logger.info(
+                "email routed to member's own org: from=%s org=%s",
+                from_addr, member_match["org_slug"],
+            )
+        else:
+            org_row = await conn.fetchrow("SELECT id FROM orgs WHERE slug = $1", org_slug)
+            if org_row is None:
+                raise HTTPException(status_code=404, detail="org not found")
+            org_id = org_row["id"]
+            logger.info(
+                "email routed via URL slug (sender not a member): from=%s org=%s",
+                from_addr, org_slug,
+            )
+
+        # Dedupe by message_id (defensive - Resend usually doesn't
+        # redeliver, but the SLA contract says we never double-process).
+        if msg_id:
+            already = await conn.fetchval(
+                """
+                SELECT 1 FROM cases
+                WHERE org_id = $1
+                  AND trigger_surface = 'inbound_email'
+                  AND trigger_payload->>'message_id' = $2
+                LIMIT 1
+                """,
+                org_id, msg_id,
+            )
+            if already:
+                return {"received": True, "deduplicated": True}
+
+        # ── Email-as-identifier routing ──
+        # Look for any open case with this sender as the customer_ref.
+        # "Open" = anything not in a terminal state. If there's a
+        # resolved-recently case (last 7 days) we ALSO match - the
+        # customer is likely following up on the same issue.
+        #
+        # EXCEPTION: demo-runner emails (sender is a Manthan member)
+        # should ALWAYS open a fresh case, never thread into a stale
+        # one. Repeated demo runs from the same logged-in user would
+        # otherwise get folded into the first resolved case forever,
+        # which freezes the wizard's "check-inbound since X" poll
+        # because no new case row appears.
+        if member_match is not None:
+            case_row = None
+        else:
+            case_row = await conn.fetchrow(
+                """
+                SELECT id, thread_id, short_id FROM cases
+                WHERE org_id = $1
+                  AND trigger_surface = 'inbound_email'
+                  AND lower(customer_ref) = $2
+                  AND (
+                      status IN ('investigating','awaiting_approval','acting')
+                      OR (status = 'resolved' AND resolved_at > now() - interval '7 days')
+                  )
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                org_id, from_addr,
+            )
+
+        if case_row is not None:
+            # Same customer, open or recent case - append a follow-up.
+            await _append_event_with_retry(
+                conn,
+                org_id=org_id,
+                thread_id=case_row["thread_id"],
+                type_="human_followup",
+                actor=f"email:{from_addr}",
+                data={
+                    "message": text,
+                    "intent": "general",
+                    "via": "email_reply",
+                    "from_addr": from_addr,
+                    "from_name": from_name,
+                    "subject": subject,
+                    "message_id": msg_id,
+                    "raw_html": html_body[:50000] if html_body else None,
+                },
+            )
+            logger.info(
+                "email follow-up routed to case %s (from=%s)",
+                case_row["short_id"], from_addr,
+            )
+            return {
+                "received": True,
+                "routed_as": "followup",
+                "case_id": str(case_row["id"]),
+                "short_id": case_row["short_id"],
+            }
+
+        # Intent gate before case creation. If the body reads like a
+        # greeting / test ping / sub-threshold message, send a friendly
+        # nudge reply pointing at what Manthan actually does and skip
+        # opening a case + running the agent loop. Real investigation
+        # emails (money mentioned, dispute keywords, > 8 words) fall
+        # through to the normal new-case path below.
+        if _is_chat_email(subject, text):
+            logger.info(
+                "email classified as chat - sending nudge reply (from=%s)",
+                from_addr,
+            )
+            background.add_task(
+                _send_nudge_email,
+                org_id=org_id,
+                from_addr=from_addr,
+                from_name=from_name,
+                subject_received=subject,
+            )
+            return {"received": True, "routed_as": "nudge"}
+
+        # Otherwise open a new case.
+        thread_id = uuid.uuid4()
+        import secrets
+        short_id = f"EML-{secrets.randbelow(900000) + 100000}"
+
+        trigger_text = (
+            f"Customer email from {from_name or from_addr} <{from_addr}>:\n\n"
+            f"Subject: {subject}\n\n{text[:2000]}"
+        )
+
+        # Demo-v2 hookup: when an inbound email matches the seeded demo
+        # template (Caldera Pro duplicate-charge complaint), graft the
+        # Maya scenario's Stripe IDs into the trigger_payload so the
+        # agent has real seeded records to investigate against. Without
+        # this, the agent looks up the sender's email in Stripe, finds
+        # nothing (their address isn't a seeded customer), and stalls.
+        # customer_ref stays the user's actual email so the auto-ack +
+        # the agent's reply both land in their inbox.
+        # Demo graft is now keyed on sender-identity, not message
+        # content. If the sender is a known Manthan member they're a
+        # demo runner (their email landed at manthan@doraro.resend.app
+        # via the wizard); attach the seeded Maya IDs regardless of
+        # what they typed in the body. Real customers (no member match)
+        # bypass the graft and follow the normal customer-email path.
+        demo_hookup = _maybe_demo_graft(
+            subject=subject, body=text, sender_is_member=member_match is not None
+        )
+
+        payload_dict: dict[str, Any] = {
+            "message_id": msg_id,
+            "from_addr": from_addr,
+            "from_name": from_name,
+            "subject": subject,
+            "received_at": email_data.get("received_at"),
+            "raw_text": text,
+            "raw_html": html_body[:50000] if html_body else None,
+        }
+        if demo_hookup:
+            payload_dict.update(demo_hookup)
+            # Enrich the trigger_text so the agent sees the resolved
+            # context in the same single block - this is what get
+            # serialised into the case_opened event the agent reads.
+            trigger_text += (
+                "\n\n-- demo-v2 enrichment (auto-attached by inbound handler) --\n"
+                f"Resolved customer: {demo_hookup['customer_id']}\n"
+                f"Original charge:   {demo_hookup['original_charge_id']}  ($89, succeeded)\n"
+                f"Duplicate charge:  {demo_hookup['duplicate_charge_id']}  ($89, succeeded - refund this one)"
+            )
+
+        async with conn.transaction():
+            new_case = await conn.fetchrow(
+                """
+                INSERT INTO cases (
+                    org_id, thread_id, short_id, status, trigger_surface,
+                    trigger_payload, case_type, customer_ref, amount_minor, currency
+                )
+                VALUES ($1, $2, $3, 'investigating', 'inbound_email',
+                        $4, $5, $6, $7, $8)
+                RETURNING id
+                """,
+                org_id, thread_id, short_id,
+                # asyncpg JSONB codec serializes dicts - don't json.dumps
+                # (double-encoded → trigger_payload->>'k' returns NULL).
+                payload_dict,
+                "refund_request",  # default; investigation may refine
+                from_addr,
+                8900 if demo_hookup else None,
+                "usd" if demo_hookup else None,
+            )
+            case_id = new_case["id"]
+            event_data: dict[str, Any] = {
+                "case_id": str(case_id),
+                "short_id": short_id,
+                "trigger_surface": "inbound_email",
+                "trigger_text": trigger_text,
+                "from_addr": from_addr,
+                "from_name": from_name,
+                "subject": subject,
+                "message_id": msg_id,
+            }
+            if demo_hookup:
+                event_data.update(demo_hookup)
+            await conn.execute(
+                """
+                INSERT INTO events (org_id, thread_id, seq, type, actor, data)
+                VALUES ($1, $2, 1, 'case_opened', $3, $4)
+                """,
+                org_id, thread_id,
+                f"email:{from_addr}",
+                event_data,
+            )
+
+    logger.info("email opened case %s from=%s subject=%r", short_id, from_addr, subject[:60])
+
+    # Schedule the auto-ack email - runs after we return the 200 to
+    # Resend so the webhook latency stays small.
+    background.add_task(
+        _send_auto_ack,
+        org_id=org_id,
+        case_id=case_id,
+        short_id=short_id,
+        from_addr=from_addr,
+        from_name=from_name,
+        subject_received=subject,
+    )
+
+    return {"received": True, "case_id": str(case_id), "short_id": short_id}
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Auto-ack
+# ──────────────────────────────────────────────────────────────────────
+
+
+async def _send_auto_ack(
+    *,
+    org_id,
+    case_id,
+    short_id: str,
+    from_addr: str,
+    from_name: str,
+    subject_received: str,
+) -> None:
+    """Send the "got your message" Manthan-branded ack email."""
+    try:
+        from manthan_api.services.email_dispatcher import send_ack_email
+        await send_ack_email(
+            org_id=org_id,
+            case_id=case_id,
+            short_id=short_id,
+            customer_email=from_addr,
+            customer_name=from_name,
+            subject_received=subject_received,
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("auto-ack send failed for case=%s: %s", short_id, e)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────────────────────────────
+
+
+def _normalise_address(addr: Any) -> str:
+    """Pull a bare email address out of a header value.
+        'Jane Patel <jane@example.com>' → 'jane@example.com'."""
+    if not addr:
+        return ""
+    s = str(addr).strip()
+    m = re.search(r"<([^>]+)>", s)
+    if m:
+        s = m.group(1)
+    return s.strip().lower()
+
+
+async def _append_event_with_retry(
+    conn,
+    *,
+    org_id,
+    thread_id,
+    type_: str,
+    actor: str,
+    data: dict[str, Any],
+) -> None:
+    import asyncio
+
+    for attempt in range(5):
+        try:
+            await conn.execute(
+                """
+                WITH next AS (
+                    SELECT COALESCE(MAX(seq), 0) + 1 AS s
+                    FROM events
+                    WHERE org_id=$1 AND thread_id=$2
+                )
+                INSERT INTO events (org_id, thread_id, seq, type, actor, data)
+                SELECT $1, $2, s, $3, $4, $5 FROM next
+                """,
+                org_id, thread_id, type_, actor, data,
+            )
+            return
+        except Exception:
+            if attempt == 4:
+                raise
+            await asyncio.sleep(0.02 * (attempt + 1))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Svix signature verification (Resend uses this scheme)
+# ──────────────────────────────────────────────────────────────────────
+
+
+def _verify_svix(body: bytes, headers: dict[str, str], secret: str) -> bool:
+    msg_id = headers.get("svix-id", "")
+    ts = headers.get("svix-timestamp", "")
+    sigs = headers.get("svix-signature", "")
+    if not msg_id or not ts or not sigs:
+        return False
+    if secret.startswith("whsec_"):
+        secret = secret[len("whsec_"):]
+    try:
+        key = b64decode(secret)
+    except Exception:
+        # Some secrets aren't base64 - use raw bytes.
+        key = secret.encode()
+    base = f"{msg_id}.{ts}.".encode() + body
+    expected = hmac.new(key, base, hashlib.sha256).digest()
+    expected_b64 = "v1," + _b64(expected)
+    return any(hmac.compare_digest(expected_b64, s.strip()) for s in sigs.split(" "))
+
+
+def _b64(data: bytes) -> str:
+    from base64 import b64encode
+    return b64encode(data).decode()
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Demo v2 inbound enrichment
+# ──────────────────────────────────────────────────────────────────────
+
+
+def _maybe_demo_graft(
+    *, subject: str, body: str, sender_is_member: bool,
+) -> dict[str, Any] | None:
+    """Attach seeded Maya scenario Stripe IDs onto the case trigger
+    when the inbound is from a demo runner, so the agent has real
+    billing records to investigate against instead of failing the
+    customer lookup on the runner's personal email.
+
+    Gating:
+      - `sender_is_member=True`: the sender's email matches a row in
+        the `members` table -> they're a signed-in Manthan user; the
+        only reason their email would land at our inbound mailbox is
+        the demo-v2 wizard told them to send it. Always graft.
+      - Otherwise: fall through to legacy content-matching as a
+        safety net so the original "Caldera Pro" smoke tests still
+        work for non-member senders.
+
+    The customer_ref / auto-ack / outbound customer_email all read
+    from the sender's actual address; we never touch identity. The
+    graft only adds Stripe IDs so the agent can do real SQL.
+
+    Returns None for any inbound that should be treated as a real
+    customer email; the webhook handler then opens a regular EML- case
+    with no seeded hooks.
+    """
+    seeded_graft = {
+        "demo_v2": True,
+        "customer_id": "cus_UbF7BXDTnXgUCt",
+        "original_charge_id": "ch_3Tc2dRCNe0SBMhzI1z6GoLeI",
+        "duplicate_charge_id": "ch_3Tc2dTCNe0SBMhzI0vIpjd62",
+    }
+    if sender_is_member:
+        return seeded_graft
+    # Legacy content-keyword path. Only used when the sender isn't a
+    # known Manthan member - mostly a fallback for synthetic tests.
+    blob = f"{subject or ''}\n{body or ''}".lower()
+    if "caldera pro" in blob and any(
+        token in blob
+        for token in ("charged twice", "duplicate", "two charges", "double charged")
+    ):
+        return seeded_graft
+    return None
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Intent classifier + nudge reply for chat-shaped emails
+# ──────────────────────────────────────────────────────────────────────
+
+
+_EMAIL_INVESTIGATE_KEYWORDS = (
+    "chargeback", "refund", "refunded", "dispute", "disputed",
+    "charged", "billed", "billing", "invoice", "subscription", "payment",
+    "ch_", "du_", "cus_", "pi_", "re_",
+    "vermillion", "aperture", "caldera",
+    "look into", "investigate", "resolve", "filed", "claim", "complaint",
+    "twice", "duplicate", "double",
+)
+
+
+def _is_chat_email(subject: str, body: str) -> bool:
+    """True when the email reads like a greeting / test / off-topic
+    message instead of a billing investigation request. The webhook
+    sends a friendly nudge reply (no case opened, no agent loop) when
+    this returns True.
+
+    Generous toward 'investigate' to avoid false-rejecting real cases:
+    any $ amount or any investigation keyword in subject+body falls
+    through to the case-create path regardless of length.
+    """
+    blob = (f"{subject or ''}\n{body or ''}").strip().lower()
+    if not blob:
+        return True
+    if "$" in blob:
+        return False
+    for kw in _EMAIL_INVESTIGATE_KEYWORDS:
+        if kw in blob:
+            return False
+    # Word count - real refund requests are usually 25-100+ words
+    word_count = len(blob.split())
+    if word_count < 8:
+        return True
+    return False
+
+
+async def _send_nudge_email(
+    *,
+    org_id: Any,
+    from_addr: str,
+    from_name: str,
+    subject_received: str,
+) -> None:
+    """Send a friendly reply that points the user at what Manthan does
+    and gives them a concrete example they can paste back. Runs as a
+    background task so the webhook ACKs Resend in <3s."""
+    try:
+        from manthan_api.services.email_dispatcher import send_nudge_email
+        await send_nudge_email(
+            org_id=org_id,
+            customer_email=from_addr,
+            customer_name=from_name,
+            subject_received=subject_received,
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("nudge email send failed for=%s: %s", from_addr, e)

@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Local config and secrets
+.env
+.env.local
+
+# Agent run artifacts
+traces/
+runs/
+.scenario_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: manthan-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: manthan
+      POSTGRES_PASSWORD: manthan_dev
+      POSTGRES_DB: manthan
+    ports:
+      - "5433:5432"  # 5433 host → avoid clash with system postgres
+    volumes:
+      - manthan_pg_data:/var/lib/postgresql/data
+      - ./schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U manthan"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  manthan_pg_data:

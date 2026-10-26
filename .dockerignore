@@ -1,0 +1,34 @@
+# Root build context - keep this MINIMAL because the Coral source is
+# ~200MB without exclusions.
+
+# Always-junk
+.git
+.DS_Store
+*.log
+.env
+.env.local
+
+# Python build artifacts
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+
+# Node
+**/node_modules
+manthan-ui/dist
+
+# Rust build cache for Coral - we rebuild in the Docker stage
+coral/target
+coral/.git
+coral/CACHEDIR.TAG
+coral/tmp
+
+# Don't ship the UI source into the API container
+manthan-ui
+
+# Agent's local scratch
+agent/.manthan
+agent/scripts/__pycache__
+agent/.venv

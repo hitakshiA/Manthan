@@ -1,0 +1,206 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checking / linting caches
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project data and artifacts (never commit real or generated datasets)
+data/*
+!data/.gitkeep
+*.duckdb
+*.duckdb.wal
+*.parquet
+*.db
+logs/
+tmp/
+/tmp/
+
+# Stress test artifacts (generated during live testing)
+docs/stress_test_artifacts/
+
+# Node (frontend, if/when added)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Agent output artifacts
+render_spec.json
+
+# Docker
+.docker/
+
+# Pitch video / demo assets (renders, snapshots, working animations - local-only)
+pitch-video/
+
+# Lobster Trap audit log - runtime, contains prompt + response payloads
+infra/lobstertrap/audit.log
+
+# Claude Code runtime & session artifacts (can contain local settings / scheduled task state)
+.claude/
+
+# Secrets / credentials - never commit
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_ed25519
+*_rsa
+*_ed25519
+credentials.json
+credentials*.json
+service-account*.json
+gcp-*.json
+aws-credentials
+.aws/
+secrets.json
+secrets.yaml
+secrets.yml
+*.secrets
+
+# Extra env variants
+.env.production
+.env.development
+.env.staging
+
+# Rendered video / snapshot outputs at any depth
+renders/
+snapshots/
+*.mp4
+*.mov
+*.webm
+
+# macOS / editor noise
+Thumbs.db
+*.bak
+*.orig
+
+# ─────────────────────────────────────────────────────────────────────
+# Audit pass - repo-specific things we never want tracked.
+# ─────────────────────────────────────────────────────────────────────
+
+# Symlinks to sibling repos (e.g. `coral` → ~/Dev Projects/coral, 10GB)
+/coral
+
+# Frontend build outputs (Vite → manthan-ui/dist)
+dist/
+build/
+
+# Pitch video sub-projects - heavy renders, frames, thumbnails. The
+# original pitch-video/ is explicit above; the pattern below catches
+# any future pitch-* folder so a fresh elevator/30s/teaser cut doesn't
+# accidentally end up in history.
+pitch-*/
+# (anything matching pitch-video/ stays excluded by the explicit rule above)
+
+# Agent run state - scenario JSONs, replay SQL captures, locally-built
+# state for the W*R / M*R / V*R / Q*R demos. The seed *scripts* under
+# agent/scripts/*.py stay tracked; the .manthan/ produced state does not.
+.manthan/
+
+# Video frame caches (ffmpeg / animation tooling output)
+**/frames/
+**/__hyperframes*
+.thumbnails/
+
+# One-off transient scripts (extract_svgs_tmp.js, *_tmp.py, etc.)
+*_tmp.*
+*-tmp.*
+*.tmp
+
+# Agent process logs we tail during dev
+/tmp/manthan-*.log
+manthan-*.log
+
+# Database backups + agent memory snapshots that shouldn't ride in git.
+# (data/* above already catches the main offenders - these belt-and-
+# suspenders for files that might land outside data/.)
+*.sqlite
+*.sqlite3
+*.duckdb
+*.duckdb.wal
+*.vault_key
+
+# Demo video (referenced from README) - explicit exception to the *.mp4 rule above
+!manthan-ui/public/demo.mp4
+
+# ── Fundraise / blog scratch (local only, never push) ────────────────
+# The live blog post is the .tsx page + its referenced /public/blog/*.webp.
+# Everything below is the *source* / generator / pitch surface that
+# stays on the founder's machine and does not belong in the public repo.
+manthan-pitch-deck.pdf
+scripts/captains_log.md
+scripts/deck_copy.md
+scripts/gen_blog_images.py
+scripts/gen_deck_images.py
+manthan-ui/public/deck/
+
+# ── Operational dirs (local only) ────────────────────────────────────
+# scripts/  infra/  docs/  hold one-off ops scripts, VPS backups,
+# internal docs, build images, founder-only experiments. None of
+# these are required to build or run Manthan; they live on the
+# founder's machine and on the VPS, not in the public repo.
+#
+# Publicly-distributable deploy artifacts live at deploy/ (not in
+# this ignore list) - that's where cloud-init.yaml, setup.sh, the
+# Caddyfile.example, and the deploy README ship from.
+scripts/
+infra/
+docs/
